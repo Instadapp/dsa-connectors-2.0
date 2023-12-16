@@ -1,10 +1,10 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
-import {MarketParams} from "./interfaces/IMorpho.sol";
+import {Id, MarketParams} from "./interfaces/IMorpho.sol";
 
 contract Events {
     event LogSupplyAssets(
-        MarketParams marketParams,
+        Id indexed id,
         uint256 assets,
         uint256 shares,
         uint256 getId,
@@ -12,7 +12,7 @@ contract Events {
     );
 
     event LogSupplyOnBehalf(
-        MarketParams marketParams,
+        Id indexed id,
         uint256 assets,
         uint256 shares,
         address onBehalf,
@@ -21,14 +21,14 @@ contract Events {
     );
 
     event LogSupplyCollateral(
-        MarketParams marketParams,
+        Id indexed id,
         uint256 assets,
         uint256 getId,
         uint256 setId
     );
 
     event LogSupplyCollateralOnBehalf(
-        MarketParams marketParams,
+        Id indexed id,
         uint256 assets,
         address onBehalf,
         uint256 getId,
@@ -36,7 +36,7 @@ contract Events {
     );
 
     event LogBorrow(
-        MarketParams marketParams,
+        Id indexed id,
         uint256 amounts,
         uint256 shares,
         uint256 getId,
@@ -44,7 +44,7 @@ contract Events {
     );
 
     event LogBorrowOnBehalf(
-        MarketParams marketParams,
+        Id indexed id,
         uint256 amounts,
         uint256 shares,
         address onBehalf,
@@ -54,7 +54,7 @@ contract Events {
     );
 
     event LogWithdraw(
-        MarketParams marketParams,
+        Id indexed id,
         uint256 amounts,
         uint256 shares,
         uint256 getId,
@@ -62,7 +62,7 @@ contract Events {
     );
 
     event LogWithdrawOnBehalf(
-        MarketParams marketParams,
+        Id indexed id,
         uint256 amounts,
         uint256 shares,
         address onBehalf,
@@ -71,14 +71,14 @@ contract Events {
     );
 
     event LogWithdrawCollateral(
-        MarketParams marketParams,
+        Id indexed id,
         uint256 amounts,
         uint256 getId,
         uint256 setId
     );
 
     event LogWithdrawCollateralOnBehalf(
-        MarketParams marketParams,
+        Id indexed id,
         uint256 amounts,
         address onBehalf,
         address receiver,
@@ -87,7 +87,7 @@ contract Events {
     );
 
     event LogRepay(
-        MarketParams marketParams,
+        Id indexed id,
         uint256 amounts,
         uint256 shares,
         uint256 getId,
@@ -95,7 +95,7 @@ contract Events {
     );
 
     event LogRepayOnBehalf(
-        MarketParams marketParams,
+        Id indexed id,
         uint256 amounts,
         uint256 shares,
         address onBehalf,

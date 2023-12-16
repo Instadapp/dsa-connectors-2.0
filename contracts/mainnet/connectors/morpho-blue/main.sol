@@ -27,7 +27,9 @@ abstract contract MorphoBlue is Helpers, Events {
         returns (string memory _eventName, bytes memory _eventParam)
     {
         uint256 _amt;
+        Id _id;
         (
+            _id,
             _marketParams, // Updated token contracts in case of Eth
             _amt
         ) = _performEthToWethConversion(
@@ -55,9 +57,9 @@ abstract contract MorphoBlue is Helpers, Events {
 
         setUint(_setId, _assets);
 
-        _eventName = "LogSupplyAssets((address,address,address,address,unit256),unit256,unit256,unit256,unit256)";
+        _eventName = "LogSupplyAssets(bytes32,unit256,unit256,unit256,unit256)";
         _eventParam = abi.encode(
-            _marketParams,
+            _id,
             _assets,
             _shares,
             _getId,
@@ -86,7 +88,9 @@ abstract contract MorphoBlue is Helpers, Events {
         returns (string memory _eventName, bytes memory _eventParam)
     {
         uint256 _amt;
+        Id _id;
         (
+            _id,
             _marketParams, // Updated token contracts in case of Eth
             _amt
         ) = _performEthToWethConversion(
@@ -114,9 +118,9 @@ abstract contract MorphoBlue is Helpers, Events {
 
         setUint(_setId, _assets);
 
-        _eventName = "LogSupplyOnBehalf((address,address,address,address,unit256),uint256,uint256,address,uint256,uint256)";
+        _eventName = "LogSupplyOnBehalf(bytes32,uint256,uint256,address,uint256,uint256)";
         _eventParam = abi.encode(
-            _marketParams,
+            _id,
             _assets,
             _shares,
             _onBehalf,
@@ -146,7 +150,9 @@ abstract contract MorphoBlue is Helpers, Events {
         returns (string memory _eventName, bytes memory _eventParam)
     {
         uint256 _amt;
+        Id _id;
         (
+            _id,
             _marketParams, // Updated token contracts in case of Eth
             _amt // Shares amount converted to assets
         ) = _performEthToWethSharesConversion(
@@ -163,19 +169,20 @@ abstract contract MorphoBlue is Helpers, Events {
             _amt
         );
 
-        (uint256 _assets, ) = MORPHO_BLUE.supply(
+        uint256 _assets;
+        (_assets, _shares) = MORPHO_BLUE.supply(
             _marketParams,
             _amt,
-            _shares,
+            0,
             _onBehalf,
             new bytes(0)
         );
 
         setUint(_setId, _assets);
 
-        _eventName = "LogSupplyOnBehalf((address,address,address,address,unit256),uint256,uint256,address,uint256,uint256)";
+        _eventName = "LogSupplyOnBehalf(bytes32,uint256,uint256,address,uint256,uint256)";
         _eventParam = abi.encode(
-            _marketParams,
+            _id,
             _assets,
             _shares,
             _onBehalf,
@@ -202,7 +209,9 @@ abstract contract MorphoBlue is Helpers, Events {
         returns (string memory _eventName, bytes memory _eventParam)
     {
         uint256 _amt;
+        Id _id;
         (
+            _id,
             _marketParams, // Updated token contracts in case of Eth
             _amt
         ) = _performEthToWethConversion(
@@ -229,8 +238,8 @@ abstract contract MorphoBlue is Helpers, Events {
 
         setUint(_setId, _amt);
 
-        _eventName = "LogSupplyCollateral((address,address,address,address,unit256),uint256,uint256,uint256)";
-        _eventParam = abi.encode(_marketParams, _assets, _getId, _setId);
+        _eventName = "LogSupplyCollateral(bytes32,uint256,uint256,uint256)";
+        _eventParam = abi.encode(_id, _assets, _getId, _setId);
     }
 
     /**
@@ -253,8 +262,10 @@ abstract contract MorphoBlue is Helpers, Events {
         returns (string memory _eventName, bytes memory _eventParam)
     {
         uint256 _amt;
+        Id _id;
         // Final assets amount and token contract
         (
+            _id,
             _marketParams, // Updated token contracts in case of Eth
             _amt
         ) = _performEthToWethConversion(
@@ -281,9 +292,9 @@ abstract contract MorphoBlue is Helpers, Events {
 
         setUint(_setId, _amt);
 
-        _eventName = "LogSupplyCollateralOnBehalf((address,address,address,address,unit256),uint256,address,uint256,uint256)";
+        _eventName = "LogSupplyCollateralOnBehalf(bytes32,uint256,address,uint256,uint256)";
         _eventParam = abi.encode(
-            _marketParams,
+            _id,
             _assets,
             _onBehalf,
             _getId,
@@ -313,9 +324,10 @@ abstract contract MorphoBlue is Helpers, Events {
 
         _marketParams = updateTokenAddresses(_marketParams);
 
+        Id _id = _marketParams.id();
+
         // If amount is max, fetch collateral value from Morpho's contract
         if (_amt == type(uint256).max) {
-            Id _id = _marketParams.id();
             Position memory _pos = MORPHO_BLUE.position(_id, address(this));
             _amt = _pos.collateral;
         }
@@ -335,8 +347,8 @@ abstract contract MorphoBlue is Helpers, Events {
 
         setUint(_setId, _amt);
 
-        _eventName = "LogWithdrawCollateral((address,address,address,address,unit256),uint256,uint256,uint256)";
-        _eventParam = abi.encode(_marketParams, _amt, _getId, _setId);
+        _eventName = "LogWithdrawCollateral(bytes32,uint256,uint256,uint256)";
+        _eventParam = abi.encode(_id, _amt, _getId, _setId);
     }
 
     /**
@@ -364,9 +376,10 @@ abstract contract MorphoBlue is Helpers, Events {
 
         _marketParams = updateTokenAddresses(_marketParams);
 
+        Id _id = _marketParams.id();
+
         // If amount is max, fetch collateral value from Morpho's contract
         if (_amt == type(uint256).max) {
-            Id _id = _marketParams.id();
             Position memory _pos = MORPHO_BLUE.position(_id, _onBehalf);
             _amt = _pos.collateral;
         }
@@ -387,9 +400,9 @@ abstract contract MorphoBlue is Helpers, Events {
 
         setUint(_setId, _amt);
 
-        _eventName = "LogWithdrawCollateralOnBehalf((address,address,address,address,unit256),uint256,address,address,uint256,uint256)";
+        _eventName = "LogWithdrawCollateralOnBehalf(bytes32,uint256,address,address,uint256,uint256)";
         _eventParam = abi.encode(
-            _marketParams,
+            _id,
             _amt,
             _onBehalf,
             _receiver,
@@ -419,12 +432,13 @@ abstract contract MorphoBlue is Helpers, Events {
         uint256 _amt = getUint(_getId, _assets);
 
         _marketParams = updateTokenAddresses(_marketParams);
+        
+        Id _id = _marketParams.id();
 
         uint256 _shares = 0;
 
         // Using shares for max amounts to make sure no dust is left on the contract
         if (_amt == type(uint256).max) {
-            Id _id = _marketParams.id();
             Position memory _pos = MORPHO_BLUE.position(_id, address(this));
             _shares = _pos.supplyShares;
             _amt = 0;
@@ -447,9 +461,9 @@ abstract contract MorphoBlue is Helpers, Events {
 
         setUint(_setId, _assets);
 
-        _eventName = "LogWithdraw((address,address,address,address,unit256),uint256,uint256,uint256,uint256)";
+        _eventName = "LogWithdraw(bytes32,uint256,uint256,uint256,uint256)";
         _eventParam = abi.encode(
-            _marketParams,
+            _id,
             _assets,
             _shares,
             _getId,
@@ -482,10 +496,11 @@ abstract contract MorphoBlue is Helpers, Events {
 
         _marketParams = updateTokenAddresses(_marketParams);
 
+        Id _id = _marketParams.id();
+
         uint256 _shares = 0;
         // Using shares for max amounts to make sure no dust is left on the contract
         if (_amt == type(uint256).max) {
-            Id _id = _marketParams.id();
             Position memory _pos = MORPHO_BLUE.position(_id, _onBehalf);
             _shares = _pos.supplyShares;
             _amt = 0;
@@ -508,9 +523,9 @@ abstract contract MorphoBlue is Helpers, Events {
 
         setUint(_setId, _assets);
 
-        _eventName = "LogWithdrawOnBehalf((address,address,address,address,unit256),uint256,uint256,address,uint256,uint256)";
+        _eventName = "LogWithdrawOnBehalf(bytes32,uint256,uint256,address,uint256,uint256)";
         _eventParam = abi.encode(
-            _marketParams,
+            _id,
             _assets,
             _shares,
             _onBehalf,
@@ -544,8 +559,9 @@ abstract contract MorphoBlue is Helpers, Events {
 
         _marketParams = updateTokenAddresses(_marketParams);
 
+        Id _id = _marketParams.id();
+
         if (_shareAmt == type(uint256).max) {
-            Id _id = _marketParams.id();
             Position memory _pos = MORPHO_BLUE.position(_id, _onBehalf);
             _shareAmt = _pos.supplyShares;
         }
@@ -567,9 +583,9 @@ abstract contract MorphoBlue is Helpers, Events {
 
         setUint(_setId, _assets);
 
-        _eventName = "LogWithdrawOnBehalf((address,address,address,address,unit256),uint256,uint256,address,uint256,uint256)";
+        _eventName = "LogWithdrawOnBehalf(bytes32,uint256,uint256,address,uint256,uint256)";
         _eventParam = abi.encode(
-            _marketParams,
+            _id,
             _assets,
             _shareAmt,
             _onBehalf,
@@ -600,6 +616,8 @@ abstract contract MorphoBlue is Helpers, Events {
 
         _marketParams = updateTokenAddresses(_marketParams);
 
+        Id _id = _marketParams.id();
+
         (, uint256 _shares) = MORPHO_BLUE.borrow(
             _marketParams,
             _amt,
@@ -616,8 +634,8 @@ abstract contract MorphoBlue is Helpers, Events {
 
         setUint(_setId, _amt);
 
-        _eventName = "LogBorrow((address,address,address,address,unit256),uint256,uint256,uint256,uint256)";
-        _eventParam = abi.encode(_marketParams, _amt, _shares, _getId, _setId);
+        _eventName = "LogBorrow(bytes32,uint256,uint256,uint256,uint256)";
+        _eventParam = abi.encode(_id, _amt, _shares, _getId, _setId);
     }
 
     /**
@@ -646,6 +664,8 @@ abstract contract MorphoBlue is Helpers, Events {
 
         _marketParams = updateTokenAddresses(_marketParams);
 
+        Id _id = _marketParams.id();
+
         (, uint256 _shares) = MORPHO_BLUE.borrow(
             _marketParams,
             _amt,
@@ -663,9 +683,9 @@ abstract contract MorphoBlue is Helpers, Events {
 
         setUint(_setId, _amt);
 
-        _eventName = "LogBorrowOnBehalf((address,address,address,address,unit256),uint256,uint256,address,address,uint256,uint256)";
+        _eventName = "LogBorrowOnBehalf(bytes32,uint256,uint256,address,address,uint256,uint256)";
         _eventParam = abi.encode(
-            _marketParams,
+            _id,
             _amt,
             _shares,
             _onBehalf,
@@ -701,6 +721,8 @@ abstract contract MorphoBlue is Helpers, Events {
 
         _marketParams = updateTokenAddresses(_marketParams);
 
+        Id _id = _marketParams.id();
+
         (uint256 _assets, ) = MORPHO_BLUE.borrow(
             _marketParams,
             0,
@@ -718,9 +740,9 @@ abstract contract MorphoBlue is Helpers, Events {
 
         setUint(_setId, _assets);
 
-        _eventName = "LogBorrowOnBehalf((address,address,address,address,unit256),uint256,uint256,address,address,uint256,uint256)";
+        _eventName = "LogBorrowOnBehalf(bytes32,uint256,uint256,address,address,uint256,uint256)";
         _eventParam = abi.encode(
-            _marketParams,
+            _id,
             _assets,
             _shareAmt,
             _onBehalf,
@@ -749,7 +771,9 @@ abstract contract MorphoBlue is Helpers, Events {
         returns (string memory _eventName, bytes memory _eventParam)
     {
         uint256 _amt;
+        Id _id;
         (
+            _id,
             _marketParams, // Updated token contracts in case of Eth
             _amt // Assets final amount to repay
         ) = _performEthToWethConversion(
@@ -778,9 +802,9 @@ abstract contract MorphoBlue is Helpers, Events {
 
         setUint(_setId, _assets);
 
-        _eventName = "LogRepay((address,address,address,address,unit256),uint256,uint256,uint256,uint256)";
+        _eventName = "LogRepay(bytes32,uint256,uint256,uint256,uint256)";
         _eventParam = abi.encode(
-            _marketParams,
+            _id,
             _assets,
             _shares,
             _getId,
@@ -809,7 +833,9 @@ abstract contract MorphoBlue is Helpers, Events {
         returns (string memory _eventName, bytes memory _eventParam)
     {
         uint256 _amt;
+        Id _id;
         (
+            _id,
             _marketParams, // Updated token contracts in case of Eth
             _amt // Assets final amount to repay
         ) = _performEthToWethConversion(
@@ -838,9 +864,9 @@ abstract contract MorphoBlue is Helpers, Events {
 
         setUint(_setId, _assets);
 
-        _eventName = "LogRepayOnBehalf((address,address,address,address,unit256),uint256,uint256,address,uint256,uint256)";
+        _eventName = "LogRepayOnBehalf(bytes32,uint256,uint256,address,uint256,uint256)";
         _eventParam = abi.encode(
-            _marketParams,
+            _id,
             _assets,
             _shares,
             _onBehalf,
@@ -870,7 +896,9 @@ abstract contract MorphoBlue is Helpers, Events {
         returns (string memory _eventName, bytes memory _eventParam)
     {
         uint256 _assetsAmt;
+        Id _id;
         (
+            _id,
             _marketParams, // Updated token contracts in case of Eth
             _assetsAmt // Assets final amount to repay
         ) = _performEthToWethSharesConversion(
@@ -897,9 +925,9 @@ abstract contract MorphoBlue is Helpers, Events {
 
         setUint(_setId, _assets);
 
-        _eventName = "LogRepayOnBehalf((address,address,address,address,unit256),uint256,uint256,address,uint256,uint256)";
+        _eventName = "LogRepayOnBehalf(bytes32,uint256,uint256,address,uint256,uint256)";
         _eventParam = abi.encode(
-            _marketParams,
+            _id,
             _assets,
             _shares,
             _onBehalf,
