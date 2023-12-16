@@ -45,7 +45,9 @@ abstract contract Helpers is Stores, Basic {
     ) internal returns (Id _id, MarketParams memory, uint256 _amt) {
         _amt = getUint(_getId, _assets);
 
-        bool _isEth = _mode == Mode.Collateral
+        bool _isModeCollateral = _mode == Mode.Collateral;
+
+        bool _isEth = _isModeCollateral
             ? _marketParams.collateralToken == ethAddr
             : _marketParams.loanToken == ethAddr;
 
@@ -55,21 +57,37 @@ abstract contract Helpers is Stores, Basic {
 
         // Check for max value
         if (_assets == type(uint256).max) {
-            uint256 _maxAvailable = _isEth
+            uint256 _maxBalance = _isEth
                 ? address(this).balance
+                : _isModeCollateral
+                ? TokenInterface(_marketParams.collateralToken).balanceOf(
+                    address(this)
+                )
                 : TokenInterface(_marketParams.loanToken).balanceOf(
                     address(this)
                 );
+
             if (_mode == Mode.Repay) {
-                uint256 _amtDebt = getPaybackBalance(_id, _marketParams, _onBehalf);
-                _amt = UtilsLib.min(_maxAvailable, _amtDebt);
+                uint256 _amtDebt = getPaybackBalance(
+                    _id,
+                    _marketParams,
+                    _onBehalf
+                );
+
+                _amt = UtilsLib.min(_maxBalance, _amtDebt);
             } else {
-                _amt = _maxAvailable;
+                _amt = _maxBalance;
             }
         }
 
-        // Perform conversion if necessary
-        convertEthToWeth(true, TokenInterface(_marketParams.loanToken), _amt);
+        // Perform eth to weth conversion if necessary
+        convertEthToWeth(
+            true,
+            _isModeCollateral
+                ? TokenInterface(_marketParams.collateralToken)
+                : TokenInterface(_marketParams.loanToken),
+            _amt
+        );
 
         return (_id, _marketParams, _amt);
     }
@@ -91,7 +109,7 @@ abstract contract Helpers is Stores, Basic {
 
         // Handle the max share case
         if (_shares == type(uint256).max) {
-            uint256 _maxAvailable = _isEth
+            uint256 _maxBalance = _isEth
                 ? address(this).balance
                 : TokenInterface(_marketParams.loanToken).balanceOf(
                     address(this)
@@ -99,19 +117,32 @@ abstract contract Helpers is Stores, Basic {
 
             // If it's repay calculate the min of balance available and debt to repay
             if (_isRepay) {
-                _assets = UtilsLib.min(_maxAvailable, getPaybackBalance(_id, _marketParams, _onBehalf));
+                _assets = UtilsLib.min(
+                    _maxBalance,
+                    getPaybackBalance(_id, _marketParams, _onBehalf)
+                );
             } else {
-                _assets = _maxAvailable;
+                _assets = _maxBalance;
             }
         } else {
             (
                 uint256 totalSupplyAssets,
                 uint256 totalSupplyShares,
-                ,
-
+                uint256 totalBorrowAssets,
+                uint256 totalBorrowShares
             ) = MORPHO_BLUE.expectedMarketBalances(_marketParams);
 
-            _assets = _shareAmt.toAssetsUp(totalSupplyAssets, totalSupplyShares);
+            if (_isRepay) {
+                _assets = _shareAmt.toAssetsUp(
+                    totalBorrowAssets,
+                    totalBorrowShares
+                );
+            } else {
+                _assets = _shareAmt.toAssetsUp(
+                    totalSupplyAssets,
+                    totalSupplyShares
+                );
+            }
         }
 
         // Perform ETH to WETH conversion if necessary
@@ -130,12 +161,17 @@ abstract contract Helpers is Stores, Basic {
         MarketParams memory _marketParams,
         address _onBehalf
     ) internal view returns (uint256 _assets) {
-        uint256 _shareAmt = MORPHO_BLUE.position(_id, _onBehalf).supplyShares;
+        uint256 _borrowedShareAmt = MORPHO_BLUE
+            .position(_id, _onBehalf)
+            .borrowShares;
 
-        (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = MORPHO_BLUE
+        (, , uint256 totalBorrowAssets, uint256 totalBorrowShares) = MORPHO_BLUE
             .expectedMarketBalances(_marketParams);
 
-        _assets = _shareAmt.toAssetsUp(totalSupplyAssets, totalSupplyShares);
+        _assets = _borrowedShareAmt.toAssetsUp(
+            totalBorrowAssets,
+            totalBorrowShares
+        );
     }
 
     function updateTokenAddresses(

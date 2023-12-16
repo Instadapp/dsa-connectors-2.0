@@ -243,7 +243,7 @@ abstract contract MorphoBlue is Helpers, Events {
     }
 
     /**
-     * @notice Supplies `assets` of collateral on behalf of `onBehalf`, optionally calling back the caller's `onMorphoSupplyCollateral` function with the given `data`.
+     * @notice Supplies `assets` of collateral on behalf of `onBehalf`.
      * @param _marketParams The market to supply assets to. (For ETH: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
      * @param _assets The amount of assets to supply. (For max: `uint256(-1)`)
      * @param _onBehalf The address that will get the shares.
@@ -263,7 +263,6 @@ abstract contract MorphoBlue is Helpers, Events {
     {
         uint256 _amt;
         Id _id;
-        // Final assets amount and token contract
         (
             _id,
             _marketParams, // Updated token contracts in case of Eth
@@ -412,7 +411,7 @@ abstract contract MorphoBlue is Helpers, Events {
     }
 
     /**
-     * @notice Handles the withdrawal of supply.
+     * @notice Handles the withdrawal of supplied assets.
      * @dev  The market to withdraw assets from. (For ETH: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
      * @param _marketParams The market to withdraw assets from.
      * @param _assets The amount of assets to withdraw. (For max: `uint256(-1)`)
@@ -499,6 +498,7 @@ abstract contract MorphoBlue is Helpers, Events {
         Id _id = _marketParams.id();
 
         uint256 _shares = 0;
+
         // Using shares for max amounts to make sure no dust is left on the contract
         if (_amt == type(uint256).max) {
             Position memory _pos = MORPHO_BLUE.position(_id, _onBehalf);
@@ -900,7 +900,7 @@ abstract contract MorphoBlue is Helpers, Events {
         (
             _id,
             _marketParams, // Updated token contracts in case of Eth
-            _assetsAmt // Assets final amount to repay
+            _assetsAmt // Shares amount converted to assets
         ) = _performEthToWethSharesConversion(
             _marketParams,
             _shares,
