@@ -6,12 +6,14 @@ import "../../common/stores.sol";
 import "../../common/basic.sol";
 import "../../common/interfaces.sol";
 import {MorphoBalancesLib} from "./libraries/periphery/MorphoBalancesLib.sol";
+import {MorphoLib} from "./libraries/periphery/MorphoLib.sol";
 import {UtilsLib} from "./libraries/UtilsLib.sol";
 import {MarketParamsLib} from "./libraries/MarketParamsLib.sol";
 import {SharesMathLib} from "./libraries/SharesMathLib.sol";
 
 abstract contract Helpers is Stores, Basic {
     using MorphoBalancesLib for IMorpho;
+    using MorphoLib for IMorpho;
     using MarketParamsLib for MarketParams;
     using UtilsLib for uint256;
     using SharesMathLib for uint256;
@@ -82,7 +84,7 @@ abstract contract Helpers is Stores, Basic {
 
         // Perform eth to weth conversion if necessary
         convertEthToWeth(
-            true,
+            _isEth,
             _isModeCollateral
                 ? TokenInterface(_marketParams.collateralToken)
                 : TokenInterface(_marketParams.loanToken),
@@ -147,7 +149,7 @@ abstract contract Helpers is Stores, Basic {
 
         // Perform ETH to WETH conversion if necessary
         convertEthToWeth(
-            true,
+            _isEth,
             TokenInterface(_marketParams.loanToken),
             _assets
         );
@@ -161,9 +163,7 @@ abstract contract Helpers is Stores, Basic {
         MarketParams memory _marketParams,
         address _onBehalf
     ) internal view returns (uint256 _assets) {
-        uint256 _borrowedShareAmt = MORPHO_BLUE
-            .position(_id, _onBehalf)
-            .borrowShares;
+        uint256 _borrowedShareAmt = MORPHO_BLUE.borrowShares(_id, _onBehalf);
 
         (, , uint256 totalBorrowAssets, uint256 totalBorrowShares) = MORPHO_BLUE
             .expectedMarketBalances(_marketParams);

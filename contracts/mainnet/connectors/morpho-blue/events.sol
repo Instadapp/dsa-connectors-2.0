@@ -15,7 +15,7 @@ contract Events {
         Id indexed id,
         uint256 assets,
         uint256 shares,
-        address onBehalf,
+        address indexed onBehalf,
         uint256 getId,
         uint256 setId
     );
@@ -30,7 +30,7 @@ contract Events {
     event LogSupplyCollateralOnBehalf(
         Id indexed id,
         uint256 assets,
-        address onBehalf,
+        address indexed onBehalf,
         uint256 getId,
         uint256 setId
     );
@@ -47,8 +47,8 @@ contract Events {
         Id indexed id,
         uint256 amounts,
         uint256 shares,
-        address onBehalf,
-        address receiver,
+        address indexed onBehalf,
+        address indexed receiver,
         uint256 getId,
         uint256 setId
     );
@@ -65,7 +65,7 @@ contract Events {
         Id indexed id,
         uint256 amounts,
         uint256 shares,
-        address onBehalf,
+        address indexed onBehalf,
         uint256 getId,
         uint256 setId
     );
@@ -80,8 +80,8 @@ contract Events {
     event LogWithdrawCollateralOnBehalf(
         Id indexed id,
         uint256 amounts,
-        address onBehalf,
-        address receiver,
+        address indexed onBehalf,
+        address indexed receiver,
         uint256 getId,
         uint256 setId
     );
@@ -98,7 +98,7 @@ contract Events {
         Id indexed id,
         uint256 amounts,
         uint256 shares,
-        address onBehalf,
+        address indexed onBehalf,
         uint256 getId,
         uint256 setId
     );
