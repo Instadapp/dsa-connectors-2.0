@@ -2,13 +2,12 @@
 pragma solidity ^0.8.2;
 
 contract Events {
-    event LogOperate (
+    event LogOperate(
         address vaultAddress,
         uint256 nftId,
         int256 newCol,
         int256 newDebt,
-        address to,
-		uint256 getId,
-		uint256 setId
+        uint256[] getIds,
+        uint256[] setIds
     );
 }

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.2;
 
 interface IVault {
-    
     /// @dev Single function which handles supply, withdraw, borrow & payback
     /// @param nftId_ NFT ID for interaction. If 0 then create new NFT/position.
     /// @param newCol_ new collateral. If positive then deposit, if negative then withdraw, if 0 then do nohing
@@ -43,5 +42,8 @@ interface IVault {
         bytes32 liquidityUserBorrowSlot;
     }
 
-    function constantsView() external view returns (ConstantViews memory constantsView_);
+    function constantsView()
+        external
+        view
+        returns (ConstantViews memory constantsView_);
 }
