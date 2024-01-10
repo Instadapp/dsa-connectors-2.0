@@ -8,15 +8,13 @@
     "typechain": "^8.3.2"
   },
   "dependencies": {
-    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomicfoundation/hardhat-toolbox": "^2.0.0",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/contracts": "^4.9.5",
-    "@typechain/ethers-v5": "^10.2.1",
-    "@typechain/hardhat": "^6.1.6",
-    "bignumber.js": "^4.0.4",
     "dotenv": "^16.3.1",
-    "prettier": "^3.1.1",
-    "prettier-plugin-solidity": "^1.2.0",
     "ts-node": "^10.9.2",
-    "web3": "^4.3.0"
+    "web3": "^1.10.3",
+    "ethers": "^5.4.7",
+    "@nomiclabs/hardhat-ethers": "^2.0.3"
   }
 }

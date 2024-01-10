@@ -15,7 +15,7 @@ abstract contract FluidConnector is Events, Stores {
     /**
      * @dev Returns Eth address
      */
-    function getEthAddr() internal pure returns (address) {
+    function getMaticAddr() internal pure returns (address) {
         return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     }
 
@@ -24,11 +24,15 @@ abstract contract FluidConnector is Events, Stores {
      * @notice Single function which handles supply, withdraw, borrow & payback
      * @param vaultAddress_ Vault address.
      * @param nftId_ NFT ID for interaction. If 0 then create new NFT/position.
-     * @param newCol_ New collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing
+     * @param newCol_ New collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
+     * For max deposit use type(uint25).max, for max withdraw use type(uint25).min.
      * @param newDebt_ New debt. If positive then borrow, if negative then payback, if 0 then do nothing
+     * For max payback use type(uint25).min.
      * @param to_ Address where withdraw or borrow should go. If address(0) then msg.sender
-     * @param getId_ ID to retrieve NFT ID.
-     * @param setId_ ID stores the NFT ID generated.
+     * @param getIds_ Array of 5 elements to retrieve IDs:
+     * Nft Id, Supply amount, Withdraw amount, Borrow Amount, Payback Amount
+     * @param setIds_ Array of 5 elements to store IDs generated:
+     * Nft Id, Supply amount, Withdraw amount, Borrow Amount, Payback Amount
      */
     function operate(
         address vaultAddress_,
@@ -36,15 +40,35 @@ abstract contract FluidConnector is Events, Stores {
         int256 newCol_,
         int256 newDebt_,
         address to_,
-        uint256 getId_,
-        uint256 setId_
+        uint256[] memory getIds_, // nft id, supply amount, withdraw amount, Borrow Amount, Payback Amount
+        uint256[] memory setIds_
     )
         external
         payable
         returns (string memory _eventName, bytes memory _eventParam)
     {
-        // todo: add max value
-        nftId_ = getUint(getId_, nftId_);
+
+        if (getIds_[1] > 0 && getIds_[2] > 0) {
+            revert ("Supply and withdraw amount get IDs cannot be > 0 at once.");
+        }
+
+        if (getIds_[3] > 0 && getIds_[4] > 0) {
+            revert ("Borrow and payback amount get IDs cannot be > 0 at once.");
+        }
+
+        if (setIds_[1] > 0 && setIds_[2] > 0) {
+            revert ("Supply and withdraw amount get IDs cannot be > 0 at once.");
+        }
+
+        if (setIds_[3] > 0 && setIds_[4] > 0) {
+            revert ("Borrow and payback amount get IDs cannot be > 0 at once.");
+        }
+
+        nftId_ = getUint(getIds_[0], nftId_);
+
+        // newCol_ = getIds_[1] > 0 ? getUint(getIds_[1], newCol_) : getUint(getIds_[2], newCol_);
+
+        // newDebt_ = getIds_[3] > 0 ? getUint(getIds_[3], newDebt_) : getUint(getIds_[4], newDebt_);
 
         IVault vault_ = IVault(vaultAddress_);
 
@@ -53,12 +77,8 @@ abstract contract FluidConnector is Events, Stores {
         uint256 colEthAmount_;
         uint256 debtEthAmount_;
 
-        if (newCol_ == type(int256).max) { // +ve max value
-            
-        }
-
         if (newCol_ > 0) {
-            if (vaultDetails_.supplyToken == getEthAddr()) {
+            if (vaultDetails_.supplyToken == getMaticAddr()) {
                 colEthAmount_ = uint256(newCol_);
             } else {
                 TokenInterface(vaultDetails_.supplyToken).approve(
@@ -71,7 +91,7 @@ abstract contract FluidConnector is Events, Stores {
         }
 
         if (newDebt_ < 0) {
-            if (vaultDetails_.borrowToken == getEthAddr()) {
+            if (vaultDetails_.borrowToken == getMaticAddr()) {
                 debtEthAmount_ = uint256(-1 * newDebt_);
             } else {
                 TokenInterface(vaultDetails_.borrowToken).approve(
@@ -87,21 +107,23 @@ abstract contract FluidConnector is Events, Stores {
             value: colEthAmount_ + debtEthAmount_
         }(nftId_, newCol_, newDebt_, to_);
 
-        setUint(setId_, nftId_);
+        setUint(setIds_[0], nftId_);
+        // setIds_[1] > 0 ? setUint(setIds_[1], newCol_) : setUint(setIds_[2], newCol_);
+        // setIds_[3] > 0 ? setUint(setIds_[3], newDebt_) : setUint(setIds_[4], newDebt_);
 
-        _eventName = "LogOperate(address,uint256,int256,int256,address,uint256,uint256)";
+        _eventName = "LogOperate(address,uint256,int256,int256,address,uint256[],uint256[])";
         _eventParam = abi.encode(
             vaultAddress_,
             nftId_,
             newCol_,
             newDebt_,
             to_,
-            getId_,
-            setId_
+            getIds_,
+            setIds_
         );
     }
 }
 
-contract ConnectV2Fluid is FluidConnector {
+contract ConnectV2FluidPolygon is FluidConnector {
     string public constant name = "Fluid-v1.0";
 }
