@@ -1,5 +1,8 @@
 import { expect } from "chai";
 import hre from "hardhat";
+const { waffle } = hre;
+// const { waffle } = require("hardhat");
+const { provider, deployContract } = waffle;
 import { abis } from "../../../scripts/constant/abis";
 import { addresses } from "../../../scripts/tests/mainnet/addresses";
 import { deployAndEnableConnector } from "../../../scripts/tests/deployAndEnableConnector";
@@ -9,7 +12,7 @@ import { ConnectV2FluidPolygon, ConnectV2FluidPolygon__factory } from "../../../
 import { parseEther, parseUnits } from "@ethersproject/units";
 import { encodeSpells } from "../../../scripts/tests/encodeSpells";
 import { constants } from "../../../scripts/constant/constant";
-import { network, ethers } from "hardhat";
+import { network, ethers, waffle } from "hardhat";
 import type { Signer, Contract } from "ethers";
 
 describe("Fluid", function () {
@@ -127,7 +130,7 @@ describe("Fluid", function () {
           forking: {
             // @ts-ignore
             jsonRpcUrl: hre.config.networks.hardhat.forking.url,
-            blockNumber: 12796965,
+            blockNumber: 51116602,
           },
         },
       ],
