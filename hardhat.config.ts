@@ -1,3 +1,8 @@
+// import "@nomiclabs/hardhat-waffle";
+// import "@nomiclabs/hardhat-ethers";
+// import "@nomiclabs/hardhat-etherscan";
+import "@nomicfoundation/hardhat-toolbox";
+
 import "@typechain/hardhat";
 import { resolve } from "path";
 import { config as dotenvConfig } from "dotenv";
@@ -65,7 +70,7 @@ const config: any = {
   solidity: {
     compilers: [
       {
-        version: "0.8.22",
+        version: "0.8.2",
         settings: {
           optimizer: {
             enabled: true,
