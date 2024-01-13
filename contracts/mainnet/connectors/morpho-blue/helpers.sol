@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.2;
+pragma solidity 0.8.19;
 
 import {Id, IMorpho, MarketParams, Position, Market} from "./interfaces/IMorpho.sol";
 import "../../common/stores.sol";
