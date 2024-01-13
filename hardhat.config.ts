@@ -2,6 +2,7 @@
 // import "@nomiclabs/hardhat-ethers";
 // import "@nomiclabs/hardhat-etherscan";
 import "@nomicfoundation/hardhat-toolbox";
+import "@nomiclabs/hardhat-web3";
 
 import "@typechain/hardhat";
 import { resolve } from "path";

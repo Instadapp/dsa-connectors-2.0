@@ -19,7 +19,7 @@ abstract contract Helpers is Stores, Basic {
     using SharesMathLib for uint256;
 
     IMorpho public constant MORPHO_BLUE =
-        IMorpho(0x777777c9898D384F785Ee44Acfe945efDFf5f3E0); // TODO: Update
+        IMorpho(0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb);
 
     uint256 internal constant MARKET_PARAMS_BYTES_LENGTH = 5 * 32;
 

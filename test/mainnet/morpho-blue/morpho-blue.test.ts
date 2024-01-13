@@ -188,6 +188,7 @@ describe("Morpho-Blue", function () {
           .cast(...encodeSpells(spells), wallet1.getAddress());
 
       await tx.wait();
+      // console.log('weth balance after borrowing1: ', await token_weth.connect(masterSigner).balanceOf(dsaWallet0.address))
       expect(expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.gte(
         parseUnits('105', 18))
       );
@@ -201,6 +202,7 @@ describe("Morpho-Blue", function () {
           args: [
             [ETH,WSTETH,oracle1,irm,lltv1],
             "5000000000000000000",
+            dsaWallet0.address,
             dsaWallet0.address,
             "0",
             "0"
@@ -269,14 +271,16 @@ describe("Morpho-Blue", function () {
       );
     })
 
+    // TODO: Update below function
     it("Should repay 2 ETH shares on behalf", async function () {
+      console.log('ethers balance before Repay shares on behalf: ', await ethers.provider.getBalance(dsaWallet0.address))
       const spells = [
         {
           connector: connectorName,
           method: "repayOnBehalfShares",
           args: [
             [ETH,WSTETH,oracle1,irm,lltv1],
-            "2000000000000000000",
+            "10000000000000000000",
             dsaWallet0.address,
             "0",
             "0"
@@ -289,11 +293,14 @@ describe("Morpho-Blue", function () {
           .cast(...encodeSpells(spells), wallet1.getAddress());
 
       await tx.wait();
+
+      console.log('ethers balance after: ', await ethers.provider.getBalance(dsaWallet0.address))
       expect(expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.lte(
         parseUnits('106', 18))
       );
     })
 
+    // TODO: Update below function
     it("Should repay max ETH", async function () {
       const spells = [
         {
