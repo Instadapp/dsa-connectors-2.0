@@ -13,10 +13,6 @@ import { dsaMaxValue, tokens } from "../../../scripts/tests/mainnet/tokens";
 const { ethers } = hre;
 import type { Signer, Contract } from "ethers";
 
-// const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-// const ACC_USDC = "0xe78388b4ce79068e89bf8aa7f218ef6b9ab0e9d0";
-// const Usdc = parseUnits("5000", 6);
-
 const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 const ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
@@ -44,7 +40,7 @@ describe("Morpho-Blue", function () {
 
   let irm = "0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC"
 
-  let loanToken1 = "0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC" // weth
+  let loanToken1 = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" // weth
   let collateralToken1 = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0" // wsteth
   let oracle1 = "0x2a01EB9496094dA03c4E364Def50f5aD1280AD72"
   let lltv1 = "945000000000000000"
@@ -188,7 +184,6 @@ describe("Morpho-Blue", function () {
           .cast(...encodeSpells(spells), wallet1.getAddress());
 
       await tx.wait();
-      // console.log('weth balance after borrowing1: ', await token_weth.connect(masterSigner).balanceOf(dsaWallet0.address))
       expect(expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.gte(
         parseUnits('105', 18))
       );
@@ -271,16 +266,14 @@ describe("Morpho-Blue", function () {
       );
     })
 
-    // TODO: Update below function
     it("Should repay 2 ETH shares on behalf", async function () {
-      console.log('ethers balance before Repay shares on behalf: ', await ethers.provider.getBalance(dsaWallet0.address))
       const spells = [
         {
           connector: connectorName,
           method: "repayOnBehalfShares",
           args: [
             [ETH,WSTETH,oracle1,irm,lltv1],
-            "10000000000000000000",
+            "2000000000000000000000000", // Shares are scaled by 6 units. So 1e24 in case of wsteth.
             dsaWallet0.address,
             "0",
             "0"
@@ -294,7 +287,6 @@ describe("Morpho-Blue", function () {
 
       await tx.wait();
 
-      console.log('ethers balance after: ', await ethers.provider.getBalance(dsaWallet0.address))
       expect(expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.lte(
         parseUnits('106', 18))
       );
