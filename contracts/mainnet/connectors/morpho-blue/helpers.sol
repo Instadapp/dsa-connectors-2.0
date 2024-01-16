@@ -21,33 +21,14 @@ abstract contract Helpers is Stores, Basic {
     IMorpho public constant MORPHO_BLUE =
         IMorpho(0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb);
 
-    uint256 internal constant MARKET_PARAMS_BYTES_LENGTH = 5 * 32;
-
-    /// @dev The number of virtual assets of 1 enforces a conversion rate between shares and assets when a market is
-    /// empty.
-    uint256 internal constant VIRTUAL_ASSETS = 1;
-
-    /// @dev The number of virtual shares has been chosen low enough to prevent overflows, and high enough to ensure
-    /// high precision computations.
-    uint256 internal constant VIRTUAL_SHARES = 1e6;
-
-    enum Mode {
-        Collateral,
-        Repay,
-        Supply
-    }
-
     /// @notice Handles Eth to Weth conversion if assets are provided.
     function _performEthToWethConversion(
         MarketParams memory _marketParams,
         uint256 _assets,
-        address _onBehalf,
         uint256 _getId,
-        Mode _mode
+        bool _isModeCollateral
     ) internal returns (Id _id, MarketParams memory, uint256 _amt) {
         _amt = getUint(_getId, _assets);
-
-        bool _isModeCollateral = _mode == Mode.Collateral;
 
         bool _isEth = _isModeCollateral
             ? _marketParams.collateralToken == ethAddr
@@ -59,27 +40,15 @@ abstract contract Helpers is Stores, Basic {
 
         // Check for max value
         if (_assets == type(uint256).max) {
-            uint256 _maxBalance = _isEth
+            _amt = _isEth
                 ? address(this).balance
                 : _isModeCollateral
-                ? TokenInterface(_marketParams.collateralToken).balanceOf(
-                    address(this)
-                )
-                : TokenInterface(_marketParams.loanToken).balanceOf(
-                    address(this)
-                );
-
-            if (_mode == Mode.Repay) {
-                uint256 _amtDebt = getPaybackBalance(
-                    _id,
-                    _marketParams,
-                    _onBehalf
-                );
-
-                _amt = UtilsLib.min(_maxBalance, _amtDebt);
-            } else {
-                _amt = _maxBalance;
-            }
+                    ? TokenInterface(_marketParams.collateralToken).balanceOf(
+                        address(this)
+                    )
+                    : TokenInterface(_marketParams.loanToken).balanceOf(
+                        address(this)
+                    );
         }
 
         // Perform eth to weth conversion if necessary
@@ -98,9 +67,7 @@ abstract contract Helpers is Stores, Basic {
     function _performEthToWethSharesConversion(
         MarketParams memory _marketParams,
         uint256 _shares,
-        address _onBehalf,
-        uint256 _getId,
-        bool _isRepay
+        uint256 _getId
     ) internal returns (Id _id, MarketParams memory, uint256 _assets) {
         uint256 _shareAmt = getUint(_getId, _shares);
         bool _isEth = _marketParams.loanToken == ethAddr;
@@ -111,40 +78,23 @@ abstract contract Helpers is Stores, Basic {
 
         // Handle the max share case
         if (_shares == type(uint256).max) {
-            uint256 _maxBalance = _isEth
+            _assets = _isEth
                 ? address(this).balance
                 : TokenInterface(_marketParams.loanToken).balanceOf(
                     address(this)
                 );
-
-            // If it's repay calculate the min of balance available and debt to repay
-            if (_isRepay) {
-                _assets = UtilsLib.min(
-                    _maxBalance,
-                    getPaybackBalance(_id, _marketParams, _onBehalf)
-                );
-            } else {
-                _assets = _maxBalance;
-            }
         } else {
             (
                 uint256 totalSupplyAssets,
                 uint256 totalSupplyShares,
-                uint256 totalBorrowAssets,
-                uint256 totalBorrowShares
+                ,
+
             ) = MORPHO_BLUE.expectedMarketBalances(_marketParams);
 
-            if (_isRepay) {
-                _assets = _shareAmt.toAssetsUp(
-                    totalBorrowAssets,
-                    totalBorrowShares
-                );
-            } else {
-                _assets = _shareAmt.toAssetsUp(
-                    totalSupplyAssets,
-                    totalSupplyShares
-                );
-            }
+            _assets = _shareAmt.toAssetsUp(
+                totalSupplyAssets,
+                totalSupplyShares
+            );
         }
 
         // Perform ETH to WETH conversion if necessary
@@ -157,13 +107,14 @@ abstract contract Helpers is Stores, Basic {
         return (_id, _marketParams, _assets);
     }
 
-    /// @notice Returns the payback balance in assets.
+    /// @notice Returns the borrowed assets and shares of onBehalf.
     function getPaybackBalance(
         Id _id,
         MarketParams memory _marketParams,
         address _onBehalf
-    ) internal view returns (uint256 _assets) {
-        uint256 _borrowedShareAmt = MORPHO_BLUE.borrowShares(_id, _onBehalf);
+    ) internal view returns (uint256 _assets, uint256 _borrowedShareAmt) {
+        Position memory _pos = MORPHO_BLUE.position(_id, _onBehalf);
+        _borrowedShareAmt = _pos.borrowShares;
 
         (, , uint256 totalBorrowAssets, uint256 totalBorrowShares) = MORPHO_BLUE
             .expectedMarketBalances(_marketParams);

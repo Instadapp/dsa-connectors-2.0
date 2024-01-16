@@ -66,6 +66,7 @@ contract Events {
         uint256 amounts,
         uint256 shares,
         address indexed onBehalf,
+        address indexed receiver,
         uint256 getId,
         uint256 setId
     );

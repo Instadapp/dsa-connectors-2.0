@@ -4,9 +4,13 @@ pragma solidity 0.8.19;
 import "./helpers.sol";
 import "./events.sol";
 import {MarketParamsLib} from "./libraries/MarketParamsLib.sol";
+import {MorphoBalancesLib} from "./libraries/periphery/MorphoBalancesLib.sol";
+import {SharesMathLib} from "./libraries/SharesMathLib.sol";
 
 abstract contract MorphoBlue is Helpers, Events {
     using MarketParamsLib for MarketParams;
+    using MorphoBalancesLib for IMorpho;
+    using SharesMathLib for uint256;
 
     /**
      * @dev Supply ETH/ERC20 Token for lending.
@@ -35,9 +39,8 @@ abstract contract MorphoBlue is Helpers, Events {
         ) = _performEthToWethConversion(
             _marketParams,
             _assets,
-            address(this),
             _getId,
-            Mode.Supply
+            false
         );
 
         approve(
@@ -58,13 +61,7 @@ abstract contract MorphoBlue is Helpers, Events {
         setUint(_setId, _assets);
 
         _eventName = "LogSupplyAssets(bytes32,unit256,unit256,unit256,unit256)";
-        _eventParam = abi.encode(
-            _id,
-            _assets,
-            _shares,
-            _getId,
-            _setId
-        );
+        _eventParam = abi.encode(_id, _assets, _shares, _getId, _setId);
     }
 
     /**
@@ -96,9 +93,8 @@ abstract contract MorphoBlue is Helpers, Events {
         ) = _performEthToWethConversion(
             _marketParams,
             _assets,
-            _onBehalf,
             _getId,
-            Mode.Supply
+            false
         );
 
         approve(
@@ -154,14 +150,8 @@ abstract contract MorphoBlue is Helpers, Events {
         (
             _id,
             _marketParams, // Updated token contracts in case of Eth
-            _amt // Shares amount converted to assets
-        ) = _performEthToWethSharesConversion(
-            _marketParams,
-            _shares,
-            _onBehalf,
-            _getId,
-            false
-        );
+            _amt // Share amount converted to assets
+        ) = _performEthToWethSharesConversion(_marketParams, _shares, _getId);
 
         approve(
             TokenInterface(_marketParams.loanToken),
@@ -217,12 +207,10 @@ abstract contract MorphoBlue is Helpers, Events {
         ) = _performEthToWethConversion(
             _marketParams,
             _assets,
-            address(this),
             _getId,
-            Mode.Collateral
+            true
         );
 
-        // Approving collateral token
         approve(
             TokenInterface(_marketParams.collateralToken),
             address(MORPHO_BLUE),
@@ -270,12 +258,10 @@ abstract contract MorphoBlue is Helpers, Events {
         ) = _performEthToWethConversion(
             _marketParams,
             _assets,
-            _onBehalf,
             _getId,
-            Mode.Collateral
+            true
         );
 
-        // Approving collateral token
         approve(
             TokenInterface(_marketParams.collateralToken),
             address(MORPHO_BLUE),
@@ -292,13 +278,7 @@ abstract contract MorphoBlue is Helpers, Events {
         setUint(_setId, _amt);
 
         _eventName = "LogSupplyCollateralOnBehalf(bytes32,uint256,address,uint256,uint256)";
-        _eventParam = abi.encode(
-            _id,
-            _assets,
-            _onBehalf,
-            _getId,
-            _setId
-        );
+        _eventParam = abi.encode(_id, _assets, _onBehalf, _getId, _setId);
     }
 
     /**
@@ -431,7 +411,7 @@ abstract contract MorphoBlue is Helpers, Events {
         uint256 _amt = getUint(_getId, _assets);
 
         _marketParams = updateTokenAddresses(_marketParams);
-        
+
         Id _id = _marketParams.id();
 
         uint256 _shares = 0;
@@ -461,13 +441,7 @@ abstract contract MorphoBlue is Helpers, Events {
         setUint(_setId, _assets);
 
         _eventName = "LogWithdraw(bytes32,uint256,uint256,uint256,uint256)";
-        _eventParam = abi.encode(
-            _id,
-            _assets,
-            _shares,
-            _getId,
-            _setId
-        );
+        _eventParam = abi.encode(_id, _assets, _shares, _getId, _setId);
     }
 
     /**
@@ -523,12 +497,13 @@ abstract contract MorphoBlue is Helpers, Events {
 
         setUint(_setId, _assets);
 
-        _eventName = "LogWithdrawOnBehalf(bytes32,uint256,uint256,address,uint256,uint256)";
+        _eventName = "LogWithdrawOnBehalf(bytes32,uint256,uint256,address,address,uint256,uint256)";
         _eventParam = abi.encode(
             _id,
             _assets,
             _shares,
             _onBehalf,
+            address(this),
             _getId,
             _setId
         );
@@ -583,12 +558,13 @@ abstract contract MorphoBlue is Helpers, Events {
 
         setUint(_setId, _assets);
 
-        _eventName = "LogWithdrawOnBehalf(bytes32,uint256,uint256,address,uint256,uint256)";
+        _eventName = "LogWithdrawOnBehalf(bytes32,uint256,uint256,address,address,uint256,uint256)";
         _eventParam = abi.encode(
             _id,
             _assets,
             _shareAmt,
             _onBehalf,
+            _receiver,
             _getId,
             _setId
         );
@@ -613,6 +589,7 @@ abstract contract MorphoBlue is Helpers, Events {
         returns (string memory _eventName, bytes memory _eventParam)
     {
         uint256 _amt = getUint(_getId, _assets);
+        bool _isLoanEth = _marketParams.loanToken == ethAddr;
 
         _marketParams = updateTokenAddresses(_marketParams);
 
@@ -627,7 +604,7 @@ abstract contract MorphoBlue is Helpers, Events {
         );
 
         convertWethToEth(
-            _marketParams.loanToken == ethAddr,
+            _isLoanEth,
             TokenInterface(wethAddr),
             _amt
         );
@@ -661,6 +638,7 @@ abstract contract MorphoBlue is Helpers, Events {
         returns (string memory _eventName, bytes memory _eventParam)
     {
         uint256 _amt = getUint(_getId, _assets);
+        bool _isLoanEth = _marketParams.loanToken == ethAddr;
 
         _marketParams = updateTokenAddresses(_marketParams);
 
@@ -675,11 +653,7 @@ abstract contract MorphoBlue is Helpers, Events {
         );
 
         if (_receiver == address(this))
-            convertWethToEth(
-                _marketParams.loanToken == ethAddr,
-                TokenInterface(wethAddr),
-                _amt
-            );
+            convertWethToEth(_isLoanEth, TokenInterface(wethAddr), _amt);
 
         setUint(_setId, _amt);
 
@@ -718,6 +692,7 @@ abstract contract MorphoBlue is Helpers, Events {
         returns (string memory _eventName, bytes memory _eventParam)
     {
         uint256 _shareAmt = getUint(_getId, _shares);
+        bool _isLoanEth = _marketParams.loanToken == ethAddr;
 
         _marketParams = updateTokenAddresses(_marketParams);
 
@@ -732,11 +707,7 @@ abstract contract MorphoBlue is Helpers, Events {
         );
 
         if (_receiver == address(this))
-            convertWethToEth(
-                _marketParams.loanToken == ethAddr,
-                TokenInterface(wethAddr),
-                _assets
-            );
+            convertWethToEth(_isLoanEth, TokenInterface(wethAddr), _assets);
 
         setUint(_setId, _assets);
 
@@ -770,32 +741,59 @@ abstract contract MorphoBlue is Helpers, Events {
         payable
         returns (string memory _eventName, bytes memory _eventParam)
     {
-        uint256 _amt;
-        Id _id;
-        (
-            _id,
-            _marketParams, // Updated token contracts in case of Eth
-            _amt // Assets final amount to repay
-        ) = _performEthToWethConversion(
-            _marketParams,
-            _assets,
-            address(this),
-            _getId,
-            Mode.Repay
+        uint256 _amt = getUint(_getId, _assets);
+        uint256 _shares = 0;
+
+        bool _isMax = _amt == type(uint256).max;
+        bool _isEth = _marketParams.loanToken == ethAddr;
+
+        _marketParams = updateTokenAddresses(_marketParams);
+
+        Id _id = _marketParams.id();
+
+        uint256 _maxDsaBalance;
+        uint256 _borrowedShareAmt;
+
+        if (_amt == type(uint256).max) {
+            _maxDsaBalance = _isEth
+                ? address(this).balance
+                : TokenInterface(_marketParams.loanToken).balanceOf(
+                    address(this)
+                );
+
+            uint256 _amtDebt;
+            (_amtDebt, _borrowedShareAmt) = getPaybackBalance(
+                _id,
+                _marketParams,
+                address(this)
+            );
+
+            // Amount is minimum of dsa balance or debt
+            _amt = UtilsLib.min(_maxDsaBalance, _amtDebt);
+        }
+
+        convertEthToWeth(
+            _isEth,
+            TokenInterface(_marketParams.loanToken),
+            _amt + 1 // Adding 1 wei as a buffer
         );
 
-        // Approving loan token for repaying
         approve(
             TokenInterface(_marketParams.loanToken),
             address(MORPHO_BLUE),
-            _amt
+            _amt + 1
         );
 
-        uint256 _shares;
+        if (_isMax && _amt < _maxDsaBalance) {
+            // case of max shares burn
+            _shares = _borrowedShareAmt;
+            _amt = 0;
+        }
+
         (_assets, _shares) = MORPHO_BLUE.repay(
             _marketParams,
             _amt,
-            0,
+            _shares,
             address(this),
             new bytes(0)
         );
@@ -803,13 +801,7 @@ abstract contract MorphoBlue is Helpers, Events {
         setUint(_setId, _assets);
 
         _eventName = "LogRepay(bytes32,uint256,uint256,uint256,uint256)";
-        _eventParam = abi.encode(
-            _id,
-            _assets,
-            _shares,
-            _getId,
-            _setId
-        );
+        _eventParam = abi.encode(_id, _assets, _shares, _getId, _setId);
     }
 
     /**
@@ -832,32 +824,58 @@ abstract contract MorphoBlue is Helpers, Events {
         payable
         returns (string memory _eventName, bytes memory _eventParam)
     {
-        uint256 _amt;
-        Id _id;
-        (
-            _id,
-            _marketParams, // Updated token contracts in case of Eth
-            _amt // Assets final amount to repay
-        ) = _performEthToWethConversion(
-            _marketParams,
-            _assets,
-            _onBehalf,
-            _getId,
-            Mode.Repay
+        uint256 _amt = getUint(_getId, _assets);
+        uint256 _shares = 0;
+
+        bool _isEth = _marketParams.loanToken == ethAddr;
+
+        _marketParams = updateTokenAddresses(_marketParams);
+
+        Id _id = _marketParams.id();
+
+        uint256 _maxDsaBalance;
+        uint256 _borrowedShareAmt;
+
+        if (_amt == type(uint256).max) {
+            _maxDsaBalance = _isEth
+                ? address(this).balance
+                : TokenInterface(_marketParams.loanToken).balanceOf(
+                    address(this)
+                );
+
+            uint256 _amtDebt;
+            (_amtDebt, _borrowedShareAmt) = getPaybackBalance(
+                _id,
+                _marketParams,
+                _onBehalf
+            );
+
+            // Amount is minimum of dsa balance or debt
+            _amt = UtilsLib.min(_maxDsaBalance, _amtDebt);
+        }
+
+        convertEthToWeth(
+            _isEth,
+            TokenInterface(_marketParams.loanToken),
+            _amt + 1 // Adding 1 wei as buffer
         );
 
-        // Approving loan token for repaying
         approve(
             TokenInterface(_marketParams.loanToken),
             address(MORPHO_BLUE),
-            _amt
+            _amt + 1
         );
 
-        uint256 _shares;
+        if (_amt == type(uint256).max && _amt < _maxDsaBalance) {
+            // Case for max shares burn
+            _shares = _borrowedShareAmt;
+            _amt = 0;
+        }
+
         (_assets, _shares) = MORPHO_BLUE.repay(
             _marketParams,
             _amt,
-            0,
+            _shares,
             _onBehalf,
             new bytes(0)
         );
@@ -895,40 +913,77 @@ abstract contract MorphoBlue is Helpers, Events {
         payable
         returns (string memory _eventName, bytes memory _eventParam)
     {
-        uint256 _assetsAmt;
-        Id _id;
-        (
-            _id,
-            _marketParams, // Updated token contracts in case of Eth
-            _assetsAmt // Shares amount converted to assets
-        ) = _performEthToWethSharesConversion(
-            _marketParams,
-            _shares,
-            _onBehalf,
-            _getId,
-            true
+        uint256 _amt;
+        uint256 _shareAmt = getUint(_getId, _shares);
+        
+        bool _isEth = _marketParams.loanToken == ethAddr;
+
+        _marketParams = updateTokenAddresses(_marketParams);
+
+        Id _id = _marketParams.id();
+
+        uint256 _borrowedShareAmt;
+        uint256 _maxDsaBalance;
+
+        if (_shareAmt == type(uint256).max) {
+            _maxDsaBalance = _isEth
+                ? address(this).balance
+                : TokenInterface(_marketParams.loanToken).balanceOf(
+                    address(this)
+                );
+
+            uint256 _assetsAmt;
+            (_assetsAmt, _borrowedShareAmt) = getPaybackBalance(
+                _id,
+                _marketParams,
+                _onBehalf
+            );
+
+            _amt = UtilsLib.min(_maxDsaBalance, _assetsAmt);
+        } else {
+            (
+                ,
+                ,
+                uint256 totalBorrowAssets,
+                uint256 totalBorrowShares
+            ) = MORPHO_BLUE.expectedMarketBalances(_marketParams);
+
+            _amt = _shareAmt.toAssetsUp(totalBorrowAssets, totalBorrowShares);
+        }
+
+        convertEthToWeth(
+            _isEth,
+            TokenInterface(_marketParams.loanToken),
+            _amt + 1
         );
 
         approve(
             TokenInterface(_marketParams.loanToken),
             address(MORPHO_BLUE),
-            _assetsAmt
+            _amt + 1
         );
 
-        (uint256 _assets, ) = MORPHO_BLUE.repay(
+        if (_shareAmt == type(uint256).max && _amt < _maxDsaBalance) {
+            _shareAmt = _borrowedShareAmt;
+            _amt = 0;
+        } else {
+            _shareAmt = 0;
+        }
+
+        (_amt, ) = MORPHO_BLUE.repay(
             _marketParams,
-            _assetsAmt,
-            0,
+            _amt,
+            _shareAmt,
             _onBehalf,
             new bytes(0)
         );
 
-        setUint(_setId, _assets);
+        setUint(_setId, _amt);
 
         _eventName = "LogRepayOnBehalf(bytes32,uint256,uint256,address,uint256,uint256)";
         _eventParam = abi.encode(
             _id,
-            _assets,
+            _amt,
             _shares,
             _onBehalf,
             _getId,
