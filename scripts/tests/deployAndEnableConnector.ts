@@ -10,8 +10,9 @@ import hre from "hardhat";
 import type { Signer, Contract } from "ethers";
 import type { ContractJSON } from "ethereum-waffle/dist/esm/ContractJSON";
 
-const { ethers, waffle } = hre;
-const { deployContract } = waffle;
+const { ethers } = hre;
+import {deployContract} from 'ethereum-waffle';
+// const { deployContract } = waffle;
 
 interface DeployInterface {
   connectorName: string;

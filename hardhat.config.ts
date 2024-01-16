@@ -2,6 +2,7 @@
 // import "@nomiclabs/hardhat-ethers";
 // import "@nomiclabs/hardhat-etherscan";
 import "@nomicfoundation/hardhat-toolbox";
+import "@nomiclabs/hardhat-web3";
 
 import "@typechain/hardhat";
 import { resolve } from "path";
@@ -70,7 +71,25 @@ const config: any = {
   solidity: {
     compilers: [
       {
+        version: "0.8.19",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200
+          }
+        }
+      },
+      {
         version: "0.8.2",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200
+          }
+        }
+      },
+      {
+        version: "0.8.0",
         settings: {
           optimizer: {
             enabled: true,
