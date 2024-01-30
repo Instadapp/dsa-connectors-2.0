@@ -775,13 +775,13 @@ abstract contract MorphoBlue is Helpers, Events {
         convertEthToWeth(
             _isEth,
             TokenInterface(_marketParams.loanToken),
-            _amt + 1 // Adding 1 wei as a buffer
+            _amt
         );
 
         approve(
             TokenInterface(_marketParams.loanToken),
             address(MORPHO_BLUE),
-            _amt + 1
+            _amt
         );
 
         if (_isMax && _amt < _maxDsaBalance) {
@@ -857,13 +857,13 @@ abstract contract MorphoBlue is Helpers, Events {
         convertEthToWeth(
             _isEth,
             TokenInterface(_marketParams.loanToken),
-            _amt + 1 // Adding 1 wei as buffer
+            _amt
         );
 
         approve(
             TokenInterface(_marketParams.loanToken),
             address(MORPHO_BLUE),
-            _amt + 1
+            _amt
         );
 
         if (_amt == type(uint256).max && _amt < _maxDsaBalance) {
@@ -954,13 +954,13 @@ abstract contract MorphoBlue is Helpers, Events {
         convertEthToWeth(
             _isEth,
             TokenInterface(_marketParams.loanToken),
-            _amt + 1
+            _amt
         );
 
         approve(
             TokenInterface(_marketParams.loanToken),
             address(MORPHO_BLUE),
-            _amt + 1
+            _amt
         );
 
         if (_shareAmt == type(uint256).max && _amt < _maxDsaBalance) {
