@@ -29,6 +29,7 @@ abstract contract FluidConnector is Events, Stores {
      * @param newDebt_ New debt. If positive then borrow, if negative then payback, if 0 then do nothing
      * For max payback use type(uint25).min.
      * @param repayApproveAmt_ In case of max amount for payback, this amount will be approved for spending.
+     * Should always be positive.
      * @param getIds_ Array of 5 elements to retrieve IDs:
      * Nft Id, Supply amount, Withdraw amount, Borrow Amount, Payback Amount
      * @param setIds_ Array of 5 elements to store IDs generated:
@@ -85,6 +86,7 @@ abstract contract FluidConnector is Events, Stores {
 
         bool isColMax_ = newCol_ == type(int256).max;
 
+        // Deposit
         if (newCol_ > 0) {
             if (vaultDetails_.supplyToken == getMaticAddr()) {
                 ethAmount_ = isColMax_
@@ -108,8 +110,10 @@ abstract contract FluidConnector is Events, Stores {
 
         bool isPaybackMax_ = newDebt_ == type(int256).min;
 
+        // Payback
         if (newDebt_ < 0) {
             if (vaultDetails_.borrowToken == getMaticAddr()) {
+                // Needs to be positive as it will be send in msg.value
                 ethAmount_ = isPaybackMax_
                     ? repayApproveAmt_
                     : uint256(-1 * newDebt_);
@@ -126,6 +130,7 @@ abstract contract FluidConnector is Events, Stores {
             }
         }
 
+        // Note max withdraw will be handled by Fluid contract
         (nftId_, newCol_, newDebt_) = vault_.operate{value: ethAmount_}(
             nftId_,
             newCol_,
@@ -142,7 +147,7 @@ abstract contract FluidConnector is Events, Stores {
             ? setUint(setIds_[3], uint256(newDebt_))
             : setUint(setIds_[4], uint256(newDebt_)); // If setIds_[4] != 0, it will set the ID.
 
-        _eventName = "LogOperate(address,uint256,int256,int256,uint256[],uint256[])";
+        _eventName = "LogOperateWithIds(address,uint256,int256,int256,uint256[],uint256[])";
         _eventParam = abi.encode(
             vaultAddress_,
             nftId_,
@@ -150,6 +155,98 @@ abstract contract FluidConnector is Events, Stores {
             newDebt_,
             getIds_,
             setIds_
+        );
+    }
+
+    /**
+     * @dev Deposit, borrow, payback and withdraw asset from the vault.
+     * @notice Single function which handles supply, withdraw, borrow & payback
+     * @param vaultAddress_ Vault address.
+     * @param nftId_ NFT ID for interaction. If 0 then create new NFT/position.
+     * @param newCol_ New collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
+     * For max deposit use type(uint25).max, for max withdraw use type(uint25).min.
+     * @param newDebt_ New debt. If positive then borrow, if negative then payback, if 0 then do nothing
+     * For max payback use type(uint25).min.
+     * @param repayApproveAmt_ In case of max amount for payback, this amount will be approved for spending.
+     * Should always be positive.
+     */
+    function operate(
+        address vaultAddress_,
+        uint256 nftId_,
+        int256 newCol_,
+        int256 newDebt_,
+        uint256 repayApproveAmt_
+    )
+        external
+        payable
+        returns (string memory _eventName, bytes memory _eventParam)
+    {
+        IVault vault_ = IVault(vaultAddress_);
+
+        IVault.ConstantViews memory vaultDetails_ = vault_.constantsView();
+
+        uint256 ethAmount_;
+
+        bool isColMax_ = newCol_ == type(int256).max;
+
+        // Deposit
+        if (newCol_ > 0) {
+            if (vaultDetails_.supplyToken == getMaticAddr()) {
+                ethAmount_ = isColMax_
+                    ? address(this).balance
+                    : uint256(newCol_);
+            } else {
+                if (isColMax_) {
+                    newCol_ = int256(
+                        TokenInterface(vaultDetails_.supplyToken).balanceOf(
+                            address(this)
+                        )
+                    );
+                }
+
+                TokenInterface(vaultDetails_.supplyToken).approve(
+                    vaultAddress_,
+                    uint256(newCol_)
+                );
+            }
+        }
+
+        bool isPaybackMax_ = newDebt_ == type(int256).min;
+
+        // Payback
+        if (newDebt_ < 0) {
+            if (vaultDetails_.borrowToken == getMaticAddr()) {
+                // Needs to be positive as it will be send in msg.value
+                ethAmount_ = isPaybackMax_
+                    ? repayApproveAmt_
+                    : uint256(-1 * newDebt_);
+            } else {
+                isPaybackMax_
+                    ? TokenInterface(vaultDetails_.borrowToken).approve(
+                        vaultAddress_,
+                        repayApproveAmt_
+                    )
+                    : TokenInterface(vaultDetails_.borrowToken).approve(
+                        vaultAddress_,
+                        uint256(-1 * newDebt_)
+                    );
+            }
+        }
+
+        // Note max withdraw will be handled by Fluid contract
+        (nftId_, newCol_, newDebt_) = vault_.operate{value: ethAmount_}(
+            nftId_,
+            newCol_,
+            newDebt_,
+            address(this)
+        );
+
+        _eventName = "LogOperate(address,uint256,int256,int256)";
+        _eventParam = abi.encode(
+            vaultAddress_,
+            nftId_,
+            newCol_,
+            newDebt_
         );
     }
 }
