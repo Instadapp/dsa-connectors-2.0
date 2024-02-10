@@ -170,7 +170,7 @@ abstract contract FluidConnector is Events, Stores {
      * @param repayApproveAmt_ In case of max amount for payback, this amount will be approved for spending.
      * Should always be positive.
      */
-    function operate(
+    function operate2(
         address vaultAddress_,
         uint256 nftId_,
         int256 newCol_,
