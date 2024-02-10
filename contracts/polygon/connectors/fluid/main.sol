@@ -35,7 +35,7 @@ abstract contract FluidConnector is Events, Stores {
      * @param setIds_ Array of 5 elements to store IDs generated:
      * Nft Id, Supply amount, Withdraw amount, Borrow Amount, Payback Amount
      */
-    function operate(
+    function operateWithIds(
         address vaultAddress_,
         uint256 nftId_,
         int256 newCol_,
@@ -170,7 +170,7 @@ abstract contract FluidConnector is Events, Stores {
      * @param repayApproveAmt_ In case of max amount for payback, this amount will be approved for spending.
      * Should always be positive.
      */
-    function operate2(
+    function operate(
         address vaultAddress_,
         uint256 nftId_,
         int256 newCol_,
