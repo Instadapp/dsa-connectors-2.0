@@ -82,16 +82,18 @@ abstract contract FluidConnector is Events, Stores {
 
         IVault.ConstantViews memory vaultDetails_ = vault_.constantsView();
 
-        uint256 ethAmount_;
+        uint256 maticAmount_;
 
         bool isColMax_ = newCol_ == type(int256).max;
 
         // Deposit
         if (newCol_ > 0) {
             if (vaultDetails_.supplyToken == getMaticAddr()) {
-                ethAmount_ = isColMax_
+                maticAmount_ = isColMax_
                     ? address(this).balance
                     : uint256(newCol_);
+
+                newCol_ = int256(maticAmount_);
             } else {
                 if (isColMax_) {
                     newCol_ = int256(
@@ -108,30 +110,30 @@ abstract contract FluidConnector is Events, Stores {
             }
         }
 
-        bool isPaybackMax_ = newDebt_ == type(int256).min;
+        bool isPaybackMin_ = newDebt_ == type(int256).min;
 
         // Payback
         if (newDebt_ < 0) {
             if (vaultDetails_.borrowToken == getMaticAddr()) {
                 // Needs to be positive as it will be send in msg.value
-                ethAmount_ = isPaybackMax_
+                maticAmount_ = isPaybackMin_
                     ? repayApproveAmt_
-                    : uint256(-1 * newDebt_);
+                    : uint256(-newDebt_);
             } else {
-                isPaybackMax_
+                isPaybackMin_
                     ? TokenInterface(vaultDetails_.borrowToken).approve(
                         vaultAddress_,
                         repayApproveAmt_
                     )
                     : TokenInterface(vaultDetails_.borrowToken).approve(
                         vaultAddress_,
-                        uint256(-1 * newDebt_)
+                        uint256(-newDebt_)
                     );
             }
         }
 
         // Note max withdraw will be handled by Fluid contract
-        (nftId_, newCol_, newDebt_) = vault_.operate{value: ethAmount_}(
+        (nftId_, newCol_, newDebt_) = vault_.operate{value: maticAmount_}(
             nftId_,
             newCol_,
             newDebt_,
@@ -185,16 +187,18 @@ abstract contract FluidConnector is Events, Stores {
 
         IVault.ConstantViews memory vaultDetails_ = vault_.constantsView();
 
-        uint256 ethAmount_;
+        uint256 maticAmount_;
 
         bool isColMax_ = newCol_ == type(int256).max;
 
         // Deposit
         if (newCol_ > 0) {
             if (vaultDetails_.supplyToken == getMaticAddr()) {
-                ethAmount_ = isColMax_
+                maticAmount_ = isColMax_
                     ? address(this).balance
                     : uint256(newCol_);
+
+                newCol_ = int256(maticAmount_);
             } else {
                 if (isColMax_) {
                     newCol_ = int256(
@@ -211,17 +215,17 @@ abstract contract FluidConnector is Events, Stores {
             }
         }
 
-        bool isPaybackMax_ = newDebt_ == type(int256).min;
+        bool isPaybackMin_ = newDebt_ == type(int256).min;
 
         // Payback
         if (newDebt_ < 0) {
             if (vaultDetails_.borrowToken == getMaticAddr()) {
                 // Needs to be positive as it will be send in msg.value
-                ethAmount_ = isPaybackMax_
+                maticAmount_ = isPaybackMin_
                     ? repayApproveAmt_
                     : uint256(-1 * newDebt_);
             } else {
-                isPaybackMax_
+                isPaybackMin_
                     ? TokenInterface(vaultDetails_.borrowToken).approve(
                         vaultAddress_,
                         repayApproveAmt_
@@ -234,7 +238,7 @@ abstract contract FluidConnector is Events, Stores {
         }
 
         // Note max withdraw will be handled by Fluid contract
-        (nftId_, newCol_, newDebt_) = vault_.operate{value: ethAmount_}(
+        (nftId_, newCol_, newDebt_) = vault_.operate{value: maticAmount_}(
             nftId_,
             newCol_,
             newDebt_,

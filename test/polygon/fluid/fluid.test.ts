@@ -11,6 +11,7 @@ import { encodeSpells } from "../../../scripts/tests/encodeSpells";
 import { constants } from "../../../scripts/constant/constant";
 import { network, ethers } from "hardhat";
 import type { Signer, Contract } from "ethers";
+import { BigNumber } from "bignumber.js";
 
 describe("Fluid", function () {
   const connectorName = "FLUID";
@@ -20,13 +21,15 @@ describe("Fluid", function () {
   let dsaWallet0: any;
   let instaConnectorsV2: any;
   let masterSigner: Signer;
-  const setIdMaticUsdc = ethers.BigNumber.from("83478237");
+  const setIdMaticUsdc = "83478237";
   const setIdWethUsdc = "83478249";
   const setId3 = "85478249";
+  const setId4 = "55478249";
 
-  const vaultMaticUsdc = "0x2226FFAE044B9fd4ED991aDf20CAACF8E8302510";
-  const vaultWethUsdc = "0x10D97a8236624222F681C12Eea4Ddac2BDD0471B";
-  const vaultWethMatic = "0x553437CB882E3aFbB67Abd135E067AFB0721fbf1";
+  const vaultMaticUsdc = "0xAf047A21CE590B36FE894dd6fa350b57Ea5Cb0aa";
+  const vaultWethUsdc = "0xEad5D80db075a905c141b37cE903d621952eA3f6";
+  const vaultWethMatic = "0x23918014AF7610e31e58A9DC9f9A7DdbfcA4087e";
+  const vaultUsdcMatic = "0x6395Ddb6161CeF6e64D4c027fbBa26CC76F18148";
 
   const wethHolder = "0xdeD8C5159CA3673f543D0F72043E4c655b35b96A";
   const usdcHolder = "0xA67EFB69A4f58F568aAB1b9d51110102985835b0";
@@ -212,21 +215,21 @@ describe("Fluid", function () {
   // 2000 matic, 20 weth, 20 usdc
 
   describe("Main", function () {
-    it("should deposit 1000 Matic in Fluid", async function () {
+    it("should deposit 1000 Matic in Fluid in MATIC-USDC", async function () {
       const amtDeposit = parseEther("1000");
 
       const spells = [
         {
           connector: connectorName,
-          method: "operate",
+          method: "operateWithIds",
           args: [
             vaultMaticUsdc,
             '0', // new nft
             amtDeposit, // +1000 collateral
             '0', // 0 debt
             '0',
-            ['0','0','0','0','0'],
-            ['0',setIdMaticUsdc,'0','0','0']
+            ['0', '0', '0', '0', '0'],
+            [setIdMaticUsdc, '0', '0', '0', '0'] // set NFT ID of position
           ],
         },
       ];
@@ -241,303 +244,388 @@ describe("Fluid", function () {
         parseEther("1000")
       );
     });
-    // 1000 matic
+    // 1000 matic, 20 weth, 20 usdc
 
-    // it("should deposit max Matic in Fluid", async function () {
-    //   const spells = [
-    //     {
-    //       connector: connectorName,
-    //       method: "operate",
-    //       args: [
-    //         vaultMaticUsdc, // matic-usdc vault
-    //         0, // setIdMaticUsdc
-    //         ethers.constants.MaxUint256, // + max collateral
-    //         0, // 0 debt
-    //         0,
-    //         [0,setIdMaticUsdc,0,0,0],
-    //         [0,0,0,0,0]
-    //       ],
-    //     },
-    //   ];
+    it("should deposit max Matic in Fluid in MATIC-USDC", async function () {
+      const spells = [
+        {
+          connector: connectorName,
+          method: "operateWithIds",
+          args: [
+            vaultMaticUsdc, // matic-usdc vault
+            0, // NFT ID from setIdMaticUsdc
+            ethers.constants.MaxInt256, // + max collateral
+            0, // 0 debt
+            0,
+            [setIdMaticUsdc, '0', '0', '0', '0'],
+            [setIdMaticUsdc, '0', '0', '0', '0']
+          ],
+        },
+      ];
 
-    //   const tx = await dsaWallet0
-    //     .connect(wallet0)
-    //     .cast(...encodeSpells(spells), wallet1.getAddress());
+      const tx = await dsaWallet0
+        .connect(wallet0)
+        .cast(...encodeSpells(spells), wallet1.getAddress());
 
-    //   await tx.wait();
+      await tx.wait();
 
-    //   expect(await ethers.provider.getBalance(dsaWallet0.address)).to.lte(
-    //     parseEther("1")
-    //   );
-    // });
+      expect(await ethers.provider.getBalance(dsaWallet0.address)).to.lte(
+        parseEther("1")
+      );
+    });
 
-    // // 0 matic
+    // // 0 matic, 20 weth, 20 usdc
 
-    // it("should deposit 10 Weth in Fluid", async function () {
-    //   const amtDeposit = parseEther("10");
+    it("should deposit 9 Weth in Fluid in WETH-USDC", async function () {
+      const amtDeposit = parseEther("9");
 
-    //   const spells = [
-    //     {
-    //       connector: connectorName,
-    //       method: "operate",
-    //       args: [
-    //         vaultWethUsdc,
-    //         0, // new nft
-    //         amtDeposit, // +10 collateral
-    //         0, // 0 debt
-    //         0,
-    //         [0,0,0,0,0],
-    //         [0,setIdWethUsdc,0,0,0]
-    //       ],
-    //     },
-    //   ];
+      const spells = [
+        {
+          connector: connectorName,
+          method: "operateWithIds",
+          args: [
+            vaultWethUsdc,
+            0, // New nft for WETH-USDC market
+            amtDeposit, // +10 collateral
+            0, // 0 debt
+            0, // 0 repay
+            ['0', '0', '0', '0', '0'],
+            [setIdWethUsdc, '0', '0', '0', '0']
+          ],
+        },
+      ];
 
-    //   const tx = await dsaWallet0
-    //     .connect(wallet0)
-    //     .cast(...encodeSpells(spells), wallet1.getAddress());
+      const tx = await dsaWallet0
+        .connect(wallet0)
+        .cast(...encodeSpells(spells), wallet1.getAddress());
 
-    //   await tx.wait();
+      await tx.wait();
 
-    //   expect(await wethToken.balanceOf(dsaWallet0.address)).to.lte(
-    //     parseEther("10")
-    //   );
-    // });
+      expect(await wethToken.connect(wallet0).balanceOf(dsaWallet0.address)).to.lte(
+        parseEther("11")
+      );
+    });
 
-    // // 10 weth
+    // // 0 matic, 11 weth, 20 usdc
 
-    // it("should deposit max Weth in Fluid", async function () {
-    //   const spells = [
-    //     {
-    //       connector: connectorName,
-    //       method: "operate",
-    //       args: [
-    //         vaultWethUsdc,
-    //         0, // get id nft
-    //         ethers.constants.MaxUint256, // + max collateral
-    //         0, // 0 debt
-    //         0,
-    //         [0,setIdWethUsdc,0,0,0],
-    //         [0,0,0,0,0]
-    //       ],
-    //     },
-    //   ];
+    it("should deposit max Weth in Fluid in WETH-USDC", async function () {
+      const spells = [
+        {
+          connector: connectorName,
+          method: "operateWithIds",
+          args: [
+            vaultWethUsdc,
+            0, // get nft id
+            ethers.constants.MaxInt256, // + max collateral
+            0, // 0 debt
+            0,
+            [setIdWethUsdc, '0', '0', '0', '0'],
+            [setIdWethUsdc, '0', '0', '0', '0']
+          ],
+        },
+      ];
 
-    //   const tx = await dsaWallet0
-    //     .connect(wallet0)
-    //     .cast(...encodeSpells(spells), wallet1.getAddress());
+      const tx = await dsaWallet0
+        .connect(wallet0)
+        .cast(...encodeSpells(spells), wallet1.getAddress());
 
-    //   await tx.wait();
+      await tx.wait();
 
-    //   expect(await ethers.provider.getBalance(dsaWallet0.address)).to.lte(
-    //     parseEther("1")
-    //   );
-    // });
+      expect(await wethToken.connect(wallet0).balanceOf(dsaWallet0.address)).to.lte(
+        parseEther("1")
+      );
+    });
 
-    // // 0 weth
+    // // 0 matic, 0 weth, 20 usdc
 
-    // it("Should borrow USDC from Fluid", async function () {
-    //   const amtBorrow = parseUnits("100", 6); // 100 USDC
+    it("should deposit 10 USDC in Fluid in USDC-MATIC", async function () {
+      const spells = [
+        {
+          connector: connectorName,
+          method: "operate",
+          args: [
+            vaultUsdcMatic,
+            0, // get nft id
+            parseUnits("10", 6), // + max collateral
+            0, // 0 debt
+            0
+          ],
+        },
+      ];
 
-    //   const spells = [
-    //     {
-    //       connector: connectorName,
-    //       method: "operate",
-    //       args: [
-    //         vaultMaticUsdc,
-    //         0, // nft id from getID
-    //         0, // 0 collateral
-    //         amtBorrow, // +100 debt
-    //         0,
-    //         [0,0,0,0,0],
-    //         [0,0,0,0,0]
-    //       ],
-    //     },
-    //   ];
+      const tx = await dsaWallet0
+        .connect(wallet0)
+        .cast(...encodeSpells(spells), wallet1.getAddress());
 
-    //   const tx = await dsaWallet0
-    //     .connect(wallet0)
-    //     .cast(...encodeSpells(spells), wallet1.getAddress());
-    //   await tx.wait();
+      await tx.wait();
+
+      expect(await usdcToken.connect(wallet0).balanceOf(dsaWallet0.address)).to.lte(
+        parseEther("10")
+      );
+    });
+
+    // // 0 matic, 0 weth, 10 usdc
+
+    it("Should borrow 0.1 USDC from Fluid in WETH-USDC", async function () {
+      const amtBorrow = parseUnits("0.1", 6); // 0.1 USDC
+
+      const spells = [
+        {
+          connector: connectorName,
+          method: "operateWithIds",
+          args: [
+            vaultWethUsdc,
+            0, // nft ID from getID
+            0, // 0 collateral
+            amtBorrow, // +0.1 debt
+            0,
+            [setIdWethUsdc, '0', '0', '0', '0'],
+            [setIdWethUsdc, '0', '0', '0', '0']
+          ],
+        },
+      ];
+
+      const tx = await dsaWallet0
+        .connect(wallet0)
+        .cast(...encodeSpells(spells), wallet1.getAddress());
+      await tx.wait();
       
-    //   expect(await usdcToken.balanceOf(dsaWallet0.address)).to.be.gte(
-    //     parseUnits("120", 6)
-    //   );
-    // });
+      expect(await usdcToken.connect(wallet0).balanceOf(dsaWallet0.address)).to.gte(
+        parseUnits("10", 6)
+      );
+    });
 
-    // // 120 usdc
+    // // 0 matic, 0 weth, 10.1 usdc
 
-    // it("Should deposit WETH and borrow MATIC from Fluid", async function () {
-    //   await hre.network.provider.request({
-    //     method: "hardhat_impersonateAccount",
-    //     params: [wethHolder]
+    it("Should deposit 5 WETH and borrow 0.1 MATIC from Fluid in WETH-MATIC", async function () {
+      await hre.network.provider.request({
+        method: "hardhat_impersonateAccount",
+        params: [wethHolder]
+      });
+  
+      wethHolderSigner = await ethers.getSigner(wethHolder);
+  
+      await wethToken.connect(wethHolderSigner).transfer(dsaWallet0.address, ethers.utils.parseEther("10"));
+
+      const amtDeposit = parseEther("5"); // 5 Weth
+      const amtBorrow = parseEther("0.1"); // 100 Matic
+      
+      const spells = [
+        {
+          connector: connectorName,
+          method: "operateWithIds",
+          args: [
+            vaultWethMatic,
+            0, // new nft id
+            amtDeposit, // 10 collateral
+            amtBorrow, // +100 debt
+            0,
+            ['0', '0', '0', '0', '0'],
+            [setId3, '0', '0', '0', '0']
+          ],
+        },
+      ];
+
+      const tx = await dsaWallet0
+        .connect(wallet0)
+        .cast(...encodeSpells(spells), wallet1.getAddress());
+      await tx.wait();
+      
+      expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.gte(
+        parseEther("0.099")
+      );
+
+      expect(await wethToken.connect(wallet0).balanceOf(dsaWallet0.address)).to.lte(
+        parseEther("6")
+      );
+    });
+
+    // // 0.1 matic, 5 weth, 10.1 usdc
+
+    it("Should deposit 5 WETH and borrow 0.1 MATIC from Fluid in WETH-MATIC", async function () {
+      await hre.network.provider.request({
+        method: "hardhat_impersonateAccount",
+        params: [wethHolder]
+      });
+  
+      wethHolderSigner = await ethers.getSigner(wethHolder);
+  
+      await wethToken.connect(wethHolderSigner).transfer(dsaWallet0.address, ethers.utils.parseEther("10"));
+
+      const amtDeposit = parseEther("5"); // 5 Weth
+      const amtBorrow = parseEther("0.1"); // 0.1 Matic
+      
+      const spells = [
+        {
+          connector: connectorName,
+          method: "operateWithIds",
+          args: [
+            vaultWethMatic,
+            0, // new nft id
+            amtDeposit, // 10 collateral
+            amtBorrow, // +0.1 debt
+            0,
+            ['0', '0', '0', '0', '0'],
+            [setId4, '0', '0', '0', '0']
+          ],
+        },
+      ];
+
+      const tx = await dsaWallet0
+        .connect(wallet0)
+        .cast(...encodeSpells(spells), wallet1.getAddress());
+      await tx.wait();
+      
+      expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.gte(
+        parseEther("0.19")
+      );
+
+      expect(await wethToken.connect(wallet0).balanceOf(dsaWallet0.address)).to.lte(
+        parseEther("11")
+      );
+    });
+
+    // // 0.2 matic, 10 weth, 10.1 usdc
+
+    it("Should payback 0.04 Matic in Fluid in WETH-MATIC", async function () {
+      const amtPayback = new BigNumber(parseEther("0.04").toString()).multipliedBy(-1); // 0.04 Matic
+
+      const spells = [
+        {
+          connector: connectorName,
+          method: "operateWithIds",
+          args: [
+            vaultWethMatic,
+            0, // nft id from setId3
+            0, // 0 collateral
+            amtPayback, // - 0.04 debt
+            new BigNumber(parseEther("0.04").toString()),
+            [setId3, '0', '0', '0', '0'],
+            [setId3, '0', '0', '0', '0']
+          ],
+        },
+      ];
+
+      const tx = await dsaWallet0
+        .connect(wallet0)
+        .cast(...encodeSpells(spells), wallet1.getAddress());
+      await tx.wait();
+      
+      expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.lte(
+        ethers.utils.parseEther("0.2")
+      );
+    });
+
+    // // 0.16 matic, 10 weth, 10.1 usdc
+
+    // it("Should payback max Matic in Fluid in WETH-MATIC", async function () {
+    //   await wallet0.sendTransaction({
+    //     to: dsaWallet0.address,
+    //     value: parseEther("1"),
     //   });
-  
-    //   wethHolderSigner = await ethers.getSigner(wethHolder);
-  
-    //   await wethToken.connect(wethHolderSigner).transfer(dsaWallet0.address, ethers.utils.parseEther("11"));
 
-    //   const amtDeposit = parseEther("10"); // 10 Weth
-    //   const amtBorrow = parseEther("100"); // 100 Matic
-      
     //   const spells = [
     //     {
     //       connector: connectorName,
-    //       method: "operate",
+    //       method: "operateWithIds",
     //       args: [
     //         vaultWethMatic,
-    //         0, // new nft id
-    //         amtDeposit, // 10 collateral
-    //         amtBorrow, // +100 debt
+    //         0, // nft id from setId3
+    //         0, // 0 collateral
+    //         ethers.constants.MinInt256, // min Int
+    //         new BigNumber(parseEther("0.7").toString()),
+    //         [setId3, '0', '0', '0', '0'],
+    //         ['0', '0', '0', '0', '0']
+    //       ],
+    //     },
+    //   ];
+
+    //   const tx = await dsaWallet0
+    //     .connect(wallet0)
+    //     .cast(...encodeSpells(spells), wallet1.getAddress());
+    //   await tx.wait();
+      
+    //   // expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.lte(
+    //   //   ethers.utils.parseEther("0.97")
+    //   // );
+    // });
+
+    // // 0.96 matic, 10 weth, 10.1 usdc
+
+    it("Should payback 0.05 Usdc in Fluid in WETH-USDC", async function () {
+      const amtPayback = new BigNumber(parseUnits("0.05", 6).toString()).multipliedBy(-1); // 0.05 usdc
+
+      const spells = [
+        {
+          connector: connectorName,
+          method: "operateWithIds",
+          args: [
+            vaultWethUsdc,
+            0, // nft id from setIdWethUsdc
+            0, // 0 collateral
+            amtPayback, // - 0.05 debt
+            new BigNumber(parseUnits("0.05", 6).toString()),
+            [setIdWethUsdc, '0', '0', '0', '0'],
+            [setIdWethUsdc, '0', '0', '0', '0']
+          ],
+        },
+      ];
+
+      const tx = await dsaWallet0
+        .connect(wallet0)
+        .cast(...encodeSpells(spells), wallet1.getAddress());
+      await tx.wait();
+      
+      expect(await usdcToken.connect(wallet0).balanceOf(dsaWallet0.address)).to.be.lte(parseUnits("10.05", 6));
+    });
+
+    // // 0.96 matic, 10 weth, 10.05 usdc
+
+    it("Should withdraw 100 Matic from Fluid in MATIC-USDC", async function () {
+      const amt = new BigNumber(parseEther("100").toString()).multipliedBy(-1); // 100 Matic
+
+      const spells = [
+        {
+          connector: connectorName,
+          method: "operateWithIds",
+          args: [
+            vaultMaticUsdc,
+            0, // nft id from setIdMaticUsdc
+            amt, // - 100 collateral
+            0, // 0 debt
+            0,
+            [setIdMaticUsdc, '0', '0', '0', '0'],
+            [setIdMaticUsdc, '0', '0', '0', '0']
+          ],
+        },
+      ];
+
+      const tx = await dsaWallet0
+        .connect(wallet0)
+        .cast(...encodeSpells(spells), wallet1.getAddress());
+
+      await tx.wait();
+
+      expect(await ethers.provider.getBalance(dsaWallet0.address)).to.gte(
+        parseEther("100")
+      );
+    });
+
+    // // 100.96 matic, 10 weth, 10.05 usdc
+
+    // it("Should withdraw max Matic from Fluid in MATIC-USDC", async function () {
+    //   const spells = [
+    //     {
+    //       connector: connectorName,
+    //       method: "operateWithIds",
+    //       args: [
+    //         vaultMaticUsdc,
+    //         0, // nft id from setIdMaticUsdc
+    //         ethers.constants.MinInt256, // min integer value
+    //         0, // 0 debt
     //         0,
-    //         [0,0,0,0,0],
-    //         [0,0,0,setId3,0]
-    //       ],
-    //     },
-    //   ];
-
-    //   const tx = await dsaWallet0
-    //     .connect(wallet0)
-    //     .cast(...encodeSpells(spells), wallet1.getAddress());
-    //   await tx.wait();
-      
-    //   expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.gte(
-    //     parseEther("100")
-    //   );
-    // });
-
-    // // 120 usdc, 100 matic
-
-    // it("Should payback Matic in Fluid", async function () {
-    //   const amtPayback = ethers.BigNumber.from(parseEther("50")).mul(-1); // 50 Matic
-
-    //   const spells = [
-    //     {
-    //       connector: connectorName,
-    //       method: "operate",
-    //       args: [
-    //         vaultWethMatic,
-    //         0, // nft id from setId3
-    //         0, // 0 collateral
-    //         amtPayback, // - 50 debt
-    //         ethers.BigNumber.from(parseEther("50")),
-    //         [0,0,0,0,setId3],
-    //         [0,0,0,0,0]
-    //       ],
-    //     },
-    //   ];
-
-    //   const tx = await dsaWallet0
-    //     .connect(wallet0)
-    //     .cast(...encodeSpells(spells), wallet1.getAddress());
-    //   await tx.wait();
-      
-    //   expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.lte(
-    //     ethers.utils.parseEther("50")
-    //   );
-    // });
-
-    // // 120 usdc, 50 matic
-
-    // it("Should payback max Matic in Fluid", async function () {
-    //   const spells = [
-    //     {
-    //       connector: connectorName,
-    //       method: "operate",
-    //       args: [
-    //         vaultWethMatic,
-    //         0, // nft id from setId3
-    //         0, // 0 collateral
-    //         ethers.constants.MinInt256, // min Int
-    //         ethers.BigNumber.from(parseEther("50")),
-    //         [0,0,0,0,0],
-    //         [0,0,0,0,0]
-    //       ],
-    //     },
-    //   ];
-
-    //   const tx = await dsaWallet0
-    //     .connect(wallet0)
-    //     .cast(...encodeSpells(spells), wallet1.getAddress());
-    //   await tx.wait();
-      
-    //   expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.lte(
-    //     ethers.utils.parseEther("1")
-    //   );
-    // });
-
-    // 120 usdc, 0 matic/////////
-
-    // it("Should payback Usdc in Fluid", async function () {
-    //   const amtPayback = ethers.BigNumber.from(parseUnits("60", 6)).mul(-1); // 60 usdc
-
-    //   const spells = [
-    //     {
-    //       connector: connectorName,
-    //       method: "operate",
-    //       args: [
-    //         vaultMaticUsdc,
-    //         0, // nft id from setIdWethUsdc
-    //         0, // 0 collateral
-    //         amtPayback, // - 60 debt
-    //         dsaWallet0.address,
-    //         setIdMaticUsdc,
-    //         0
-    //       ],
-    //     },
-    //   ];
-
-    //   const tx = await dsaWallet0
-    //     .connect(wallet0)
-    //     .cast(...encodeSpells(spells), wallet1.getAddress());
-    //   await tx.wait();
-      
-    //   expect(await usdcToken.balanceOf(dsaWallet0.address)).to.be.lte(parseUnits("60", 6));
-    // });
-
-    // // 60 usdc, 0 matic
-
-    // it("Should payback max Matic in Fluid", async function () {
-    //   const spells = [
-    //     {
-    //       connector: connectorName,
-    //       method: "operate",
-    //       args: [
-    //         vaultMaticUsdc,
-    //         0, // nft id from setIdWethUsdc
-    //         0, // 0 collateral
-    //         ethers.constants.MinInt256, // min Int
-    //         dsaWallet0.address,
-    //         setIdMaticUsdc,
-    //         0
-    //       ],
-    //     },
-    //   ];
-
-    //   const tx = await dsaWallet0
-    //     .connect(wallet0)
-    //     .cast(...encodeSpells(spells), wallet1.getAddress());
-    //   await tx.wait();
-      
-    //   expect(await usdcToken.balanceOf(dsaWallet0.address)).to.be.lte(parseUnits("1", 6));
-    // });
-
-    // // 0 usdc, 0 matic
-
-    // it("Should withdraw Matic from Fluid", async function () {
-    //   const amt = ethers.BigNumber.from(parseEther("100")).mul(-1); // 100 Matic
-
-    //   const spells = [
-    //     {
-    //       connector: connectorName,
-    //       method: "operate",
-    //       args: [
-    //         vaultMaticUsdc,
-    //         0, // nft id from setIdMaticUsdc
-    //         amt, // - 100 collateral
-    //         0, // 0 debt
-    //         dsaWallet0.address,
-    //         setIdMaticUsdc,
-    //         0
+    //         [setIdMaticUsdc, '0', '0', '0', '0'],
+    //         ['0', '0', '0', '0', '0']
     //       ],
     //     },
     //   ];
@@ -549,103 +637,78 @@ describe("Fluid", function () {
     //   await tx.wait();
 
     //   expect(await ethers.provider.getBalance(dsaWallet0.address)).to.eq(
-    //     parseEther("100")
+    //     parseEther("2000")
     //   );
     // });
 
-    // // 0 usdc, 100 matic
+    // // 2000.96 matic, 10 weth, 10.05 usdc
 
-    // it("Should withdraw max Matic from Fluid", async function () {
-    //   const spells = [
-    //     {
-    //       connector: connectorName,
-    //       method: "operate",
-    //       args: [
-    //         vaultMaticUsdc,
-    //         0, // nft id from setIdMaticUsdc
-    //         ethers.constants.MinInt256, // min integer value
-    //         0, // 0 debt
-    //         dsaWallet0.address,
-    //         setIdMaticUsdc,
-    //         0
-    //       ],
-    //     },
-    //   ];
+    it("Should withdraw 0.4 WETH from Fluid in WETH-USDC", async function () {
+      const amt = new BigNumber(parseEther("0.4").toString()).multipliedBy(-1); // 1 Weth
 
-    //   const tx = await dsaWallet0
-    //     .connect(wallet0)
-    //     .cast(...encodeSpells(spells), wallet1.getAddress());
+      const spells = [
+        {
+          connector: connectorName,
+          method: "operateWithIds",
+          args: [
+            vaultWethUsdc,
+            0, // nft id from setIdWethUsdc
+            amt, // -1 collateral
+            0, // 0 debt
+            0,
+            [setIdWethUsdc, '0', '0', '0', '0'],
+            [setIdWethUsdc, '0', '0', '0', '0']
+          ],
+        },
+      ];
 
-    //   await tx.wait();
+      const tx = await dsaWallet0
+        .connect(wallet0)
+        .cast(...encodeSpells(spells), wallet1.getAddress());
 
-    //   expect(await ethers.provider.getBalance(dsaWallet0.address)).to.eq(
-    //     parseEther("1000")
-    //   );
-    // });
+      await tx.wait();
 
-    // // 0 usdc, 1000 matic
+      // expect(await wethToken.connect(wallet0).balanceOf(dsaWallet0.address)).to.gte(
+      //   parseEther("11")
+      // );
+    });
 
-    // it("Should withdraw WETH from Fluid", async function () {
-    //   const amt = ethers.BigNumber.from(parseEther("10")).mul(-1); // 10 Weth
+    // // 2000.96 matic, 11 weth, 10.05 usdc
 
-    //   const spells = [
-    //     {
-    //       connector: connectorName,
-    //       method: "operate",
-    //       args: [
-    //         vaultWethUsdc,
-    //         0, // nft id from setIdWethUsdc
-    //         amt, // -10 collateral
-    //         0, // 0 debt
-    //         dsaWallet0.address,
-    //         setIdWethUsdc,
-    //         0
-    //       ],
-    //     },
-    //   ];
+    it("Should payback 0.02 and withdraw 0.5 WETH from Fluid in WETH-USDC", async function () {
+      const amt = new BigNumber(parseEther("0.5").toString()).multipliedBy(-1); // 1 Weth
+      const paybackAmt = new BigNumber(parseUnits("0.02", 6).toString()).multipliedBy(-1); // 1 Weth
 
-    //   const tx = await dsaWallet0
-    //     .connect(wallet0)
-    //     .cast(...encodeSpells(spells), wallet1.getAddress());
+      const spells = [
+        {
+          connector: connectorName,
+          method: "operateWithIds",
+          args: [
+            vaultWethUsdc,
+            0, // nft id from setIdWethUsdc
+            amt, // -1 collateral
+            paybackAmt, // 0 debt
+            new BigNumber(parseUnits("0.03", 6).toString()),
+            [setIdWethUsdc, '0', '0', '0', '0'],
+            [setIdWethUsdc, '0', '0', '0', '0']
+          ],
+        },
+      ];
 
-    //   await tx.wait();
+      const tx = await dsaWallet0
+        .connect(wallet0)
+        .cast(...encodeSpells(spells), wallet1.getAddress());
 
-    //   expect(await wethToken.balanceOf(dsaWallet0.address)).to.eq(
-    //     parseEther("10")
-    //   );
-    // });
+      await tx.wait();
 
-    // // 0 usdc, 1000 matic, 10 weth
+      // expect(await wethToken.connect(wallet0).balanceOf(dsaWallet0.address)).to.gte(
+      //   parseEther("12")
+      // );
 
-    // it("Should withdraw max WETH from Fluid", async function () {
-    //   const spells = [
-    //     {
-    //       connector: connectorName,
-    //       method: "operate",
-    //       args: [
-    //         vaultWethUsdc,
-    //         0, // nft id from setIdWethUsdc
-    //         ethers.constants.MinInt256, // min integer value
-    //         0, // 0 debt
-    //         dsaWallet0.address,
-    //         setIdWethUsdc,
-    //         0
-    //       ],
-    //     },
-    //   ];
-
-    //   const tx = await dsaWallet0
-    //     .connect(wallet0)
-    //     .cast(...encodeSpells(spells), wallet1.getAddress());
-
-    //   await tx.wait();
-
-    //   expect(await ethers.provider.getBalance(dsaWallet0.address)).to.eq(
-    //     parseEther("29")
-    //   );
-    // });
-
-    // 0 usdc, 1000 matic, 30 weth
+      // expect(await usdcToken.connect(wallet0).balanceOf(dsaWallet0.address)).to.gte(
+      //   parseEther("11")
+      // );
+    });
 
     // todo: add a (payback and withdraw case)
   });

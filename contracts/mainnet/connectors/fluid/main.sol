@@ -197,6 +197,8 @@ abstract contract FluidConnector is Events, Stores {
                 ethAmount_ = isColMax_
                     ? address(this).balance
                     : uint256(newCol_);
+
+                newCol_ = int256(ethAmount_);
             } else {
                 if (isColMax_) {
                     newCol_ = int256(
