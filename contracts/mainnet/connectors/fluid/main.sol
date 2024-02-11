@@ -92,6 +92,8 @@ abstract contract FluidConnector is Events, Stores {
                 ethAmount_ = isColMax_
                     ? address(this).balance
                     : uint256(newCol_);
+
+                newCol_ = int256(ethAmount_);
             } else {
                 if (isColMax_) {
                     newCol_ = int256(
@@ -108,24 +110,24 @@ abstract contract FluidConnector is Events, Stores {
             }
         }
 
-        bool isPaybackMax_ = newDebt_ == type(int256).min;
+        bool isPaybackMin_ = newDebt_ == type(int256).min;
 
         // Payback
         if (newDebt_ < 0) {
             if (vaultDetails_.borrowToken == getEthAddr()) {
                 // Needs to be positive as it will be send in msg.value
-                ethAmount_ = isPaybackMax_
+                ethAmount_ = isPaybackMin_
                     ? repayApproveAmt_
-                    : uint256(-1 * newDebt_);
+                    : uint256(-newDebt_);
             } else {
-                isPaybackMax_
+                isPaybackMin_
                     ? TokenInterface(vaultDetails_.borrowToken).approve(
                         vaultAddress_,
                         repayApproveAmt_
                     )
                     : TokenInterface(vaultDetails_.borrowToken).approve(
                         vaultAddress_,
-                        uint256(-1 * newDebt_)
+                        uint256(-newDebt_)
                     );
             }
         }
@@ -211,24 +213,24 @@ abstract contract FluidConnector is Events, Stores {
             }
         }
 
-        bool isPaybackMax_ = newDebt_ == type(int256).min;
+        bool isPaybackMin_ = newDebt_ == type(int256).min;
 
         // Payback
         if (newDebt_ < 0) {
             if (vaultDetails_.borrowToken == getEthAddr()) {
                 // Needs to be positive as it will be send in msg.value
-                ethAmount_ = isPaybackMax_
+                ethAmount_ = isPaybackMin_
                     ? repayApproveAmt_
-                    : uint256(-1 * newDebt_);
+                    : uint256(-newDebt_);
             } else {
-                isPaybackMax_
+                isPaybackMin_
                     ? TokenInterface(vaultDetails_.borrowToken).approve(
                         vaultAddress_,
                         repayApproveAmt_
                     )
                     : TokenInterface(vaultDetails_.borrowToken).approve(
                         vaultAddress_,
-                        uint256(-1 * newDebt_)
+                        uint256(-newDebt_)
                     );
             }
         }
