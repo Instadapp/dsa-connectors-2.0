@@ -15,7 +15,7 @@ abstract contract FluidConnector is Events, Stores {
     /**
      * @dev Returns Eth address
      */
-    function getMaticAddr() internal pure returns (address) {
+    function getEthAddr() internal pure returns (address) {
         return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     }
 
@@ -82,18 +82,18 @@ abstract contract FluidConnector is Events, Stores {
 
         IVault.ConstantViews memory vaultDetails_ = vault_.constantsView();
 
-        uint256 maticAmount_;
+        uint256 ethAmount_;
 
         bool isColMax_ = newCol_ == type(int256).max;
 
         // Deposit
         if (newCol_ > 0) {
-            if (vaultDetails_.supplyToken == getMaticAddr()) {
-                maticAmount_ = isColMax_
+            if (vaultDetails_.supplyToken == getEthAddr()) {
+                ethAmount_ = isColMax_
                     ? address(this).balance
                     : uint256(newCol_);
 
-                newCol_ = int256(maticAmount_);
+                newCol_ = int256(ethAmount_);
             } else {
                 if (isColMax_) {
                     newCol_ = int256(
@@ -114,9 +114,9 @@ abstract contract FluidConnector is Events, Stores {
 
         // Payback
         if (newDebt_ < 0) {
-            if (vaultDetails_.borrowToken == getMaticAddr()) {
+            if (vaultDetails_.borrowToken == getEthAddr()) {
                 // Needs to be positive as it will be send in msg.value
-                maticAmount_ = isPaybackMin_
+                ethAmount_ = isPaybackMin_
                     ? repayApproveAmt_
                     : uint256(-newDebt_);
             } else {
@@ -133,7 +133,7 @@ abstract contract FluidConnector is Events, Stores {
         }
 
         // Note max withdraw will be handled by Fluid contract
-        (nftId_, newCol_, newDebt_) = vault_.operate{value: maticAmount_}(
+        (nftId_, newCol_, newDebt_) = vault_.operate{value: ethAmount_}(
             nftId_,
             newCol_,
             newDebt_,
@@ -187,18 +187,18 @@ abstract contract FluidConnector is Events, Stores {
 
         IVault.ConstantViews memory vaultDetails_ = vault_.constantsView();
 
-        uint256 maticAmount_;
+        uint256 ethAmount_;
 
         bool isColMax_ = newCol_ == type(int256).max;
 
         // Deposit
         if (newCol_ > 0) {
-            if (vaultDetails_.supplyToken == getMaticAddr()) {
-                maticAmount_ = isColMax_
+            if (vaultDetails_.supplyToken == getEthAddr()) {
+                ethAmount_ = isColMax_
                     ? address(this).balance
                     : uint256(newCol_);
 
-                newCol_ = int256(maticAmount_);
+                newCol_ = int256(ethAmount_);
             } else {
                 if (isColMax_) {
                     newCol_ = int256(
@@ -219,11 +219,11 @@ abstract contract FluidConnector is Events, Stores {
 
         // Payback
         if (newDebt_ < 0) {
-            if (vaultDetails_.borrowToken == getMaticAddr()) {
+            if (vaultDetails_.borrowToken == getEthAddr()) {
                 // Needs to be positive as it will be send in msg.value
-                maticAmount_ = isPaybackMin_
+                ethAmount_ = isPaybackMin_
                     ? repayApproveAmt_
-                    : uint256(-1 * newDebt_);
+                    : uint256(-newDebt_);
             } else {
                 isPaybackMin_
                     ? TokenInterface(vaultDetails_.borrowToken).approve(
@@ -232,13 +232,13 @@ abstract contract FluidConnector is Events, Stores {
                     )
                     : TokenInterface(vaultDetails_.borrowToken).approve(
                         vaultAddress_,
-                        uint256(-1 * newDebt_)
+                        uint256(-newDebt_)
                     );
             }
         }
 
         // Note max withdraw will be handled by Fluid contract
-        (nftId_, newCol_, newDebt_) = vault_.operate{value: maticAmount_}(
+        (nftId_, newCol_, newDebt_) = vault_.operate{value: ethAmount_}(
             nftId_,
             newCol_,
             newDebt_,
@@ -255,6 +255,6 @@ abstract contract FluidConnector is Events, Stores {
     }
 }
 
-contract ConnectV2FluidPolygon is FluidConnector {
+contract ConnectV2Fluid is FluidConnector {
     string public constant name = "Fluid-v1.0";
 }
