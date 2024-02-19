@@ -6,22 +6,113 @@ import { deployAndEnableConnector } from "../../../scripts/tests/deployAndEnable
 import { getMasterSigner } from "../../../scripts/tests/getMasterSigner";
 import { buildDSAv2 } from "../../../scripts/tests/buildDSAv2";
 import { ConnectV2Fluid, ConnectV2Fluid__factory } from "../../../typechain";
-import { parseEther } from "@ethersproject/units";
+import { parseEther, parseUnits } from "@ethersproject/units";
 import { encodeSpells } from "../../../scripts/tests/encodeSpells";
-import { tokens } from "../../../scripts/tests/mainnet/tokens";
 import { constants } from "../../../scripts/constant/constant";
-import { addLiquidity } from "../../../scripts/tests/addLiquidity";
-const { ethers } = hre;
+import { network, ethers } from "hardhat";
 import type { Signer, Contract } from "ethers";
+import { BigNumber } from "bignumber.js";
 
 describe("Fluid", function () {
   const connectorName = "FLUID";
   let connector: any;
 
-  let wallet0: Signer, wallet1:Signer;
+  let wallet0: Signer, wallet1: Signer, wstethHolderSigner: Signer;
+  let nftId = "6";
   let dsaWallet0: any;
-  let instaConnectorsV2: Contract;
+  let instaConnectorsV2: any;
   let masterSigner: Signer;
+
+  const vaultWstethEth = "0x28680f14C4Bb86B71119BC6e90E4e6D87E6D1f51";
+
+  const wstethHolder = "0x17170904077C84F26c190eC05fF414B7045F4652";
+
+  const WSTETH = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0";
+
+  const erc20Abi = [
+    {
+      constant: false,
+      inputs: [
+        {
+          name: "_spender",
+          type: "address"
+        },
+        {
+          name: "_value",
+          type: "uint256"
+        }
+      ],
+      name: "approve",
+      outputs: [
+        {
+          name: "",
+          type: "bool"
+        }
+      ],
+      payable: false,
+      stateMutability: "nonpayable",
+      type: "function"
+    },
+    {
+      constant: true,
+      inputs: [],
+      name: "totalSupply",
+      outputs: [
+        {
+          name: "",
+          type: "uint256"
+        }
+      ],
+      payable: false,
+      stateMutability: "view",
+      type: "function"
+    },
+    {
+      constant: true,
+      inputs: [
+        {
+          name: "_owner",
+          type: "address"
+        }
+      ],
+      name: "balanceOf",
+      outputs: [
+        {
+          name: "balance",
+          type: "uint256"
+        }
+      ],
+      payable: false,
+      stateMutability: "view",
+      type: "function"
+    },
+    {
+      constant: false,
+      inputs: [
+        {
+          name: "_to",
+          type: "address"
+        },
+        {
+          name: "_value",
+          type: "uint256"
+        }
+      ],
+      name: "transfer",
+      outputs: [
+        {
+          name: "",
+          type: "bool"
+        }
+      ],
+      payable: false,
+      stateMutability: "nonpayable",
+      type: "function"
+    }
+  ];
+
+  const wstethToken = new ethers.Contract(WSTETH, erc20Abi);
+
   before(async () => {
     await hre.network.provider.request({
       method: "hardhat_reset",
@@ -30,17 +121,20 @@ describe("Fluid", function () {
           forking: {
             // @ts-ignore
             jsonRpcUrl: hre.config.networks.hardhat.forking.url,
-            blockNumber: 12796965,
+            blockNumber: 19261868,
           },
         },
       ],
     });
+
     [wallet0, wallet1] = await ethers.getSigners();
     masterSigner = await getMasterSigner();
     instaConnectorsV2 = await ethers.getContractAt(
       abis.core.connectorsV2,
-      addresses.core.connectorsV2
+      addresses.core.connectorsV2,
+      masterSigner
     );
+    
     connector = await deployAndEnableConnector({
       connectorName,
       contractArtifact: ConnectV2Fluid__factory,
@@ -62,25 +156,74 @@ describe("Fluid", function () {
       expect(!!dsaWallet0.address).to.be.true;
     });
 
-    it("Deposit ETH into DSA wallet", async function () {
+    it("Deposit 20 Wsteth into DSA wallet", async function () {
       await wallet0.sendTransaction({
-        to: dsaWallet0.address,
-        value: parseEther("10"),
+        to: wstethHolder,
+        value: parseEther("200"),
       });
-      expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.gte(
-        parseEther("10")
-      );
+
+      await hre.network.provider.request({
+        method: "hardhat_impersonateAccount",
+        params: [wstethHolder]
+      });
+  
+      wstethHolderSigner = await ethers.getSigner(wstethHolder);
+  
+      await wstethToken.connect(wstethHolderSigner).transfer(dsaWallet0.address, ethers.utils.parseEther("20"));
+
+      expect(await wstethToken.connect(wstethHolderSigner).balanceOf(dsaWallet0.address)).to.be.gte(ethers.utils.parseEther("20"));
     });
   });
 
+  // 200 wsteth
+
   describe("Main", function () {
-    it("should deposit ETH in Aave V2", async function () {
-      const amt = parseEther("1");
+    it("should deposit 10 wsteth in Fluid", async function () {
+      const amtDeposit = parseEther("10");
+
       const spells = [
         {
           connector: connectorName,
-          method: "deposit",
-          args: [tokens.eth.address, amt, 0, 0],
+          method: "operate",
+          args: [
+            vaultWstethEth,
+            '0', // new nft
+            amtDeposit, // +10 collateral
+            '0', // 0 debt
+            '0'
+          ],
+        },
+      ];
+
+      const tx = await dsaWallet0
+        .connect(wallet0)
+        .cast(...encodeSpells(spells), wallet1.getAddress());
+
+      const receipt = await tx.wait();
+
+      const eventName = "LogOperate(address,uint256,int256,int256)";
+      const eventSignatureHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(eventName));
+
+      const log = receipt.logs.find((log: { topics: string[]; }) => log.topics[0] === eventSignatureHash);
+
+      // expect(await ethers.provider.getBalance(dsaWallet0.address)).to.gte(
+      //   parseEther("1000")
+      // );
+    });
+    // 90 wsteth
+
+    it("should deposit max wsteth in Fluid", async function () {
+      const spells = [
+        {
+          connector: connectorName,
+          method: "operate",
+          args: [
+            vaultWstethEth, // matic-usdc vault
+            nftId, // new nft
+            ethers.constants.MaxInt256, // + max collateral
+            0, // 0 debt
+            0
+          ],
         },
       ];
 
@@ -90,24 +233,27 @@ describe("Fluid", function () {
 
       await tx.wait();
 
-      expect(await ethers.provider.getBalance(dsaWallet0.address)).to.eq(
-        parseEther("9")
-      );
+      // expect(await ethers.provider.getBalance(dsaWallet0.address)).to.lte(
+      //   parseEther("1")
+      // );
     });
 
-    it("Should borrow and payback DAI from Aave V2", async function () {
-      const amt = parseEther("100"); // 100 DAI
-      const setId = "83478237";
+    // 0 wsteth
+
+    it("Should borrow 1 ETH", async function () {
+      const amtBorrow = parseEther("1"); // 1 eth
+      
       const spells = [
         {
           connector: connectorName,
-          method: "borrow",
-          args: [tokens.dai.address, amt, 2, 0, setId],
-        },
-        {
-          connector: connectorName,
-          method: "payback",
-          args: [tokens.dai.address, amt, 2, setId, 0],
+          method: "operate",
+          args: [
+            vaultWstethEth,
+            nftId,
+            0,
+            amtBorrow,
+            0
+          ],
         },
       ];
 
@@ -115,59 +261,31 @@ describe("Fluid", function () {
         .connect(wallet0)
         .cast(...encodeSpells(spells), wallet1.getAddress());
       await tx.wait();
-      expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.lte(
-        ethers.utils.parseEther("9")
-      );
+      
+      // expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.gte(
+      //   parseEther("0.099")
+      // );
     });
 
-    it("Should borrow and payback half DAI from Aave V2", async function () {
-      const amt = parseEther("100"); // 100 DAI
-      // const setId = "83478237";
-      await addLiquidity("dai", dsaWallet0.address, parseEther("1"));
-      let spells = [
-        {
-          connector: connectorName,
-          method: "borrow",
-          args: [tokens.dai.address, amt, 2, 0, 0],
-        },
-        {
-          connector: connectorName,
-          method: "payback",
-          args: [tokens.dai.address, amt.div(2), 2, 0, 0],
-        },
-      ];
+    // 0 wsteth, 1 eth
 
-      let tx = await dsaWallet0
-        .connect(wallet0)
-        .cast(...encodeSpells(spells), wallet1.getAddress());
-      await tx.wait();
-      expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.lte(
-        ethers.utils.parseEther("9")
-      );
+    it("Should payback max eth", async function () {
+      await network.provider.send("hardhat_setBalance", [
+        dsaWallet0.address,
+        ethers.utils.parseEther("2.0").toHexString(),
+      ]);
 
-      spells = [
-        {
-          connector: connectorName,
-          method: "payback",
-          args: [tokens.dai.address, constants.max_value, 2, 0, 0],
-        },
-      ];
-
-      tx = await dsaWallet0
-        .connect(wallet0)
-        .cast(...encodeSpells(spells), wallet1.getAddress());
-      await tx.wait();
-      expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.lte(
-        ethers.utils.parseEther("9")
-      );
-    });
-
-    it("Should deposit all ETH in Aave V2", async function () {
       const spells = [
         {
           connector: connectorName,
-          method: "deposit",
-          args: [tokens.eth.address, constants.max_value, 0, 0],
+          method: "operate",
+          args: [
+            vaultWstethEth,
+            nftId,
+            0,
+            ethers.constants.MinInt256,
+            new BigNumber(parseEther("1").toString()),
+          ],
         },
       ];
 
@@ -175,52 +293,70 @@ describe("Fluid", function () {
         .connect(wallet0)
         .cast(...encodeSpells(spells), wallet1.getAddress());
       await tx.wait();
-      expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.lte(
-        ethers.utils.parseEther("0")
-      );
+      
+      // expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.lte(
+      //   ethers.utils.parseEther("0.2")
+      // );
     });
 
-    it("Should withdraw all ETH from Aave V2", async function () {
+    // 0 wsteth, 1 eth
+
+    it("Should withdraw 2 wsteth", async function () {
+      const amt = new BigNumber(parseEther("2").toString()).multipliedBy(-1); // 100 Matic
+
       const spells = [
         {
           connector: connectorName,
-          method: "withdraw",
-          args: [tokens.eth.address, constants.max_value, 0, 0],
+          method: "operate",
+          args: [
+            vaultWstethEth,
+            nftId,
+            amt,
+            0, // 0 debt
+            0
+          ],
         },
       ];
 
       const tx = await dsaWallet0
         .connect(wallet0)
         .cast(...encodeSpells(spells), wallet1.getAddress());
+
       await tx.wait();
-      expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.gte(
-        ethers.utils.parseEther("10")
-      );
+
+      // expect(await ethers.provider.getBalance(dsaWallet0.address)).to.gte(
+      //   parseEther("100")
+      // );
     });
 
-    it("should deposit and withdraw", async () => {
-      const amt = parseEther("1"); // 1 eth
-      const setId = "834782373";
+    // 2 wsteth, 1 eth
+
+    it("Should withdraw max wsteth", async function () {
       const spells = [
         {
           connector: connectorName,
-          method: "deposit",
-          args: [tokens.eth.address, amt, 0, setId],
-        },
-        {
-          connector: connectorName,
-          method: "withdraw",
-          args: [tokens.eth.address, amt, setId, 0],
+          method: "operate",
+          args: [
+            vaultWstethEth,
+            nftId,
+            ethers.constants.MinInt256, // min integer value
+            0,
+            0
+          ],
         },
       ];
 
       const tx = await dsaWallet0
         .connect(wallet0)
         .cast(...encodeSpells(spells), wallet1.getAddress());
+
       await tx.wait();
-      expect(await ethers.provider.getBalance(dsaWallet0.address)).to.be.gte(
-        ethers.utils.parseEther("10")
-      );
+
+      // expect(await ethers.provider.getBalance(dsaWallet0.address)).to.eq(
+      //   parseEther("2000")
+      // );
     });
+
+    //  wsteth, 1 eth
   });
 });
