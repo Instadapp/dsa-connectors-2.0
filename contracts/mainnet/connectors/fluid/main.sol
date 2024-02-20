@@ -256,5 +256,5 @@ abstract contract FluidConnector is Events, Stores {
 }
 
 contract ConnectV2Fluid is FluidConnector {
-    string public constant name = "Fluid-v1.0";
+    string public constant name = "Fluid-v1.1";
 }
