@@ -31,7 +31,7 @@ abstract contract StethQueueConnector is Events, Basic {
             ? TokenInterface(STETH).balanceOf(address(this))
             : stETHAmt_;
 
-        approve(TokenInterface(address(FLUID_STETH_QUEUE)), STETH, stETHAmt_);
+        approve(TokenInterface(address(STETH)), FLUID_STETH_QUEUE, stETHAmt_);
         uint256 requestIdFrom_ = fluidStethContract_.queue(
             ethBorrowAmount_,
             stETHAmount_,
