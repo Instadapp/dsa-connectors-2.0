@@ -31,7 +31,7 @@ abstract contract StethQueueConnector is Events, Basic {
             ? TokenInterface(STETH).balanceOf(address(this))
             : stETHAmt_;
 
-        approve(TokenInterface(address(STETH)), FLUID_STETH_QUEUE, stETHAmt_);
+        approve(TokenInterface(STETH), FLUID_STETH_QUEUE, stETHAmt_);
         uint256 requestIdFrom_ = fluidStethContract_.queue(
             ethBorrowAmount_,
             stETHAmt_,
@@ -73,7 +73,7 @@ abstract contract StethQueueConnector is Events, Basic {
         setUint(setIdRepayAmt_, repayAmount_);
         _eventName = "LogClaimSteth(uint256,uint256,uint256,uint256,uint256,uint256)";
         _eventParam = abi.encode(
-            nftId_,
+            nftIdNum_,
             claimedAmount_,
             repayAmount_,
             getId_,
