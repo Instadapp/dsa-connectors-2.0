@@ -8,7 +8,7 @@ import {Basic} from "../../common/basic.sol";
 
 abstract contract StethQueueConnector is Events, Basic {
     address public constant FLUID_STETH_QUEUE =
-        0xEb6643733c5E7CaB6B27D98C8CFDc647f8112a96;
+        0x1F6B2bFDd5D1e6AdE7B17027ff5300419a56Ad6b;
     address public constant STETH = 0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84;
 
     function queueSteth(
@@ -34,15 +34,15 @@ abstract contract StethQueueConnector is Events, Basic {
         approve(TokenInterface(address(STETH)), FLUID_STETH_QUEUE, stETHAmt_);
         uint256 requestIdFrom_ = fluidStethContract_.queue(
             ethBorrowAmount_,
-            stETHAmount_,
+            stETHAmt_,
             address(this),
             address(this)
-        ); // todo: confirm
+        );
 
         setUint(setId_, requestIdFrom_);
         _eventName = "LogQueueSteth(uint256,uint256,uint256,uint256,uint256)";
         _eventParam = abi.encode(
-            stETHAmount_,
+            stETHAmt_,
             ethBorrowAmount_,
             requestIdFrom_,
             getId_,
