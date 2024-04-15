@@ -21,11 +21,11 @@ contract WEETHContract is Helpers, Basic, Events {
     ) external returns (string memory _eventName, bytes memory _eventParam) {
         uint256 _eETHAmount = getUint(getId, eETHAmount);
         _eETHAmount = _eETHAmount == type(uint256).max
-            ? eETHContract.balanceOf(address(this))
+            ? EETH_CONTRACT.balanceOf(address(this))
             : _eETHAmount;
 
-        approve(eETHContract, address(weETHContract), _eETHAmount);
-        uint256 _weETHAmount = weETHContract.wrap(_eETHAmount);
+        approve(EETH_CONTRACT, address(WEETH_CONTRACT), _eETHAmount);
+        uint256 _weETHAmount = WEETH_CONTRACT.wrap(_eETHAmount);
 
         setUint(setId, _weETHAmount);
 
@@ -47,10 +47,10 @@ contract WEETHContract is Helpers, Basic, Events {
     ) external returns (string memory _eventName, bytes memory _eventParam) {
         uint256 _weETHAmount = getUint(getId, weETHAmount);
         _weETHAmount = _weETHAmount == type(uint256).max
-            ? weETHContract.balanceOf(address(this))
+            ? WEETH_CONTRACT.balanceOf(address(this))
             : _weETHAmount;
 
-        uint256 _eETHAmount = weETHContract.unwrap(_weETHAmount);
+        uint256 _eETHAmount = WEETH_CONTRACT.unwrap(_weETHAmount);
         setUint(setId, _eETHAmount);
 
         _eventName = "LogWithdraw(uint256,uint256,uint256,uint256)";

@@ -27,7 +27,7 @@ contract EETHContract is Helpers, Basic, Events {
             ? address(this).balance
             : _amount;
         
-        etherfiPool.deposit{value: _amount}();
+        ETHERFI_POOL.deposit{value: _amount}();
 
         setUint(setId, _amount);
 
