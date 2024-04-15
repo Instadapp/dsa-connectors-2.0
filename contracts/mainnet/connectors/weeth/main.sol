@@ -2,9 +2,10 @@
 pragma solidity 0.8.19;
 
 import "./helpers.sol";
+import "./events.sol";
 import {Basic} from "../../common/basic.sol";
 
-contract WEETHContract is Helpers, Basic {
+contract WEETHContract is Helpers, Basic, Events {
 
     /**
      * @dev Deposit eETH into weETH.
