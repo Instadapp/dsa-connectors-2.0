@@ -2,9 +2,10 @@
 pragma solidity 0.8.19;
 
 import "./helpers.sol";
+import "./events.sol";
 import {Basic} from "../../common/basic.sol";
 
-contract EETHContract is Helpers, Basic {
+contract EETHContract is Helpers, Basic, Events {
     /**
 	 * @dev deposit ETH into Etherfi.
 	 * @notice stake Eth in Etherfi, users receive eETH tokens on a 1:1 basis representing their staked ETH.
