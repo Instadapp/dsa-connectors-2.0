@@ -24,10 +24,7 @@ contract EETHContract is Helpers, Basic, Events {
             : _amount;
 
         uint256 _ethBeforeBalance = address(this).balance;
-
-        WETH_CONTRACT.approve(address(WETH_CONTRACT), _amount);
         WETH_CONTRACT.withdraw(_amount);
-
         uint256 _ethAfterBalance = address(this).balance;
 
         uint256 _ethAmount = sub(_ethAfterBalance, _ethBeforeBalance);

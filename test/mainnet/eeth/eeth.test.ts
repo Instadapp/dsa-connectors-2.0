@@ -142,7 +142,7 @@ describe("eETH Staking", function () {
     });
 
     it("Should deposit wETH into eETH", async function () {
-        const amount = ethers.utils.parseEther("1");
+        const amount = ethers.utils.parseEther("10");
         const eETHTAddress = "0x35fA164735182de50811E8e2E824cFb9B6118ac2";
         const IERC20ABI = [
           "function approve(address spender, uint256 amount) external returns (bool)",
