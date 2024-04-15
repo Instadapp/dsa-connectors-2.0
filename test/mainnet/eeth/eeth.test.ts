@@ -56,6 +56,52 @@ describe("eETH Staking", function () {
         ethers.utils.parseEther("10")
       );
     });
+    it("Topup wETH into DSA wallet", async function () {
+        const wETHAddress = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+        const IERC20ABI = [
+          "function approve(address spender, uint256 amount) external returns (bool)",
+          "function balanceOf(address account) external view returns (uint256)",
+          "function transfer(address recipient, uint256 amount) external returns (bool)",
+        ];
+        const wETHHolder = "0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E";
+        const amount = ethers.utils.parseEther("10");
+  
+        const eETHContract = await ethers.getContractAt(IERC20ABI, wETHAddress);
+        await hre.network.provider.send("hardhat_setBalance", [
+            wETHHolder,
+          "0x56BC75E2D63100000",
+        ]);
+  
+        console.log(
+          "Holder wETH Balance before topup:",
+          ethers.utils.formatEther(await eETHContract.balanceOf(wETHHolder))
+        );
+        console.log(
+          "Holder ETH Balance before topup:",
+          ethers.utils.formatEther(await ethers.provider.getBalance(wETHHolder))
+        );
+        await hre.network.provider.request({
+          method: "hardhat_impersonateAccount",
+          params: [wETHHolder],
+        });
+        const eETHHolderSigner = await ethers.getSigner(wETHHolder);
+        await eETHContract
+          .connect(eETHHolderSigner)
+          .approve(dsaWallet0.address, amount);
+        await eETHContract
+          .connect(eETHHolderSigner)
+          .transfer(dsaWallet0.address, amount);
+        const balance = await eETHContract.balanceOf(dsaWallet0.address);
+        console.log(
+          "DSA wETH Balance after topup:",
+          ethers.utils.formatEther(balance)
+        );
+  
+        await hre.network.provider.request({
+          method: "hardhat_stopImpersonatingAccount",
+          params: [wETHHolder],
+        });
+      });
   });
 
   describe("Main", function () {
@@ -93,6 +139,42 @@ describe("eETH Staking", function () {
         "eETH Balance after:",
         ethers.utils.formatEther(finalBalance)
       );
+    });
+
+    it("Should deposit wETH into eETH", async function () {
+        const amount = ethers.utils.parseEther("1");
+        const eETHTAddress = "0x35fA164735182de50811E8e2E824cFb9B6118ac2";
+        const IERC20ABI = [
+          "function approve(address spender, uint256 amount) external returns (bool)",
+          "function balanceOf(address account) external view returns (uint256)",
+        ];
+        const eETHContract = await ethers.getContractAt(IERC20ABI, eETHTAddress);
+  
+        const initialBalance = await eETHContract.balanceOf(dsaWallet0.address);
+        console.log(
+          "eETH Balance before:",
+          ethers.utils.formatEther(initialBalance)
+        );
+
+        const spells = [
+          {
+            connector: connectorName,
+            method: "depositWeth",
+            args: [amount, 0, 0],
+          },
+        ];
+
+        const spellsEncoded = encodeSpells(spells);
+        const tx = await dsaWallet0
+          .connect(wallet0)
+          .cast(...encodeSpells(spells), await wallet1.getAddress());
+        const receipt = await tx.wait();
+
+        const finalBalance = await eETHContract.balanceOf(dsaWallet0.address);
+        console.log(
+          "eETH Balance after:",
+          ethers.utils.formatEther(finalBalance)
+        );
     });
   });
 });
