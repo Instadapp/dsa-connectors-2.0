@@ -6,7 +6,6 @@ import "./events.sol";
 import {Basic} from "../../common/basic.sol";
 
 contract WEETHContract is Helpers, Basic, Events {
-
     /**
      * @dev Deposit eETH into weETH.
      * @notice Wrap eETH into weETH
