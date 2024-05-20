@@ -11,13 +11,27 @@ contract MakerImport is Helpers, Events {
         uint256 _vault = getVault(vaultId);
         (bytes32 ilk,) = getVaultData(_vault);
 
-        require(managerContract.owns(_vault) == address(this), "not-owner");
+        require(managerContract.owns(_vault) == msg.sender, "not-owner");
 
         address fluidAddress = fluidWalletFactory.computeWallet(msg.sender);
         managerContract.give(_vault, fluidAddress);
 
-        _eventName = "LogTransferToAvo(uint256,bytes32,address)";
+        _eventName = "LogTransferToFluid(uint256,bytes32,address)";
         _eventParam = abi.encode(_vault, ilk, fluidAddress);
+    }
+
+    function transferMakerToEOA(
+        uint256 vaultId
+    ) public payable returns (string memory _eventName, bytes memory _eventParam) {
+        uint256 _vault = getVault(vaultId);
+        (bytes32 ilk,) = getVaultData(_vault);
+
+        require(managerContract.owns(_vault) == address(this), "not-owner");
+
+        managerContract.give(_vault, msg.sender);
+
+        _eventName = "LogTransferToEOA(uint256,bytes32,address)";
+        _eventParam = abi.encode(_vault, ilk, msg.sender);
     }
 }
 
