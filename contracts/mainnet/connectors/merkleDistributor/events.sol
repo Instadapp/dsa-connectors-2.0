@@ -7,7 +7,8 @@ contract Events {
         address fToken,
         uint256 cycle,
         bytes32[] merkleProof,
-        uint256 getId
+        uint256 rewardsClaimed,
+        uint256 setId
     );
 
     event LogClaimOnBehalf(
@@ -16,6 +17,7 @@ contract Events {
         address fToken,
         uint256 cycle,
         bytes32[] merkleProof,
-        uint256 getId
+        uint256 rewardsClaimed,
+        uint256 setId
     );
 }
