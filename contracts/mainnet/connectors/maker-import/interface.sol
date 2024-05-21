@@ -1,9 +1,10 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import { TokenInterface } from "../../common/interfaces.sol";
+import {TokenInterface} from "../../common/interfaces.sol";
 
 interface IMakerManager {
+    function cdpAllow(uint cdp, address usr, uint ok) external;
     function cdpCan(address, uint, address) external view returns (uint);
     function ilks(uint) external view returns (bytes32);
     function last(address) external view returns (uint);
