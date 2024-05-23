@@ -6,12 +6,13 @@ pragma solidity ^0.8.2;
  * @dev Lending & Borrowing.
  */
 
-import {Stores} from "../../common/stores.sol";
+import {Basic} from "../../common/basic.sol";
 import {TokenInterface} from "../../common/interfaces.sol";
+
 import {Events} from "./events.sol";
 import {IVault} from "./interface.sol";
 
-abstract contract FluidConnector is Events, Stores {
+abstract contract FluidConnector is Events, Basic {
     /**
      * @dev Returns Eth address
      */
@@ -103,8 +104,9 @@ abstract contract FluidConnector is Events, Stores {
                     );
                 }
 
-                TokenInterface(vaultDetails_.supplyToken).approve(
-                    vaultAddress_,
+                approve(
+                    TokenInterface(vaultDetails_.supplyToken), 
+                    vaultAddress_, 
                     uint256(newCol_)
                 );
             }
@@ -121,12 +123,14 @@ abstract contract FluidConnector is Events, Stores {
                     : uint256(-newDebt_);
             } else {
                 isPaybackMin_
-                    ? TokenInterface(vaultDetails_.borrowToken).approve(
-                        vaultAddress_,
+                    ? approve(
+                        TokenInterface(vaultDetails_.borrowToken), 
+                        vaultAddress_, 
                         repayApproveAmt_
                     )
-                    : TokenInterface(vaultDetails_.borrowToken).approve(
-                        vaultAddress_,
+                    : approve(
+                        TokenInterface(vaultDetails_.borrowToken), 
+                        vaultAddress_, 
                         uint256(-newDebt_)
                     );
             }
@@ -208,8 +212,9 @@ abstract contract FluidConnector is Events, Stores {
                     );
                 }
 
-                TokenInterface(vaultDetails_.supplyToken).approve(
-                    vaultAddress_,
+                approve(
+                    TokenInterface(vaultDetails_.supplyToken), 
+                    vaultAddress_, 
                     uint256(newCol_)
                 );
             }
@@ -226,12 +231,14 @@ abstract contract FluidConnector is Events, Stores {
                     : uint256(-newDebt_);
             } else {
                 isPaybackMin_
-                    ? TokenInterface(vaultDetails_.borrowToken).approve(
-                        vaultAddress_,
+                    ? approve(
+                        TokenInterface(vaultDetails_.borrowToken), 
+                        vaultAddress_, 
                         repayApproveAmt_
                     )
-                    : TokenInterface(vaultDetails_.borrowToken).approve(
-                        vaultAddress_,
+                    : approve(
+                        TokenInterface(vaultDetails_.borrowToken), 
+                        vaultAddress_, 
                         uint256(-newDebt_)
                     );
             }
@@ -256,5 +263,5 @@ abstract contract FluidConnector is Events, Stores {
 }
 
 contract ConnectV2Fluid is FluidConnector {
-    string public constant name = "Fluid-v1.1";
+    string public constant name = "Fluid-v1.2";
 }
