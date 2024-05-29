@@ -8,7 +8,7 @@ import {TokenInterface} from "../../common/interfaces.sol";
 
 abstract contract FluidMerkle is Basic, Events {
     IFluidMerkleDistributor internal constant MERKLE_DISTRIBUTOR =
-        IFluidMerkleDistributor(address(0));
+        IFluidMerkleDistributor(0x1d3D6d38Da24E9Ff3B17693f6971CAe62c3AA1DE);
 
     TokenInterface internal constant TOKEN =
         TokenInterface(0x6f40d4A6237C257fff2dB00FA0510DeEECd303eb);
