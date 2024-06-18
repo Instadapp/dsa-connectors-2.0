@@ -9,6 +9,6 @@ contract Variables {
     * @dev Instapool contract proxy
     */
     InstaFlashV5Interface public constant instaPool =
-        InstaFlashV5Interface(0xAB50Dd1C57938218627Df2311ef65b4e2e84aF48);
+        InstaFlashV5Interface(0x352423e2fA5D5c99343d371C9e3bC56C87723Cc7);
 
 }
