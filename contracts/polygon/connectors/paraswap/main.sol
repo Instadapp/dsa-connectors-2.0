@@ -9,13 +9,13 @@ contract ParaswapResolver is Helpers {
     /**
      * @dev Sell ETH/ERC20_Token using ParaSwap.
      * @notice Swap tokens from exchanges like kyber, 0x etc, with calculation done off-chain.
-     * @param buyAddr The address of the token to buy.(For ETH: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
-     * @param sellAddr The address of the token to sell.(For ETH: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
+     * @param buyAddr The address of the token to buy.(For MATIC: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
+     * @param sellAddr The address of the token to sell.(For MATIC: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
      * @param sellAmt The amount of the token to sell.
      * @param unitAmt The amount of buyAmt/sellAmt with slippage.
      * @param callData Data from paraswap API.
      * @param setId ID stores the amount of token brought.
-     */
+    */
     function swap(
         address buyAddr,
         address sellAddr,
