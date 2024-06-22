@@ -50,6 +50,6 @@ contract ParaswapResolver is Helpers {
     }
 }
 
-contract ConnectV2ParaswapV6Arbitrum is ParaswapResolver {
+contract ConnectV2ParaswapV6Base is ParaswapResolver {
     string public name = "Paraswap-v6.2";
 }
