@@ -191,6 +191,6 @@ abstract contract BasicConnector is Events, DSMath, Basic {
 	}
 }
 
-contract ConnectV2BasicERC4626V2 is BasicConnector {
+contract ConnectV2BasicERC4626V2Base is BasicConnector {
 	string public constant name = "BASIC-ERC4626-v2.0";
 }
