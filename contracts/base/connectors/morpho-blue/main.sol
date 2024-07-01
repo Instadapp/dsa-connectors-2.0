@@ -992,6 +992,6 @@ abstract contract MorphoBlue is Helpers, Events {
     }
 }
 
-contract ConnectV2MorphoBlue is MorphoBlue {
+contract ConnectV2MorphoBlueBase is MorphoBlue {
     string public constant name = "Morpho-Blue-v1.0";
 }
