@@ -131,6 +131,6 @@ contract LiquidityConnector is Stores, Variables, Events {
 
 }
 
-contract ConnectV2InstaPoolV5 is LiquidityConnector {
+contract ConnectV2InstaPoolV5Optimism is LiquidityConnector {
     string public name = "Instapool-v5";
 }
