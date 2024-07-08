@@ -133,6 +133,6 @@ contract LiquidityResolver is Stores, Variables, Events {
 
 }
 
-contract ConnectV2InstaPoolV5 is LiquidityResolver {
+contract ConnectV2InstaPoolV5Arbitrum is LiquidityResolver {
     string public name = "Instapool-v5";
 }
