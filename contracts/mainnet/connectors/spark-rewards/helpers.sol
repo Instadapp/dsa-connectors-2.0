@@ -10,5 +10,5 @@ abstract contract Helpers is DSMath, Basic {
      * @dev Spark Incentives
      */
     SparkIncentivesInterface internal constant SPARK_INCENTIVES =
-        SparkIncentivesInterface(0x8164Cc65827dcFe994AB23944CBC90e0aa80bFcb);
+        SparkIncentivesInterface(0x4370D3b6C9588E02ce9D22e684387859c7Ff5b34);
 }

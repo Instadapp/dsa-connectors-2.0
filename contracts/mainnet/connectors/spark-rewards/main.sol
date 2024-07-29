@@ -15,7 +15,7 @@ abstract contract IncentivesConnector is Helpers, Events {
     /**
      * @dev Claim Pending Rewards.
      * @notice Claim Pending Rewards from Spark incentives contract.
-     * @param assets The list of assets supplied and borrowed.
+     * @param assets Array of pool addresses.
      * @param amt The amount of reward to claim. (uint(-1) for max)
      * @param reward The address of reward token to claim.
      * @param getId ID to retrieve amt.
@@ -59,7 +59,7 @@ abstract contract IncentivesConnector is Helpers, Events {
     /**
      * @dev Claim All Pending Rewards.
      * @notice Claim All Pending Rewards from Spark incentives contract.
-     * @param assets The list of assets supplied and borrowed.
+     * @param assets Pool address array.
      */
     function claimAll(
         address[] calldata assets
