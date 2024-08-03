@@ -7,13 +7,15 @@ pragma solidity ^0.8.0;
  */
 
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { TokenInterface } from "../../common/interfaces.sol";
 import { AccountInterface } from "./interfaces.sol";
 import { Stores } from "../../common/stores.sol";
 import { Variables } from "./variables.sol";
 import { Events } from "./events.sol";
 
-contract LiquidityResolver is Stores, Variables, Events {
+contract LiquidityConnectors is Stores, Variables, Events {
     using SafeERC20 for IERC20;
 
     /**
@@ -120,7 +122,7 @@ contract LiquidityResolver is Stores, Variables, Events {
         for (uint i = 0; i < tokens_.length; i++) {
             amts_[i] = getUint(getIds[i], amts_[i]);
 
-        IERC20(tokens_[i]).safeTransfer(address(instaPool), amts_[i]);
+            IERC20(tokens_[i]).safeTransfer(address(instaPool), amts_[i]);
 
             setUint(setIds[i], amts_[i]);
         }
@@ -131,6 +133,6 @@ contract LiquidityResolver is Stores, Variables, Events {
 
 }
 
-contract ConnectV2InstaPoolV5 is LiquidityResolver {
-    string public name = "Instapool-v5.1";
+contract ConnectV2InstaPoolV5Polygon is LiquidityConnectors {
+    string public name = "Instapool-v5";
 }

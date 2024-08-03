@@ -5,16 +5,16 @@ import {MemoryInterface, InstaMapping, ListInterface, InstaConnectors} from "./i
 
 abstract contract Stores {
     /**
-     * @dev Return ethereum address
+     * @dev Return avax address
      */
-    address internal constant ethAddr =
+    address internal constant avaxAddr =
         0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /**
-     * @dev Return Wrapped ETH address
+     * @dev Return Wrapped AVAX address
      */
-    address internal constant wethAddr =
-        0x4200000000000000000000000000000000000006;
+    address internal constant wavaxAddr =
+        0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;
 
     /**
      * @dev Return memory variable address
@@ -23,7 +23,7 @@ abstract contract Stores {
         MemoryInterface(0x3254Ce8f5b1c82431B8f21Df01918342215825C2);
 
     /**
-     * @dev Return InstaList Address
+     * @dev Return InstaList address
      */
     ListInterface internal constant instaList =
         ListInterface(0x9926955e0Dd681Dc303370C52f4Ad0a4dd061687);

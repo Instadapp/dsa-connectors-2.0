@@ -9,16 +9,16 @@ contract EETHContract is Helpers, Basic, Events {
     /**
      * @dev deposit wETH into Etherfi.
      * @notice unwrap wETH and stake ETH in Etherfi, users receive eETH tokens on a 1:1 basis representing their staked ETH.
-     * @param amount The amount of ETH to deposit. (For max: `uint256(-1)`)
+     * @param wethAmount The amount of wETH to deposit. (For max: `uint256(-1)`)
      * @param getId ID to retrieve amt.
      * @param setId ID stores the amount of ETH deposited.
      */
     function depositWeth(
-        uint256 amount,
+        uint256 wethAmount,
         uint256 getId,
         uint256 setId
     ) public returns (string memory _eventName, bytes memory _eventParam) {
-        uint256 _amount = getUint(getId, amount);
+        uint256 _amount = getUint(getId, wethAmount);
         _amount = _amount == type(uint256).max
             ? WETH_CONTRACT.balanceOf(address(this))
             : _amount;
@@ -27,7 +27,7 @@ contract EETHContract is Helpers, Basic, Events {
         WETH_CONTRACT.withdraw(_amount);
         uint256 _ethAfterBalance = address(this).balance;
 
-        uint256 _ethAmount = sub(_ethAfterBalance, _ethBeforeBalance);
+        uint256 _ethAmount = _ethAfterBalance - _ethBeforeBalance;
         ETHERFI_POOL.deposit{value: _ethAmount}();
 
         setUint(setId, _ethAmount);

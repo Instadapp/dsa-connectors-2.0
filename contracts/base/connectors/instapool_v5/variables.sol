@@ -10,5 +10,4 @@ contract Variables {
     */
     InstaFlashV5Interface public constant instaPool =
         InstaFlashV5Interface(0x352423e2fA5D5c99343d371C9e3bC56C87723Cc7);
-
 }

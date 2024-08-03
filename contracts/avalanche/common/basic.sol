@@ -23,7 +23,7 @@ abstract contract Basic is DSMath, Stores {
     function getTokenBal(
         TokenInterface token
     ) internal view returns (uint _amt) {
-        _amt = address(token) == ethAddr
+        _amt = address(token) == avaxAddr
             ? address(this).balance
             : token.balanceOf(address(this));
     }
@@ -32,8 +32,8 @@ abstract contract Basic is DSMath, Stores {
         TokenInterface buyAddr,
         TokenInterface sellAddr
     ) internal view returns (uint buyDec, uint sellDec) {
-        buyDec = address(buyAddr) == ethAddr ? 18 : buyAddr.decimals();
-        sellDec = address(sellAddr) == ethAddr ? 18 : sellAddr.decimals();
+        buyDec = address(buyAddr) == avaxAddr ? 18 : buyAddr.decimals();
+        sellDec = address(sellAddr) == avaxAddr ? 18 : sellAddr.decimals();
     }
 
     function encodeEvent(
@@ -58,16 +58,16 @@ abstract contract Basic is DSMath, Stores {
         address buy,
         address sell
     ) internal pure returns (TokenInterface _buy, TokenInterface _sell) {
-        _buy = buy == ethAddr ? TokenInterface(wethAddr) : TokenInterface(buy);
-        _sell = sell == ethAddr
-            ? TokenInterface(wethAddr)
+        _buy = buy == avaxAddr ? TokenInterface(wavaxAddr) : TokenInterface(buy);
+        _sell = sell == avaxAddr
+            ? TokenInterface(wavaxAddr)
             : TokenInterface(sell);
     }
 
     function changeEthAddrToWethAddr(
         address token
     ) internal pure returns (address tokenAddr) {
-        tokenAddr = token == ethAddr ? wethAddr : token;
+        tokenAddr = token == avaxAddr ? wavaxAddr : token;
     }
 
     function convertEthToWeth(

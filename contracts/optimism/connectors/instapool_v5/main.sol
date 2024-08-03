@@ -13,7 +13,7 @@ import { Stores } from "../../common/stores.sol";
 import { Variables } from "./variables.sol";
 import { Events } from "./events.sol";
 
-contract LiquidityResolver is Stores, Variables, Events {
+contract LiquidityConnector is Stores, Variables, Events {
     using SafeERC20 for IERC20;
 
     /**
@@ -131,6 +131,6 @@ contract LiquidityResolver is Stores, Variables, Events {
 
 }
 
-contract ConnectV2InstaPoolV5 is LiquidityResolver {
-    string public name = "Instapool-v5.1";
+contract ConnectV2InstaPoolV5Optimism is LiquidityConnector {
+    string public name = "Instapool-v5";
 }

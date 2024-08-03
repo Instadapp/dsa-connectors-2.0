@@ -14,25 +14,25 @@ abstract contract Stores {
      * @dev Return Wrapped ETH address
      */
     address internal constant wethAddr =
-        0x4200000000000000000000000000000000000006;
+        0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
 
     /**
      * @dev Return memory variable address
      */
     MemoryInterface internal constant instaMemory =
-        MemoryInterface(0x3254Ce8f5b1c82431B8f21Df01918342215825C2);
+        MemoryInterface(0xc109f7Ef06152c3a63dc7254fD861E612d3Ac571);
 
     /**
      * @dev Return InstaList Address
      */
     ListInterface internal constant instaList =
-        ListInterface(0x9926955e0Dd681Dc303370C52f4Ad0a4dd061687);
+        ListInterface(0x3565F6057b7fFE36984779A507fC87b31EFb0f09);
 
     /**
      * @dev Return connectors registry address
      */
     InstaConnectors internal constant instaConnectors =
-        InstaConnectors(0x127d8cD0E2b2E0366D522DeA53A787bfE9002C14);
+        InstaConnectors(0x67fCE99Dd6d8d659eea2a1ac1b8881c57eb6592B);
 
     /**
      * @dev Get Uint value from InstaMemory Contract.
