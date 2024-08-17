@@ -34,7 +34,7 @@ abstract contract FluidMerkleClaim is Basic, Events {
         uint256 rewardsClaimed_ = TOKEN.balanceOf(address(this)) - rewardsBeforeBal_;
         setUint(setId_, rewardsClaimed_);
 
-        _eventName = "LogClaim(uint256,address,uint256,bytes32[],uint256,uint256)";
+        _eventName = "LogClaim(uint256,bytes32,uint256,bytes32[],uint256,uint256)";
         _eventParam = abi.encode(
             cumulativeAmount_,
             positionId_,
