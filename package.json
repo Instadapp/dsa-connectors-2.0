@@ -18,6 +18,7 @@
     "dotenv": "^16.3.1",
     "ethereum-waffle": "^4.0.10",
     "ethers": "^5.4.7",
+    "solmate": "^6.2.0",
     "ts-node": "^10.9.2",
     "web3": "^1.10.3"
   }
