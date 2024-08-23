@@ -39,6 +39,6 @@ contract OdosV2Connector is Helpers, Events {
     }
 }
 
-contract ConnectV2OdosV2 is OdosV2Connector {
+contract ConnectV2OdosV2Optimism is OdosV2Connector {
     string public name = "Odos-v2";
 }
