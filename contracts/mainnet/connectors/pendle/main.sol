@@ -107,7 +107,7 @@ abstract contract Pendle is Basic, Events {
             swapData: IPendle.SwapData({
                 swapType: IPendle.SwapType.NONE,
                 extRouter: address(0),
-                extCalldata: "0x", // TODO: Array in their Swagger sdk api
+                extCalldata: "0x",
                 needScale: false
             })
         });
