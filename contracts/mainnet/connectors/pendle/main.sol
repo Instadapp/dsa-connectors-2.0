@@ -10,90 +10,119 @@ abstract contract Pendle is Basic, Events {
     IPendle constant PENDLE_ROUTER =
         IPendle(0x888888888889758F76e7103c6CbF23ABbF58F946);
 
+    address internal constant STETH_ADDR =
+        0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84;
+
+    address internal constant WSTETH_ADDR =
+        0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
+
+    address internal constant PENDLESWAP_ADDR =
+        0x1e8b6Ac39f8A33f46a6Eb2D1aCD1047B99180AD1;
+
     /**
-	 * @dev Swap tokens for Pendle PT.
-	 * @param market The address of the market to deposit in.
-	 * @param minPtOut Min amount of PT to receive after swap.
-     * @param guessPtOut The amount of the token to deposit.
-	 * @param input Input token data. (For ETH: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)(For max: `uint256(-1)`)
-     * @param limit Limit order data.
-	 * @param setId ID stores the amount of PT received.
-	 */
+     * @dev Swap tokens for Pendle PT.
+     * @param market The address of the market to deposit in.
+     * @param netTokenIn The amount of tokens to deposit. Use type(uint256).max for entire balance.
+     * @param swapData Additional data required for the swap.
+     * @param guessPtOut Estimated amount of PT to receive, used for slippage control.
+     * @param minPtOut Min amount of PT to receive after swap.
+     * @param setId ID stores the amount of PT received.
+     */
     function deposit(
         address market,
-        uint256 minPtOut,
+        uint256 netTokenIn,
+        IPendle.SwapData calldata swapData,
         IPendle.ApproxParams calldata guessPtOut,
-        IPendle.TokenInput memory input,
-        IPendle.LimitOrderData calldata limit,
+        uint256 minPtOut,
         uint256 setId
     )
         external
         payable
         returns (string memory _eventName, bytes memory _eventParam)
     {
-        uint256 ethAmt;
+        TokenInterface wsteth = TokenInterface(WSTETH_ADDR);
 
-        if (input.tokenIn == ethAddr) {
-            ethAmt = input.netTokenIn == type(uint256).max ? address(this).balance : input.netTokenIn;
-            input.tokenIn = address(0);
-        } else {
-            TokenInterface token = TokenInterface(input.tokenIn);
+        // Use entire balance if netTokenIn is set to max uint256
+        netTokenIn = netTokenIn == type(uint256).max
+            ? wsteth.balanceOf(address(this))
+            : netTokenIn;
 
-            input.netTokenIn = input.netTokenIn == type(uint256).max 
-                ? token.balanceOf(address(this)) 
-                : input.netTokenIn;
+        IPendle.TokenInput memory input = IPendle.TokenInput({
+            tokenIn: WSTETH_ADDR,
+            netTokenIn: netTokenIn,
+            tokenMintSy: WSTETH_ADDR,
+            pendleSwap: PENDLESWAP_ADDR,
+            swapData: swapData
+        });
 
-            approve(
-                token,
-                address(PENDLE_ROUTER),
-                input.netTokenIn
-            );
-        }
+        // Approve PENDLE_ROUTER to spend wstETH
+        approve(wsteth, address(PENDLE_ROUTER), input.netTokenIn);
 
-        (uint256 netPtOut, , ) = PENDLE_ROUTER.swapExactTokenForPt{value: ethAmt}(
-            address(this), 
-            market, 
-            minPtOut, 
-            guessPtOut, 
-            input, 
+        IPendle.LimitOrderData memory limit = IPendle.LimitOrderData({
+            limitRouter: address(0),
+            epsSkipMarket: 0,
+            normalFills: new IPendle.FillOrderParams[](0),
+            flashFills: new IPendle.FillOrderParams[](0),
+            optData: "0x"
+        });
+
+        (uint256 netPtOut, , ) = PENDLE_ROUTER.swapExactTokenForPt(
+            address(this),
+            market,
+            minPtOut,
+            guessPtOut,
+            input,
             limit
         );
 
+        // Store the amount of PT received
         setUint(setId, netPtOut);
 
-        _eventName = "LogDeposit(address,uint256,address,uint256,uint256)";
-        _eventParam = abi.encode(market,minPtOut,input.tokenIn,input.netTokenIn,setId);
+        _eventName = "LogDeposit(address,uint256,uint256,uint256)";
+        _eventParam = abi.encode(market, netTokenIn, minPtOut, setId);
     }
 
     /**
-	 * @dev Swap PT for underlying tokens.
-	 * @param market The address of the market to withdraw from.
-	 * @param exactPtIn Exact amount of PT to send for swap.
-	 * @param output Output token data. (For ETH: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)(For max: `uint256(-1)`)
-     * @param limit Limit order data.
-	 * @param setId ID stores the amount of tokens received.
-	 */
+     * @dev Swap PT for underlying tokens.
+     * @param market The address of the market to withdraw from.
+     * @param minTokenOut Minimum amount of tokens to receive after swap.
+     * @param exactPtIn Exact amount of PT to send for swap.
+     * @param setId ID stores the amount of tokens received.
+     */
     function withdraw(
         address market,
         uint256 exactPtIn,
-        IPendle.TokenOutput memory output,
-        IPendle.LimitOrderData calldata limit,
+        uint256 minTokenOut,
         uint256 setId
-    ) external
-		payable
-		returns (string memory _eventName, bytes memory _eventParam)
-	{
-        uint256 initialBal;
-        uint256 finalBal;
-        bool isEth = (output.tokenOut == ethAddr);
+    )
+        external
+        payable
+        returns (string memory _eventName, bytes memory _eventParam)
+    {
+        IPendle.TokenOutput memory output = IPendle.TokenOutput({
+            tokenOut: WSTETH_ADDR,
+            minTokenOut: minTokenOut,
+            tokenRedeemSy: WSTETH_ADDR,
+            pendleSwap: address(0),
+            swapData: IPendle.SwapData({
+                swapType: IPendle.SwapType.NONE,
+                extRouter: address(0),
+                extCalldata: "0x", // TODO: Array in their Swagger sdk api
+                needScale: false
+            })
+        });
 
-        if (isEth) {
-            initialBal = address(this).balance;
-            output.tokenOut = address(0);
-        } else {
-            TokenInterface tokenContract = TokenInterface(output.tokenOut);
-            initialBal = tokenContract.balanceOf(address(this));
-        }
+        IPendle.LimitOrderData memory limit = IPendle.LimitOrderData({
+            limitRouter: address(0),
+            epsSkipMarket: 0,
+            normalFills: new IPendle.FillOrderParams[](0),
+            flashFills: new IPendle.FillOrderParams[](0),
+            optData: "0x"
+        });
+
+        // Get initial wstETH balance
+        TokenInterface wsteth = TokenInterface(WSTETH_ADDR);
+        uint256 initialBal = wsteth.balanceOf(address(this));
 
         PENDLE_ROUTER.swapExactPtForToken(
             address(this),
@@ -103,16 +132,14 @@ abstract contract Pendle is Basic, Events {
             limit
         );
 
-        finalBal = isEth 
-            ? address(this).balance 
-            : TokenInterface(output.tokenOut).balanceOf(address(this));
+        // Calculate the amount of wstETH received from the swap
+        uint256 swapAmtReceived = wsteth.balanceOf(address(this)) - initialBal;
 
-        uint256 swapAmtReceived = finalBal - initialBal;
-
+        // Store the amount of wstETH received
         setUint(setId, swapAmtReceived);
 
-        _eventName = "LogWithdraw(address,uint256,address,uint256,uint256)";
-        _eventParam = abi.encode(market,exactPtIn,output.tokenOut,output.minTokenOut,setId);        
+        _eventName = "LogWithdraw(address,uint256,uint256,uint256)";
+        _eventParam = abi.encode(market, exactPtIn, minTokenOut, setId);
     }
 }
 
