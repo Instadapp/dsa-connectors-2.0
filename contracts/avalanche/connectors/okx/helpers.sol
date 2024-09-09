@@ -16,10 +16,10 @@ contract Helpers is DSMath, Basic {
     }
 
     address internal constant OKX_ROUTER =
-        0xA748D6573acA135aF68F2635BE60CB80278bd855;
+        0x1daC23e41Fc8ce857E86fD8C1AE5b6121C67D96d;
 
     address internal constant OKX_TOKEN_SPENDER =
-        0x3B86917369B83a6892f553609F3c2F439C184e31;
+        0x40aA958dd87FC8305b97f2BA922CDdCa374bcD7f;
 
     function _swapHelper(
         SwapData memory swapData,
