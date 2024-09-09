@@ -39,6 +39,6 @@ contract OKXConnector is Helpers, Events {
     }
 }
 
-contract ConnectV2OKX is OKXConnector {
-    string public name = "OKX-v1";
+contract ConnectV2OKXBase is OKXConnector {
+    string public constant name = "OKX-v1";
 }
