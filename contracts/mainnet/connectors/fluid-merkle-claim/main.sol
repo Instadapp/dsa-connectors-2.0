@@ -85,5 +85,5 @@ abstract contract FluidMerkleClaim is Basic, Events {
 }
 
 contract ConnectV2FluidMerkleClaim is FluidMerkleClaim {
-    string public constant name = "Fluid-Merkle-v1.0";
+    string public constant name = "Fluid-Merkle-Claim-v1.0";
 }
