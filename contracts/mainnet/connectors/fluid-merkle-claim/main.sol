@@ -16,10 +16,10 @@ abstract contract FluidMerkleClaim is Basic, Events {
         bytes32[] calldata merkleProof_,
         uint256 setId_
     ) external payable returns (string memory _eventName, bytes memory _eventParam) {
-        TokenInterface TOKEN = TokenInterface(rewardToken);
+        TokenInterface REWARD_TOKEN = TokenInterface(rewardToken);
         IFluidMerkleDistributor MERKLE_DISTRIBUTOR = IFluidMerkleDistributor(merkleDistributorContract);
 
-        uint256 rewardsBeforeBal_ = TOKEN.balanceOf(address(this));
+        uint256 rewardsBeforeBal_ = REWARD_TOKEN.balanceOf(address(this));
         MERKLE_DISTRIBUTOR.claim(
             address(this),
             cumulativeAmount_,
@@ -28,7 +28,7 @@ abstract contract FluidMerkleClaim is Basic, Events {
             merkleProof_
         );
 
-        uint256 rewardsClaimed_ = TOKEN.balanceOf(address(this)) - rewardsBeforeBal_;
+        uint256 rewardsClaimed_ = REWARD_TOKEN.balanceOf(address(this)) - rewardsBeforeBal_;
         setUint(setId_, rewardsClaimed_);
 
         _eventName = "LogClaim(address,address,uint256,bytes32,uint256,bytes32[],uint256,uint256)";
@@ -54,10 +54,10 @@ abstract contract FluidMerkleClaim is Basic, Events {
         bytes32[] calldata merkleProof_,
         uint256 setId_
     ) external payable returns (string memory _eventName, bytes memory _eventParam) {
-        TokenInterface TOKEN = TokenInterface(rewardToken);
+        TokenInterface REWARD_TOKEN = TokenInterface(rewardToken);
         IFluidMerkleDistributor MERKLE_DISTRIBUTOR = IFluidMerkleDistributor(merkleDistributorContract);
 
-        uint256 rewardsBeforeBal_ = TOKEN.balanceOf(address(this));
+        uint256 rewardsBeforeBal_ = REWARD_TOKEN.balanceOf(address(this));
         MERKLE_DISTRIBUTOR.claim(
             recipient_,
             cumulativeAmount_,
@@ -66,7 +66,7 @@ abstract contract FluidMerkleClaim is Basic, Events {
             merkleProof_
         );
 
-        uint256 rewardsClaimed_ = TOKEN.balanceOf(address(this)) - rewardsBeforeBal_;
+        uint256 rewardsClaimed_ = REWARD_TOKEN.balanceOf(address(this)) - rewardsBeforeBal_;
         setUint(setId_, rewardsClaimed_);
 
         _eventName = "LogClaimOnBehalf(address,address,uint256,bytes32,uint256,bytes32[],uint256,uint256)";
