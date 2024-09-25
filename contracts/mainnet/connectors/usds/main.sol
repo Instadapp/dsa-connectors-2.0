@@ -31,11 +31,10 @@ contract USDSConnector is Basic, Helpers, Events {
 
         uint256 _usdsBalanceBefore = USDS.balanceOf(address(this));
 
-        DAI.approve(address(DAI_USDS_CONVERTER), _daiAmount);
+        approve(DAI, address(DAI_USDS_CONVERTER), _daiAmount);
         DAI_USDS_CONVERTER.daiToUsds(address(this), _daiAmount);
 
-        uint256 _usdsBalanceAfter = USDS.balanceOf(address(this));
-        uint256 _usdsAmount = _usdsBalanceAfter - _usdsBalanceBefore;
+        uint256 _usdsAmount = USDS.balanceOf(address(this)) - _usdsBalanceBefore;
 
         setUint(setId, _daiAmount);
 
@@ -63,11 +62,10 @@ contract USDSConnector is Basic, Helpers, Events {
 
         uint256 _daiBalanceBefore = DAI.balanceOf(address(this));
 
-        USDS.approve(address(DAI_USDS_CONVERTER), _usdsAmount);
+        approve(USDS, address(DAI_USDS_CONVERTER), _usdsAmount);
         DAI_USDS_CONVERTER.usdsToDai(address(this), _usdsAmount);
 
-        uint256 _daiBalanceAfter = DAI.balanceOf(address(this));
-        uint256 _daiAmount = _daiBalanceAfter - _daiBalanceBefore;
+        uint256 _daiAmount = DAI.balanceOf(address(this)) - _daiBalanceBefore;
 
         setUint(setId, _usdsAmount);
 
@@ -77,5 +75,5 @@ contract USDSConnector is Basic, Helpers, Events {
 }
 
 contract ConnectV2USDS is USDSConnector {
-    string public constant name = "USDS-v1";
+    string public constant name = "USDS-v1.0";
 }
