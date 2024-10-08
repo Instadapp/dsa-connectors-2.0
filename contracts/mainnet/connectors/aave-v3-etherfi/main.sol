@@ -531,5 +531,5 @@ abstract contract AaveV3EtherfiConnector is Events, Helpers {
 }
 
 contract ConnectV2AaveV3Etherfi is AaveV3EtherfiConnector {
-	string public constant name = "AaveV3-Etherfi-v1.0";
+	string public constant name = "AaveV3-Etherfi-v1.1";
 }
