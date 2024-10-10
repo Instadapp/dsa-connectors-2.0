@@ -15,7 +15,7 @@ abstract contract Helpers is Basic {
 	 * @dev Aave Pool Data Provider
 	 */
 	AaveDataProviderInterface internal constant aaveData =
-		AaveDataProviderInterface(0xa3206d66cF94AA1e93B21a9D8d409d6375309F4A);
+		AaveDataProviderInterface(0x08795CFE08C7a81dCDFf482BbAAF474B240f31cD);
 
 	/**
 	 * @dev Aave Referral Code

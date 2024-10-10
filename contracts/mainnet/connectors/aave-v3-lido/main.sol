@@ -531,5 +531,5 @@ abstract contract AaveV3Connector is Events, Helpers {
 }
 
 contract ConnectV2AaveV3Lido is AaveV3Connector {
-	string public constant name = "AaveV3-Lido-v1.0";
+	string public constant name = "AaveV3-Lido-v1.1";
 }
