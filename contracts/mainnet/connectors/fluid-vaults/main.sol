@@ -12,7 +12,7 @@ import {IVaultT4} from "./interface.sol";
 
 abstract contract FluidVaultT4Connector is Helpers, Events {
     /**
-     * @dev Deposit, borrow, payback and withdraw asset from the vault.
+     * @dev Deposit, borrow, payback and withdraw assets from the vault.
      * @notice Single function which handles supply, withdraw, borrow & payback
      * @param vaultAddress_ Vault address.
      * @param nftId_ NFT ID for interaction. If 0 then create new NFT/position.
@@ -27,7 +27,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
      * @param repayApproveAmtToken0_ In case of max amount for payback, this amount will be approved for token 0 spending.
      * @param repayApproveAmtToken1_ In case of max amount for payback, this amount will be approved for token 1 spending.
      * Should always be positive.
-     * @param getIds_ Array of 9 elements to retrieve IDs:
+     * @param getIds_ Array of 9 elements to retrieve IDs.
      * @param setIds_ Array of 9 elements to set IDs:
      * Nft Id
      * Supply amount token 0
@@ -39,6 +39,8 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
      * Payback amount token 0
      * Payback amount token 1
      */
+
+     // WITHDRAW AND PAYBACK
     function operateWithIds(
         address vaultAddress_,
         uint256 nftId_,
@@ -136,7 +138,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
         int256 colShares;
         int256 debtShares;
 
-        // Note max withdraw will be handled by Fluid contract
+        // TODO: If max withdraw, can we send min int?
         (nftId_, colShares, debtShares) = vaultT4_.operate{value: ethAmount_}(
             nftId_,
             newColToken0_,
@@ -151,7 +153,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
         setUint(setIds_[0], nftId_);
 
         _setIds(setIds_[1], setIds_[3], uint256(newColToken0_));
-        _setIds(setIds_[2], setIds_[4], uint256(newColToken1_));
+        _setIds(setIds_[2], setIds_[4], uint256(newColToken1_)); // TODO: what if max withdraw?
         _setIds(setIds_[5], setIds_[7], uint256(newDebtToken0_));
         _setIds(setIds_[6], setIds_[8], uint256(newDebtToken1_));
 
@@ -173,7 +175,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
     }
 
     /**
-     * @dev Deposit, borrow, payback and withdraw asset from the vault.
+     * @dev Deposit, borrow, payback and withdraw perfect amounts of assets from the vault.
      * @notice Single function which handles supply, withdraw, borrow & payback
      * @param vaultAddress_ Vault address.
      * @param nftId_ NFT ID for interaction. If 0 then create new NFT/position.
