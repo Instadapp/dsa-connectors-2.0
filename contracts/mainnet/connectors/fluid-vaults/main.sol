@@ -166,7 +166,7 @@ abstract contract FluidConnector is Events, Basic {
         bool isPayback1Min_ = newDebtToken1_ == type(int256).min;
 
         // Payback token 0
-        if (isPayback0Min_ < 0) {
+        if (newDebtToken0_ < 0) {
             if (vaultT4Details_.borrowToken.token0 == getEthAddr()) {
                 // Needs to be positive as it will be send in msg.value
                 ethAmount_ = isPayback0Min_
@@ -188,7 +188,7 @@ abstract contract FluidConnector is Events, Basic {
         }
 
         // Payback token 1
-        if (isPayback1Min_ < 0) {
+        if (newDebtToken1_ < 0) {
             if (vaultT4Details_.borrowToken.token1 == getEthAddr()) {
                 // Needs to be positive as it will be send in msg.value
                 ethAmount_ = isPayback1Min_
