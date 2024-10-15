@@ -17,20 +17,35 @@ contract Helpers is Basic {
         return a > 0 && b > 0;
     }
 
-    function _validateIds(uint256[] memory getIds_, uint256[] memory setIds_) internal pure {
-        if (_bothPositive(getIds_[1], getIds_[3]) || _bothPositive(getIds_[2], getIds_[4])) {
+    function _validateIds(
+        uint256[] memory getIds_,
+        uint256[] memory setIds_
+    ) internal pure {
+        if (
+            _bothPositive(getIds_[1], getIds_[3]) ||
+            _bothPositive(getIds_[2], getIds_[4])
+        ) {
             revert("Supply and withdraw get IDs cannot both be > 0.");
         }
 
-        if (_bothPositive(getIds_[5], getIds_[7]) || _bothPositive(getIds_[6], getIds_[8])) {
+        if (
+            _bothPositive(getIds_[5], getIds_[7]) ||
+            _bothPositive(getIds_[6], getIds_[8])
+        ) {
             revert("Borrow and payback get IDs cannot both be > 0.");
         }
 
-        if (_bothPositive(setIds_[1], setIds_[3]) || _bothPositive(setIds_[2], setIds_[4])) {
+        if (
+            _bothPositive(setIds_[1], setIds_[3]) ||
+            _bothPositive(setIds_[2], setIds_[4])
+        ) {
             revert("Supply and withdraw set IDs cannot both be > 0.");
         }
 
-        if (_bothPositive(setIds_[5], setIds_[7]) || _bothPositive(setIds_[6], setIds_[8])) {
+        if (
+            _bothPositive(setIds_[5], setIds_[7]) ||
+            _bothPositive(setIds_[6], setIds_[8])
+        ) {
             revert("Borrow and payback set IDs cannot both be > 0.");
         }
     }
@@ -40,11 +55,14 @@ contract Helpers is Basic {
         uint256 idWithdrawOrPayback_,
         int256 colOrDebtAmt_
     ) internal returns (int256) {
-        return idDepositOrBorrow_ > 0
-            ? int256(getUint(idDepositOrBorrow_, uint256(colOrDebtAmt_))) // Token supply or borrow
-            : idWithdrawOrPayback_ > 0 
-                ? -int256(getUint(idWithdrawOrPayback_, uint256(colOrDebtAmt_))) // Token withdraw or payback
-                : colOrDebtAmt_;
+        return
+            idDepositOrBorrow_ > 0
+                ? int256(getUint(idDepositOrBorrow_, uint256(colOrDebtAmt_))) // Token supply or borrow
+                : idWithdrawOrPayback_ > 0
+                    ? -int256(
+                        getUint(idWithdrawOrPayback_, uint256(colOrDebtAmt_))
+                    ) // Token withdraw or payback
+                    : colOrDebtAmt_;
     }
 
     function _handleDeposit(
@@ -54,11 +72,8 @@ contract Helpers is Basic {
         address token_,
         int256 colAmt_
     ) internal returns (uint256 ethAmt_, int256) {
-
         if (isEth_) {
-            ethAmt_ = isMax_
-                ? address(this).balance
-                : uint256(colAmt_);
+            ethAmt_ = isMax_ ? address(this).balance : uint256(colAmt_);
 
             colAmt_ = int256(ethAmt_);
         } else {
@@ -68,11 +83,7 @@ contract Helpers is Basic {
                 );
             }
 
-            approve(
-                TokenInterface(token_), 
-                vaultAddress_, 
-                uint256(colAmt_)
-            );
+            approve(TokenInterface(token_), vaultAddress_, uint256(colAmt_));
         }
 
         return (ethAmt_, colAmt_);
@@ -87,31 +98,37 @@ contract Helpers is Basic {
         address vaultAddress_
     ) internal returns (uint256 ethAmt_) {
         if (isEth_) {
-            ethAmt_ = isMin_
-                ? repayApproveAmt_
-                : uint256(-debtAmt_);
+            ethAmt_ = isMin_ ? repayApproveAmt_ : uint256(-debtAmt_);
         } else {
             isMin_
                 ? approve(
-                    TokenInterface(token_), 
-                    vaultAddress_, 
+                    TokenInterface(token_),
+                    vaultAddress_,
                     repayApproveAmt_
                 )
                 : approve(
-                    TokenInterface(token_), 
-                    vaultAddress_, 
+                    TokenInterface(token_),
+                    vaultAddress_,
                     uint256(-debtAmt_)
                 );
         }
     }
 
-    function _setIds(uint256 idSupplyOrBorrow_, uint256 idWithdrawOrPayback, uint256 tokenAmt_) internal {
+    function _setIds(
+        uint256 idSupplyOrBorrow_,
+        uint256 idWithdrawOrPayback,
+        uint256 tokenAmt_
+    ) internal {
         idSupplyOrBorrow_ > 0
             ? setUint(idSupplyOrBorrow_, tokenAmt_)
             : setUint(idWithdrawOrPayback, tokenAmt_);
     }
 
-    function _handleOperatePerfectSetIds(int256 tokenActionAmount_, uint256 depositOrBorrowId_, uint256 withdrawOrPaybackId_) internal {
+    function _handleOperatePerfectSetIds(
+        int256 tokenActionAmount_,
+        uint256 depositOrBorrowId_,
+        uint256 withdrawOrPaybackId_
+    ) internal {
         if (tokenActionAmount_ > 0) {
             setUint(depositOrBorrowId_, uint256(tokenActionAmount_));
         } else {

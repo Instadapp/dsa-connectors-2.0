@@ -2,7 +2,6 @@
 pragma solidity ^0.8.2;
 
 contract Events {
-
     event LogOperateWithIds(
         address vaultAddress,
         uint256 nftId,

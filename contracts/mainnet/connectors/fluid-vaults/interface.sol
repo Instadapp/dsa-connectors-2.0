@@ -91,5 +91,8 @@ interface IVaultT4 {
         bytes32 userBorrowSlot; // if smart debt then slot is from DEX protocol else from liquidity layer
     }
 
-    function constantsView() external view returns (ConstantViews memory constantsView_);
+    function constantsView()
+        external
+        view
+        returns (ConstantViews memory constantsView_);
 }

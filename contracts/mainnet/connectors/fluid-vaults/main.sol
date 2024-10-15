@@ -7,13 +7,10 @@ pragma solidity ^0.8.2;
  */
 
 import {Helpers} from "./helpers.sol";
-import {TokenInterface} from "../../common/interfaces.sol";
-
 import {Events} from "./events.sol";
 import {IVaultT4} from "./interface.sol";
 
 abstract contract FluidVaultT4Connector is Helpers, Events {
-
     /**
      * @dev Deposit, borrow, payback and withdraw asset from the vault.
      * @notice Single function which handles supply, withdraw, borrow & payback
@@ -41,7 +38,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
      * Borrow amount token 1
      * Payback amount token 0
      * Payback amount token 1
-    */
+     */
     function operateWithIds(
         address vaultAddress_,
         uint256 nftId_,
@@ -62,39 +59,54 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
     {
         _validateIds(getIds_, setIds_);
         nftId_ = getUint(getIds_[0], nftId_);
-        newColToken0_ = _adjustTokenValues(getIds_[1], getIds_[3], newColToken0_);
-        newColToken1_ = _adjustTokenValues(getIds_[2], getIds_[4], newColToken1_);
-        newDebtToken0_ = _adjustTokenValues(getIds_[5], getIds_[7], newDebtToken0_);
-        newDebtToken1_ = _adjustTokenValues(getIds_[6], getIds_[8], newDebtToken1_);
+        newColToken0_ = _adjustTokenValues(
+            getIds_[1],
+            getIds_[3],
+            newColToken0_
+        );
+        newColToken1_ = _adjustTokenValues(
+            getIds_[2],
+            getIds_[4],
+            newColToken1_
+        );
+        newDebtToken0_ = _adjustTokenValues(
+            getIds_[5],
+            getIds_[7],
+            newDebtToken0_
+        );
+        newDebtToken1_ = _adjustTokenValues(
+            getIds_[6],
+            getIds_[8],
+            newDebtToken1_
+        );
 
         IVaultT4 vaultT4_ = IVaultT4(vaultAddress_);
-        IVaultT4.ConstantViews memory vaultT4Details_ = vaultT4_.constantsView();
+        IVaultT4.ConstantViews memory vaultT4Details_ = vaultT4_
+            .constantsView();
         uint256 ethAmount_;
 
         // Deposit token 0
         if (newColToken0_ > 0) {
             // Assumes ethAmount_ would either be token0 or token1
-            (ethAmount_, newColToken0_) = 
-                _handleDeposit(
-                    vaultT4Details_.supplyToken.token0 == getEthAddr(), 
-                    newColToken0_ == type(int256).max, 
-                    vaultAddress_, 
-                    vaultT4Details_.supplyToken.token0, 
-                    newColToken0_
-                );
+            (ethAmount_, newColToken0_) = _handleDeposit(
+                vaultT4Details_.supplyToken.token0 == getEthAddr(),
+                newColToken0_ == type(int256).max,
+                vaultAddress_,
+                vaultT4Details_.supplyToken.token0,
+                newColToken0_
+            );
         }
 
         // Deposit token 1
         if (newColToken1_ > 0) {
             // Assumes ethAmount_ would either be token0 or token1
-            (ethAmount_, newColToken1_) = 
-                _handleDeposit(
-                    vaultT4Details_.supplyToken.token1 == getEthAddr(), 
-                    newColToken1_ == type(int256).max, 
-                    vaultAddress_, 
-                    vaultT4Details_.supplyToken.token1, 
-                    newColToken1_
-                );
+            (ethAmount_, newColToken1_) = _handleDeposit(
+                vaultT4Details_.supplyToken.token1 == getEthAddr(),
+                newColToken1_ == type(int256).max,
+                vaultAddress_,
+                vaultT4Details_.supplyToken.token1,
+                newColToken1_
+            );
         }
 
         // Payback token 0
@@ -182,7 +194,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
      *              6 - token0 payback amount
      *              7 - token1 borrow amount
      *              8 - token1 payback amount
-    */
+     */
     function operatePerfectWithIds(
         address vaultAddress_,
         uint256 nftId_,
@@ -201,7 +213,8 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
     {
         nftId_ = getUint(getNftId_, nftId_);
         IVaultT4 vaultT4_ = IVaultT4(vaultAddress_);
-        IVaultT4.ConstantViews memory vaultT4Details_ = vaultT4_.constantsView();
+        IVaultT4.ConstantViews memory vaultT4Details_ = vaultT4_
+            .constantsView();
         uint256 ethAmount_;
 
         if (perfectColShares_ > 0) {
