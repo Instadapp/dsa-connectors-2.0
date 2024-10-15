@@ -12,7 +12,7 @@ contract Helpers is Basic {
     function getEthAddr() internal pure returns (address) {
         return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     }
-    
+
     function _bothPositive(uint256 a, uint256 b) internal pure returns (bool) {
         return a > 0 && b > 0;
     }
@@ -45,12 +45,6 @@ contract Helpers is Basic {
             : idWithdrawOrPayback_ > 0 
                 ? -int256(getUint(idWithdrawOrPayback_, uint256(colOrDebtAmt_))) // Token withdraw or payback
                 : colOrDebtAmt_;
-    }
-
-    function _setIds(uint256 idSupplyOrBorrow_, uint256 idWithdrawOrPayback, uint256 tokenAmt_) internal {
-        idSupplyOrBorrow_ > 0
-            ? setUint(idSupplyOrBorrow_, tokenAmt_)
-            : setUint(idWithdrawOrPayback, tokenAmt_);
     }
 
     function _handleDeposit(
@@ -108,6 +102,22 @@ contract Helpers is Basic {
                     vaultAddress_, 
                     uint256(-debtAmt_)
                 );
+        }
+    }
+
+    function _setIds(uint256 idSupplyOrBorrow_, uint256 idWithdrawOrPayback, uint256 tokenAmt_) internal {
+        idSupplyOrBorrow_ > 0
+            ? setUint(idSupplyOrBorrow_, tokenAmt_)
+            : setUint(idWithdrawOrPayback, tokenAmt_);
+    }
+
+    function _handleOperatePerfectSetIds(int256 tokenActionAmount_, uint256 depositOrBorrowId_, uint256 withdrawOrPaybackId_) internal {
+        if (tokenActionAmount_ > 0) {
+            setUint(depositOrBorrowId_, uint256(tokenActionAmount_));
+        } else {
+            if (tokenActionAmount_ < 0) {
+                setUint(withdrawOrPaybackId_, uint256(tokenActionAmount_));
+            }
         }
     }
 }

@@ -12,7 +12,7 @@ import {TokenInterface} from "../../common/interfaces.sol";
 import {Events} from "./events.sol";
 import {IVaultT4} from "./interface.sol";
 
-abstract contract FluidConnector is Helpers, Events {
+abstract contract FluidVaultT4Connector is Helpers, Events {
 
     /**
      * @dev Deposit, borrow, payback and withdraw asset from the vault.
@@ -174,12 +174,14 @@ abstract contract FluidConnector is Helpers, Events {
      * @param getNftId_ Id to retrieve Nft Id
      * @param setIds_ Array of 9 elements to set IDs:
      *              0 - nft id
-     *              1 - final col shares amount
-     *              2 - token0 deposit or withdraw amount
-     *              3 - token1 deposit or withdraw amount
-     *              4 - final debt shares amount
-     *              5 - token0 borrow or payback amount
-     *              6 - token1 borrow or payback amount
+     *              1 - token0 deposit amount
+     *              2 - token0 withdraw amount
+     *              3 - token1 deposit amount
+     *              4 - token1 withdraw amount
+     *              5 - token0 borrow amount
+     *              6 - token0 payback amount
+     *              7 - token1 borrow amount
+     *              8 - token1 payback amount
     */
     function operatePerfectWithIds(
         address vaultAddress_,
@@ -255,39 +257,11 @@ abstract contract FluidConnector is Helpers, Events {
         );
 
         setUint(setIds_[0], nftId_);
-        // r_[0] > 0 ? setUint(setIds_[1], uint256(r_[0])) : r_[0] < 0 ? setUint(setIds_[2], uint256(r_[0])) : 0;
 
-        if (r_[2] > 0) {
-            setUint(setIds_[1], uint256(r_[2]));
-        } else {
-            if (r_[2] < 0) {
-                setUint(setIds_[2], uint256(r_[2]));
-            }
-        }
-
-        if (r_[3] > 0) {
-            setUint(setIds_[3], uint256(r_[3]));
-        } else {
-            if (r_[3] < 0) {
-                setUint(setIds_[4], uint256(r_[3]));
-            }
-        }
-
-        if (r_[5] > 0) {
-            setUint(setIds_[5], uint256(r_[5]));
-        } else {
-            if (r_[5] < 0) {
-                setUint(setIds_[6], uint256(r_[5]));
-            }
-        }
-
-        if (r_[6] > 0) {
-            setUint(setIds_[7], uint256(r_[6]));
-        } else {
-            if (r_[6] < 0) {
-                setUint(setIds_[8], uint256(r_[6]));
-            }
-        }
+        _handleOperatePerfectSetIds(r_[2], setIds_[1], setIds_[2]);
+        _handleOperatePerfectSetIds(r_[3], setIds_[3], setIds_[4]);
+        _handleOperatePerfectSetIds(r_[5], setIds_[5], setIds_[6]);
+        _handleOperatePerfectSetIds(r_[6], setIds_[7], setIds_[8]);
 
         _eventName = "LogOperatePerfectWithIds(address,uint256,int256,int256,int256,int256,int256,int256,uint256,uint256[])";
         _eventParam = abi.encode(
@@ -305,6 +279,6 @@ abstract contract FluidConnector is Helpers, Events {
     }
 }
 
-contract ConnectV2FluidVaultT4 is FluidConnector {
+contract ConnectV2FluidVaultT4 is FluidVaultT4Connector {
     string public constant name = "Fluid-vaultT4-v1.0";
 }
