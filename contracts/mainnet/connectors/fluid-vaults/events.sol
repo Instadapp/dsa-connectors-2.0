@@ -11,8 +11,6 @@ contract Events {
         int256 newDebtToken0,
         int256 newDebtToken1,
         int256 debtSharesMinMax,
-        uint256 repayApproveAmtToken0,
-        uint256 repayApproveAmtToken1,
         uint256[] getIds,
         uint256[] setIds
     );

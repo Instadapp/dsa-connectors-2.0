@@ -65,51 +65,67 @@ contract Helpers is Basic {
                     : colOrDebtAmt_;
     }
 
-    function _handleDeposit(
-        bool isEth_,
-        bool isMax_,
-        address vaultAddress_,
-        address token_,
-        int256 colAmt_
-    ) internal returns (uint256 ethAmt_, int256) {
-        if (isEth_) {
-            ethAmt_ = isMax_ ? address(this).balance : uint256(colAmt_);
+    struct HandleDepositData {
+        bool isEth;
+        bool isMax;
+        address vaultAddress;
+        address token;
+        int256 colAmt;
+    }
 
-            colAmt_ = int256(ethAmt_);
+    function _handleDeposit(
+        HandleDepositData memory depositData_
+    ) internal returns (uint256 ethAmt_, int256) {
+        if (depositData_.isEth) {
+            ethAmt_ = depositData_.isMax
+                ? address(this).balance
+                : uint256(depositData_.colAmt);
+
+            depositData_.colAmt = int256(ethAmt_);
         } else {
-            if (isMax_) {
-                colAmt_ = int256(
-                    TokenInterface(token_).balanceOf(address(this))
+            if (depositData_.isMax) {
+                depositData_.colAmt = int256(
+                    TokenInterface(depositData_.token).balanceOf(address(this))
                 );
             }
 
-            approve(TokenInterface(token_), vaultAddress_, uint256(colAmt_));
+            approve(
+                TokenInterface(depositData_.token),
+                depositData_.vaultAddress,
+                uint256(depositData_.colAmt)
+            );
         }
 
-        return (ethAmt_, colAmt_);
+        return (ethAmt_, depositData_.colAmt);
+    }
+
+    struct HandlePaybackData {
+        bool isEth;
+        bool isMin;
+        address token;
+        uint256 repayApproveAmt;
+        int256 debtAmt;
+        address vaultAddress;
     }
 
     function _handlePayback(
-        bool isEth_,
-        bool isMin_,
-        address token_,
-        uint256 repayApproveAmt_,
-        int256 debtAmt_,
-        address vaultAddress_
+        HandlePaybackData memory paybackData_
     ) internal returns (uint256 ethAmt_) {
-        if (isEth_) {
-            ethAmt_ = isMin_ ? repayApproveAmt_ : uint256(-debtAmt_);
+        if (paybackData_.isEth) {
+            ethAmt_ = paybackData_.isMin
+                ? paybackData_.repayApproveAmt
+                : uint256(-paybackData_.debtAmt);
         } else {
-            isMin_
+            paybackData_.isMin
                 ? approve(
-                    TokenInterface(token_),
-                    vaultAddress_,
-                    repayApproveAmt_
+                    TokenInterface(paybackData_.token),
+                    paybackData_.vaultAddress,
+                    paybackData_.repayApproveAmt
                 )
                 : approve(
-                    TokenInterface(token_),
-                    vaultAddress_,
-                    uint256(-debtAmt_)
+                    TokenInterface(paybackData_.token),
+                    paybackData_.vaultAddress,
+                    uint256(-paybackData_.debtAmt)
                 );
         }
     }
