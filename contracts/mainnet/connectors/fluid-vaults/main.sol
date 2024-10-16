@@ -12,7 +12,6 @@ import {IVaultT4} from "./interface.sol";
 import {TokenInterface} from "../../common/interfaces.sol";
 
 abstract contract FluidVaultT4Connector is Helpers, Events {
-    // TODO: Make approval 0 in the end
 
     /**
      * @param vaultAddress_ Vault address.
@@ -271,7 +270,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
             (internalVar_.ethAmount, ) = _handleDeposit(
                 HandleDepositData({
                     isEth: vaultT4Details_.supplyToken.token0 == getEthAddr(),
-                    isMax: false,
+                    isMax: helper_.perfectColShares == type(int256).max,
                     vaultAddress: helper_.vaultAddress,
                     token: vaultT4Details_.supplyToken.token0,
                     colAmt: helper_.colToken0MinMax
@@ -281,7 +280,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
             (internalVar_.ethAmount, ) = _handleDeposit(
                 HandleDepositData({
                     isEth: vaultT4Details_.supplyToken.token1 == getEthAddr(),
-                    isMax: false,
+                    isMax: helper_.perfectColShares == type(int256).max,
                     vaultAddress: helper_.vaultAddress,
                     token: vaultT4Details_.supplyToken.token1,
                     colAmt: helper_.colToken1MinMax
