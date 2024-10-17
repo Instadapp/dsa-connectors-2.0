@@ -261,7 +261,132 @@ describe("Fluid Dex", function () {
     });
 
     // 6 wsteth 6 eth
-    it("should deposit and borrow wsteth using operate perfect in Fluid Dex", async function () {
+    it("should deposit and borrow wsteth using operate perfect", async function () {
+      const amtDepositWsteth = parseEther("5");
+      const amtDepositEth = parseEther("5");
+
+      const spells = [
+        {
+          connector: connectorName,
+          method: "operatePerfectWithIds",
+          args: [
+          {
+            vaultAddress: vaultWstethEth,
+            nftId: '0', // new nft
+            perfectColShares: amtDepositWsteth, // +10 collateral // newColToken0_
+            colToken0MinMax: amtDepositEth, // +10 collateral // newColToken1_
+            colToken1MinMax: '0', // colSharesMinMax_
+            perfectDebtShares: '0', // newDebtToken0_
+            debtToken0MinMax: '0', // newDebtToken1_
+            debtToken1MinMax: '0', // debtSharesMinMax_
+            getNftId: Array(9).fill('0'),
+            setIds: ['0','0','0','0','0','0','0','0','0']
+          }
+        ],
+        },
+      ];
+
+      const tx = await dsaWallet0
+        .connect(wallet0)
+        .cast(...encodeSpells(spells), wallet1.getAddress());
+
+      const receipt = await tx.wait();
+
+      const eventName = "LogOperateWithIds(address,uint256,int256,int256,int256,int256,int256,int256,uint256[],uint256[])";
+      const eventSignatureHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(eventName));
+
+      const log = receipt.logs.find((log: { topics: string[]; }) => log.topics[0] === eventSignatureHash);
+
+      // expect(await ethers.provider.getBalance(dsaWallet0.address)).to.gte(
+      //   parseEther("1000")
+      // );
+    });
+
+    it("should payback and withdraw using operate perfect", async function () {
+      const amtDepositWsteth = parseEther("5");
+      const amtDepositEth = parseEther("5");
+
+      const spells = [
+        {
+          connector: connectorName,
+          method: "operatePerfectWithIds",
+          args: [
+          {
+            vaultAddress: vaultWstethEth,
+            nftId: '0', // new nft
+            perfectColShares: amtDepositWsteth, // +10 collateral // newColToken0_
+            colToken0MinMax: amtDepositEth, // +10 collateral // newColToken1_
+            colToken1MinMax: '0', // colSharesMinMax_
+            perfectDebtShares: '0', // newDebtToken0_
+            debtToken0MinMax: '0', // newDebtToken1_
+            debtToken1MinMax: '0', // debtSharesMinMax_
+            getNftId: Array(9).fill('0'),
+            setIds: ['0','0','0','0','0','0','0','0','0']
+          }
+        ],
+        },
+      ];
+
+      const tx = await dsaWallet0
+        .connect(wallet0)
+        .cast(...encodeSpells(spells), wallet1.getAddress());
+
+      const receipt = await tx.wait();
+
+      const eventName = "LogOperateWithIds(address,uint256,int256,int256,int256,int256,int256,int256,uint256[],uint256[])";
+      const eventSignatureHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(eventName));
+
+      const log = receipt.logs.find((log: { topics: string[]; }) => log.topics[0] === eventSignatureHash);
+
+      // expect(await ethers.provider.getBalance(dsaWallet0.address)).to.gte(
+      //   parseEther("1000")
+      // );
+    });
+
+    // 6 wsteth 6 eth
+    it("should deposit max and borrow using operate perfect", async function () {
+      const amtDepositWsteth = parseEther("5");
+      const amtDepositEth = parseEther("5");
+
+      const spells = [
+        {
+          connector: connectorName,
+          method: "operatePerfectWithIds",
+          args: [
+          {
+            vaultAddress: vaultWstethEth,
+            nftId: '0', // new nft
+            perfectColShares: amtDepositWsteth, // +10 collateral // newColToken0_
+            colToken0MinMax: amtDepositEth, // +10 collateral // newColToken1_
+            colToken1MinMax: '0', // colSharesMinMax_
+            perfectDebtShares: '0', // newDebtToken0_
+            debtToken0MinMax: '0', // newDebtToken1_
+            debtToken1MinMax: '0', // debtSharesMinMax_
+            getNftId: Array(9).fill('0'),
+            setIds: ['0','0','0','0','0','0','0','0','0']
+          }
+        ],
+        },
+      ];
+
+      const tx = await dsaWallet0
+        .connect(wallet0)
+        .cast(...encodeSpells(spells), wallet1.getAddress());
+
+      const receipt = await tx.wait();
+
+      const eventName = "LogOperateWithIds(address,uint256,int256,int256,int256,int256,int256,int256,uint256[],uint256[])";
+      const eventSignatureHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(eventName));
+
+      const log = receipt.logs.find((log: { topics: string[]; }) => log.topics[0] === eventSignatureHash);
+
+      // expect(await ethers.provider.getBalance(dsaWallet0.address)).to.gte(
+      //   parseEther("1000")
+      // );
+    });
+
+    // 6 wsteth 6 eth
+    it("should payback max and withdraw max using operate perfect", async function () {
       const amtDepositWsteth = parseEther("5");
       const amtDepositEth = parseEther("5");
 
