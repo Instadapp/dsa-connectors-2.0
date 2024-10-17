@@ -153,6 +153,24 @@ abstract contract FluidConnector is Events, Basic {
             ? setUint(setIds_[3], uint256(newDebt_))
             : setUint(setIds_[4], uint256(newDebt_)); // If setIds_[4] != 0, it will set the ID.
 
+        // Revoke supply approvals in case of deposit
+        if (newCol_ > 0 && vaultDetails_.supplyToken != getEthAddr()) {
+            approve(
+                TokenInterface(vaultDetails_.supplyToken),
+                vaultAddress_,
+                0
+            );
+        }
+
+        // Revoke borrow approvals in case of payback
+        if (newDebt_ < 0 && vaultDetails_.borrowToken != getEthAddr()) {
+            approve(
+                TokenInterface(vaultDetails_.borrowToken),
+                vaultAddress_,
+                0
+            );
+        }
+
         _eventName = "LogOperateWithIds(address,uint256,int256,int256,uint256[],uint256[])";
         _eventParam = abi.encode(
             vaultAddress_,
@@ -251,6 +269,24 @@ abstract contract FluidConnector is Events, Basic {
             newDebt_,
             address(this)
         );
+
+        // Revoke supply approvals in case of deposit
+        if (newCol_ > 0 && vaultDetails_.supplyToken != getEthAddr()) {
+            approve(
+                TokenInterface(vaultDetails_.supplyToken),
+                vaultAddress_,
+                0
+            );
+        }
+
+        // Revoke borrow approvals in case of payback
+        if (newDebt_ < 0 && vaultDetails_.borrowToken != getEthAddr()) {
+            approve(
+                TokenInterface(vaultDetails_.borrowToken),
+                vaultAddress_,
+                0
+            );
+        }
 
         _eventName = "LogOperate(address,uint256,int256,int256)";
         _eventParam = abi.encode(
