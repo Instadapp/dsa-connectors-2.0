@@ -60,7 +60,7 @@ contract Helpers is Basic {
                 ? int256(getUint(idDepositOrBorrow_, uint256(colOrDebtAmt_))) // Token supply or borrow
                 : idWithdrawOrPayback_ > 0
                     ? -int256(
-                        getUint(idWithdrawOrPayback_, uint256(colOrDebtAmt_))
+                        getUint(idWithdrawOrPayback_, uint256(-colOrDebtAmt_))
                     ) // Token withdraw or payback
                     : colOrDebtAmt_;
     }
@@ -133,11 +133,11 @@ contract Helpers is Basic {
     function _setIds(
         uint256 idSupplyOrBorrow_,
         uint256 idWithdrawOrPayback,
-        uint256 tokenAmt_
+        int256 tokenAmt_
     ) internal {
         idSupplyOrBorrow_ > 0
-            ? setUint(idSupplyOrBorrow_, tokenAmt_)
-            : setUint(idWithdrawOrPayback, tokenAmt_);
+            ? setUint(idSupplyOrBorrow_, uint256(tokenAmt_))
+            : setUint(idWithdrawOrPayback, uint256(-tokenAmt_));
     }
 
     function _handleOperatePerfectSetIds(
@@ -149,7 +149,7 @@ contract Helpers is Basic {
             setUint(depositOrBorrowId_, uint256(tokenActionAmount_));
         } else {
             if (tokenActionAmount_ < 0) {
-                setUint(withdrawOrPaybackId_, uint256(tokenActionAmount_));
+                setUint(withdrawOrPaybackId_, uint256(-tokenActionAmount_));
             }
         }
     }

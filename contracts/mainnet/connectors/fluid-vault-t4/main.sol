@@ -34,7 +34,6 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
      * Payback amount token 0
      * Payback amount token 1
      */
-     */
     struct OperateWIthIdsHelper {
         address vaultAddress;
         uint256 nftId;
@@ -130,7 +129,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
                     isEth: vaultT4Details_.borrowToken.token0 == getEthAddr(),
                     isMin: false,
                     token: vaultT4Details_.borrowToken.token0,
-                    repayApproveAmt: uint256(helper_.newDebtToken0),
+                    repayApproveAmt: uint256(-helper_.newDebtToken0),
                     debtAmt: helper_.newDebtToken0,
                     vaultAddress: helper_.vaultAddress
                 })
@@ -144,7 +143,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
                     isEth: vaultT4Details_.borrowToken.token1 == getEthAddr(),
                     isMin: false,
                     token: vaultT4Details_.borrowToken.token1,
-                    repayApproveAmt: uint256(helper_.newDebtToken1),
+                    repayApproveAmt: uint256(-helper_.newDebtToken1),
                     debtAmt: helper_.newDebtToken1,
                     vaultAddress: helper_.vaultAddress
                 })
@@ -170,22 +169,22 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
         _setIds(
             helper_.setIds[1],
             helper_.setIds[3],
-            uint256(helper_.newColToken0)
+            helper_.newColToken0
         );
         _setIds(
             helper_.setIds[2],
             helper_.setIds[4],
-            uint256(helper_.newColToken1)
+            helper_.newColToken1
         );
         _setIds(
             helper_.setIds[5],
             helper_.setIds[7],
-            uint256(helper_.newDebtToken0)
+            helper_.newDebtToken0
         );
         _setIds(
             helper_.setIds[6],
             helper_.setIds[8],
-            uint256(helper_.newDebtToken1)
+            helper_.newDebtToken1
         );
 
         _eventName = "LogOperateWithIds(address,uint256,int256,int256,int256,int256,int256,int256,uint256[],uint256[])";
@@ -301,7 +300,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
                     isEth: internalVar_.isDebtToken0Eth,
                     isMin: internalVar_.isDebtMin,
                     token: vaultT4Details_.borrowToken.token0,
-                    repayApproveAmt: uint256(helper_.debtToken0MinMax),
+                    repayApproveAmt: uint256(-helper_.debtToken0MinMax), // TODO: verify everywhere
                     debtAmt: helper_.debtToken0MinMax,
                     vaultAddress: helper_.vaultAddress
                 })
@@ -312,14 +311,14 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
                     isEth: internalVar_.isDebtToken1Eth,
                     isMin: internalVar_.isDebtMin,
                     token: vaultT4Details_.borrowToken.token1,
-                    repayApproveAmt: uint256(helper_.debtToken1MinMax),
+                    repayApproveAmt: uint256(-helper_.debtToken1MinMax), // TODO: verify everywhere
                     debtAmt: helper_.debtToken1MinMax,
                     vaultAddress: helper_.vaultAddress
                 })
             );
         }
 
-        (helper_.nftId, internalVar_.r) = vaultT4_.operatePerfect(
+        (helper_.nftId, internalVar_.r) = vaultT4_.operatePerfect{value: internalVar_.ethAmount}(
             helper_.nftId,
             helper_.perfectColShares,
             helper_.colToken0MinMax,
@@ -332,22 +331,22 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
 
         setUint(helper_.setIds[0], helper_.nftId);
         _handleOperatePerfectSetIds(
-            internalVar_.r[2],
+            internalVar_.r[1],
             helper_.setIds[1],
             helper_.setIds[2]
         );
         _handleOperatePerfectSetIds(
-            internalVar_.r[3],
+            internalVar_.r[2],
             helper_.setIds[3],
             helper_.setIds[4]
         );
         _handleOperatePerfectSetIds(
-            internalVar_.r[5],
+            internalVar_.r[4],
             helper_.setIds[5],
             helper_.setIds[6]
         );
         _handleOperatePerfectSetIds(
-            internalVar_.r[6],
+            internalVar_.r[5],
             helper_.setIds[7],
             helper_.setIds[8]
         );
@@ -376,11 +375,11 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
             helper_.vaultAddress,
             helper_.nftId,
             helper_.perfectColShares,
+            internalVar_.r[1],
             internalVar_.r[2],
-            internalVar_.r[3],
             helper_.perfectDebtShares,
+            internalVar_.r[4],
             internalVar_.r[5],
-            internalVar_.r[6],
             helper_.getNftId,
             helper_.setIds
         );
