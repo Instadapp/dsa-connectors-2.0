@@ -23,4 +23,26 @@ contract Events {
         int256 newDebt_,
         uint256 repayApproveAmt_
     );
+
+    event LogOperatePerfectWithIds(
+        address vaultAddress,
+        uint256 nftId,
+        int256 perfectColShares_,
+        int256 token0DepositOrWithdraw,
+        int256 token1DepositOrWithdraw,
+        int256 newDebt_,
+        uint256 repayApproveAmt_,
+        uint256 getNftId_,
+        uint256[] setIds
+    );
+
+    event LogOperatePerfect(
+        address vaultAddress,
+        uint256 nftId,
+        int256 perfectColShares_,
+        int256 token0DepositOrWithdraw,
+        int256 token1DepositOrWithdraw,
+        int256 newDebt_,
+        uint256 repayApproveAmt_
+    );
 }
