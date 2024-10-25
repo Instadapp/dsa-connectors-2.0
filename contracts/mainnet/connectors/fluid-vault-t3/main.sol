@@ -30,14 +30,14 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
     /**
      * @param vaultAddress_ Vault address.
      * @param nftId_ NFT ID for interaction. If 0 then create new NFT/position.
-     * @param newColToken0_ Token 0 new collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
-     * @param newColToken1_ Token 1 new collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
+     * @param newColToken0 Token 0 new collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
+     * @param newColToken1 Token 1 new collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
      * No max or min values allowed. Need to send exact values.
-     * @param colSharesMinMax_ Min or max collateral shares to mint or burn (positive for deposit, negative for withdrawal)
-     * @param newDebtToken0_ Token 0 new debt. If positive then borrow, if negative then payback, if 0 then do nothing
-     * @param newDebtToken1_ Token 1 new debt. If positive then borrow, if negative then payback, if 0 then do nothing
-     * @param debtSharesMinMax_ Min or max debt shares to burn or mint (positive for borrowing, negative for repayment)
-     * @param setIds_ Array of 9 elements to set IDs:
+     * @param colSharesMinMax Min or max collateral shares to mint or burn (positive for deposit, negative for withdrawal)
+     * @param newDebtToken0 Token 0 new debt. If positive then borrow, if negative then payback, if 0 then do nothing
+     * @param newDebtToken1 Token 1 new debt. If positive then borrow, if negative then payback, if 0 then do nothing
+     * @param debtSharesMinMax Min or max debt shares to burn or mint (positive for borrowing, negative for repayment)
+     * @param setIds Array of 7 elements to set IDs:
      * Nft Id
      * Supply amount token 0
      * Withdraw amount token 0
@@ -49,7 +49,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
     struct OperateWIthIdsHelper {
         address vaultAddress;
         uint256 nftId;
-        int256 newCol_;
+        int256 newCol;
         int256 newDebtToken0;
         int256 newDebtToken1;
         int256 debtSharesMinMax;
@@ -71,10 +71,10 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
     {
         _validateIds(helper_.getIds, helper_.setIds);
         helper_.nftId = getUint(helper_.getIds[0], helper_.nftId);
-        helper_.newCol_ = _adjustTokenValues(
+        helper_.newCol = _adjustTokenValues(
             helper_.getIds[1],
             helper_.getIds[2],
-            helper_.newCol_
+            helper_.newCol
         );
         helper_.newDebtToken0 = _adjustTokenValues(
             helper_.getIds[3],
@@ -94,14 +94,14 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
         OperateInternalVariables memory internalVar_;
 
         // Deposit (Normal Collateral)
-        if (helper_.newCol_ > 0) {
-            (internalVar_.ethAmount, helper_.newCol_) = _handleDeposit(
+        if (helper_.newCol > 0) {
+            (internalVar_.ethAmount, helper_.newCol) = _handleDeposit(
                 HandleDepositData({
                     isEth: vaultT3Details_.supplyToken.token0 == getEthAddr(),
-                    isMax: helper_.newCol_ == type(int256).max,
+                    isMax: helper_.newCol == type(int256).max,
                     vaultAddress: helper_.vaultAddress,
                     token: vaultT3Details_.supplyToken.token0,
-                    colAmt: helper_.newCol_
+                    colAmt: helper_.newCol
                 })
             );
         }
@@ -140,7 +140,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
             internalVar_.debtShares
         ) = vaultT3_.operate{value: internalVar_.ethAmount}(
             helper_.nftId,
-            helper_.newCol_,
+            helper_.newCol,
             helper_.newDebtToken0,
             helper_.newDebtToken1,
             helper_.debtSharesMinMax,
@@ -148,7 +148,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
         );
 
         setUint(helper_.setIds[0], helper_.nftId);
-        _setIds(helper_.setIds[1], helper_.setIds[2], helper_.newCol_);
+        _setIds(helper_.setIds[1], helper_.setIds[2], helper_.newCol);
         _setIds(helper_.setIds[3], helper_.setIds[5], helper_.newDebtToken0);
         _setIds(helper_.setIds[4], helper_.setIds[6], helper_.newDebtToken1);
 
@@ -156,7 +156,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
         _eventParam = abi.encode(
             helper_.vaultAddress,
             helper_.nftId,
-            helper_.newCol_,
+            helper_.newCol,
             helper_.newDebtToken0,
             helper_.newDebtToken1,
             helper_.debtSharesMinMax,
@@ -166,17 +166,17 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
     }
 
     /**
-     * @param vaultAddress_ Vault address.
-     * @param nftId_ NFT ID for interaction. If 0 then create new NFT/position.
-     * @param newCol_ New collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
-     * @param newDebtToken0_ Token 0 new debt. If positive then borrow, if negative then payback, if 0 then do nothing
-     * @param newDebtToken1_ Token 1 new debt. If positive then borrow, if negative then payback, if 0 then do nothing
-     * @param debtSharesMinMax_ Min or max debt shares to burn or mint (positive for borrowing, negative for repayment)
+     * @param vaultAddress Vault address.
+     * @param nftId NFT ID for interaction. If 0 then create new NFT/position.
+     * @param newCol New collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
+     * @param newDebtToken0 Token 0 new debt. If positive then borrow, if negative then payback, if 0 then do nothing
+     * @param newDebtToken1 Token 1 new debt. If positive then borrow, if negative then payback, if 0 then do nothing
+     * @param debtSharesMinMax Min or max debt shares to burn or mint (positive for borrowing, negative for repayment)
      */
     struct OperateHelper {
         address vaultAddress;
         uint256 nftId;
-        int256 newCol_;
+        int256 newCol;
         int256 newDebtToken0;
         int256 newDebtToken1;
         int256 debtSharesMinMax;
@@ -201,14 +201,14 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
         OperateInternalVariables memory internalVar_;
 
         // Deposit (Normal Collateral)
-        if (helper_.newCol_ > 0) {
-            (internalVar_.ethAmount, helper_.newCol_) = _handleDeposit(
+        if (helper_.newCol > 0) {
+            (internalVar_.ethAmount, helper_.newCol) = _handleDeposit(
                 HandleDepositData({
                     isEth: vaultT3Details_.supplyToken.token0 == getEthAddr(),
-                    isMax: helper_.newCol_ == type(int256).max,
+                    isMax: helper_.newCol == type(int256).max,
                     vaultAddress: helper_.vaultAddress,
                     token: vaultT3Details_.supplyToken.token0,
-                    colAmt: helper_.newCol_
+                    colAmt: helper_.newCol
                 })
             );
         }
@@ -247,7 +247,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
             internalVar_.debtShares
         ) = vaultT3_.operate{value: internalVar_.ethAmount}(
             helper_.nftId,
-            helper_.newCol_,
+            helper_.newCol,
             helper_.newDebtToken0,
             helper_.newDebtToken1,
             helper_.debtSharesMinMax,
@@ -258,7 +258,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
         _eventParam = abi.encode(
             helper_.vaultAddress,
             helper_.nftId,
-            helper_.newCol_,
+            helper_.newCol,
             helper_.newDebtToken0,
             helper_.newDebtToken1,
             helper_.debtSharesMinMax
@@ -266,15 +266,15 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
     }
 
     /**
-     * @param vaultAddress_ Vault address.
-     * @param nftId_ NFT ID for interaction. If 0 then create new NFT/position.
-     * @param newCol_ New collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
-     * @param perfectDebtShares_ The change in debt shares (positive for borrowing, negative for repayment)
+     * @param vaultAddress Vault address.
+     * @param nftId NFT ID for interaction. If 0 then create new NFT/position.
+     * @param newCol New collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
+     * @param perfectDebtShares The change in debt shares (positive for borrowing, negative for repayment)
      * Send Min int for max payback.
-     * @param debtToken0MinMax_ Min or max debt amount for token0 to borrow or payback (positive for borrowing, negative for repayment)
-     * @param debtToken1MinMax_ Min or max debt amount for token1 to borrow or payback (positive for borrowing, negative for repayment)
-     * @param getNftId_ Id to retrieve Nft Id
-     * @param setIds_ Array of 7 elements to set IDs:
+     * @param debtToken0MinMax Min or max debt amount for token0 to borrow or payback (positive for borrowing, negative for repayment)
+     * @param debtToken1MinMax Min or max debt amount for token1 to borrow or payback (positive for borrowing, negative for repayment)
+     * @param getNftId Id to retrieve Nft Id
+     * @param setIds Array of 7 elements to set IDs:
      *              0 - nft id
      *              1 - deposit amount
      *              2 - withdraw amount
@@ -286,7 +286,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
     struct OperatePerfectWithIdsHelper {
         address vaultAddress;
         uint256 nftId;
-        int256 newCol_;
+        int256 newCol;
         int256 perfectDebtShares;
         int256 debtToken0MinMax; // if +, min to borrow, if -, max to payback
         int256 debtToken1MinMax; // if +, min to borrow, if -, max to payback
@@ -314,14 +314,14 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
         OperatePerfectInternalVariables memory internalVar_;
 
         // Deposit (Normal Collateral)
-        if (helper_.newCol_ > 0) {
-            (internalVar_.ethAmount, helper_.newCol_) = _handleDeposit(
+        if (helper_.newCol > 0) {
+            (internalVar_.ethAmount, helper_.newCol) = _handleDeposit(
                 HandleDepositData({
                     isEth: vaultT3Details_.supplyToken.token0 == getEthAddr(),
-                    isMax: helper_.newCol_ == type(int256).max,
+                    isMax: helper_.newCol == type(int256).max,
                     vaultAddress: helper_.vaultAddress,
                     token: vaultT3Details_.supplyToken.token0,
-                    colAmt: helper_.newCol_
+                    colAmt: helper_.newCol
                 })
             );
         }
@@ -361,7 +361,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
             value: internalVar_.ethAmount
         }(
             helper_.nftId,
-            helper_.newCol_,
+            helper_.newCol,
             helper_.perfectDebtShares,
             helper_.debtToken0MinMax,
             helper_.debtToken1MinMax,
@@ -418,18 +418,18 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
     }
 
     /**
-     * @param vaultAddress_ Vault address.
-     * @param nftId_ NFT ID for interaction. If 0 then create new NFT/position.
-     * @param newCol_ New collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
-     * @param perfectDebtShares_ The change in debt shares (positive for borrowing, negative for repayment)
+     * @param vaultAddress Vault address.
+     * @param nftId NFT ID for interaction. If 0 then create new NFT/position.
+     * @param newCol New collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
+     * @param perfectDebtShares The change in debt shares (positive for borrowing, negative for repayment)
      * Send Min int for max payback.
-     * @param debtToken0MinMax_ Min or max debt amount for token0 to borrow or payback (positive for borrowing, negative for repayment)
-     * @param debtToken1MinMax_ Min or max debt amount for token1 to borrow or payback (positive for borrowing, negative for repayment)
+     * @param debtToken0MinMax Min or max debt amount for token0 to borrow or payback (positive for borrowing, negative for repayment)
+     * @param debtToken1MinMax Min or max debt amount for token1 to borrow or payback (positive for borrowing, negative for repayment)
      */
     struct OperatePerfectHelper {
         address vaultAddress;
         uint256 nftId;
-        int256 newCol_;
+        int256 newCol;
         int256 perfectDebtShares;
         int256 debtToken0MinMax; // if +, min to borrow, if -, max to payback
         int256 debtToken1MinMax; // if +, min to borrow, if -, max to payback
@@ -449,14 +449,14 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
         OperatePerfectInternalVariables memory internalVar_;
 
         // Deposit (Normal Collateral)
-        if (helper_.newCol_ > 0) {
-            (internalVar_.ethAmount, helper_.newCol_) = _handleDeposit(
+        if (helper_.newCol > 0) {
+            (internalVar_.ethAmount, helper_.newCol) = _handleDeposit(
                 HandleDepositData({
                     isEth: vaultT3Details_.supplyToken.token0 == getEthAddr(),
-                    isMax: helper_.newCol_ == type(int256).max,
+                    isMax: helper_.newCol == type(int256).max,
                     vaultAddress: helper_.vaultAddress,
                     token: vaultT3Details_.supplyToken.token0,
-                    colAmt: helper_.newCol_
+                    colAmt: helper_.newCol
                 })
             );
         }
@@ -496,7 +496,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
             value: internalVar_.ethAmount
         }(
             helper_.nftId,
-            helper_.newCol_,
+            helper_.newCol,
             helper_.perfectDebtShares,
             helper_.debtToken0MinMax,
             helper_.debtToken1MinMax,

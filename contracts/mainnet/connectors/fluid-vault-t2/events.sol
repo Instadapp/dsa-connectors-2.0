@@ -8,8 +8,8 @@ contract Events {
         int256 newColToken0,
         int256 newColToken1,
         int256 colSharesMinMax,
-        int256 newDebt_,
-        uint256 repayApproveAmt_,
+        int256 newDebt,
+        uint256 repayApproveAmt,
         uint256[] getIds,
         uint256[] setIds
     );
@@ -20,29 +20,29 @@ contract Events {
         int256 newColToken0,
         int256 newColToken1,
         int256 colSharesMinMax,
-        int256 newDebt_,
-        uint256 repayApproveAmt_
+        int256 newDebt,
+        uint256 repayApproveAmt
     );
 
     event LogOperatePerfectWithIds(
         address vaultAddress,
         uint256 nftId,
-        int256 perfectColShares_,
+        int256 perfectColShares,
         int256 token0DepositOrWithdraw,
         int256 token1DepositOrWithdraw,
-        int256 newDebt_,
-        uint256 repayApproveAmt_,
-        uint256 getNftId_,
+        int256 newDebt,
+        uint256 repayApproveAmt,
+        uint256 getNftId,
         uint256[] setIds
     );
 
     event LogOperatePerfect(
         address vaultAddress,
         uint256 nftId,
-        int256 perfectColShares_,
+        int256 perfectColShares,
         int256 token0DepositOrWithdraw,
         int256 token1DepositOrWithdraw,
-        int256 newDebt_,
-        uint256 repayApproveAmt_
+        int256 newDebt,
+        uint256 repayApproveAmt
     );
 }

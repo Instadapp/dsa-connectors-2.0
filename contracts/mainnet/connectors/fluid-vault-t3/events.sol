@@ -5,7 +5,7 @@ contract Events {
     event LogOperateWithIds(
         address vaultAddress,
         uint256 nftId,
-        int256 newCol_,
+        int256 newCol,
         int256 newDebtToken0,
         int256 newDebtToken1,
         int256 debtSharesMinMax,
@@ -16,7 +16,7 @@ contract Events {
     event LogOperate(
         address vaultAddress,
         uint256 nftId,
-        int256 newCol_,
+        int256 newCol,
         int256 newDebtToken0,
         int256 newDebtToken1,
         int256 debtSharesMinMax
@@ -25,8 +25,8 @@ contract Events {
     event LogOperatePerfectWithIds(
         address vaultAddress,
         uint256 nftId,
-        int256 newCol_,
-        int256 perfectDebtShares_,
+        int256 newCol,
+        int256 perfectDebtShares,
         int256 token0BorrowOrPayback,
         int256 token1BorrowOrPayback,
         uint256 getNftId_,
@@ -36,8 +36,8 @@ contract Events {
     event LogOperatePerfect(
         address vaultAddress,
         uint256 nftId,
-        int256 newCol_,
-        int256 perfectDebtShares_,
+        int256 newCol,
+        int256 perfectDebtShares,
         int256 token0BorrowOrPayback,
         int256 token1BorrowOrPayback
     );
