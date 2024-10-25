@@ -529,7 +529,7 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
             );
         }
 
-        _eventName = "LogOperatePerfectWithIds(address,uint256,int256,int256,int256,int256,uint256)";
+        _eventName = "LogOperatePerfect(address,uint256,int256,int256,int256,int256,uint256)";
         _eventParam = abi.encode(
             helper_.vaultAddress,
             helper_.nftId,
