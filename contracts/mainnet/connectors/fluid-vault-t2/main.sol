@@ -19,7 +19,6 @@ abstract contract FluidVaultT2Connector is Helpers {
         int256 debtShares;
     }
 
-
     function operateWithIds()
         external
         payable
@@ -36,7 +35,9 @@ abstract contract FluidVaultT2Connector is Helpers {
         uint256 repayApproveAmt_;
     }
 
-    function operate(OperateHelper memory helper_)
+    function operate(
+        OperateHelper memory helper_
+    )
         external
         payable
         returns (string memory _eventName, bytes memory _eventParam)
@@ -46,7 +47,7 @@ abstract contract FluidVaultT2Connector is Helpers {
             .constantsView();
 
         OperateInternalVariables memory internalVar_;
-        
+
         // Deposit token 0
         if (helper_.newColToken0 > 0) {
             // Assumes ethAmount_ would either be token0 or token1
@@ -89,6 +90,19 @@ abstract contract FluidVaultT2Connector is Helpers {
             );
         }
 
+        (
+            helper_.nftId,
+            internalVar_.colShares,
+            internalVar_.debtShares
+        ) = vaultT2_.operate{value: internalVar_.ethAmount}(
+            helper_.nftId,
+            helper_.newColToken0,
+            helper_.newColToken1,
+            helper_.colSharesMinMax,
+            helper_.newDebt_,
+            address(this)
+        );
+
         _eventName = "LogOperate(address,uint256,int256,int256,int256,int256, uint256)";
         _eventParam = abi.encode(
             helper_.vaultAddress,
@@ -117,4 +131,3 @@ abstract contract FluidVaultT2Connector is Helpers {
 contract ConnectV2FluidVaultT4 is FluidVaultT2Connector {
     string public constant name = "Fluid-vaultT2-v1.0";
 }
-
