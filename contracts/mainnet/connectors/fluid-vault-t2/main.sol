@@ -26,6 +26,25 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
         int256[] r;
     }
 
+    /**
+     * @param vaultAddress_ Vault address.
+     * @param nftId_ NFT ID for interaction. If 0 then create new NFT/position.
+     * @param newColToken0_ Token 0 new collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
+     * @param newColToken1_ Token 1 new collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
+     * No max or min values allowed. Need to send exact values.
+     * @param colSharesMinMax_ Min or max collateral shares to mint or burn (positive for deposit, negative for withdrawal)
+     * @param newDebt_ Token 0 new debt. If positive then borrow, if negative then payback, if 0 then do nothing.
+     * @param repayApproveAmt_ Amount to approve for repay. If 0 then no approval needed.
+     * @param getIds_ Array of 7 elements to get IDs:
+     * @param setIds_ Array of 7 elements to set IDs:
+     * Nft Id
+     * Supply amount token 0
+     * Supply amount token 1
+     * Withdraw amount token 0
+     * Withdraw amount token 1
+     * Borrow amount of debt token
+     * Payback amount of debt token
+     */
     struct OperateWIthIdsHelper {
         address vaultAddress;
         uint256 nftId;
@@ -38,6 +57,11 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
         uint256[] setIds;
     }
 
+    /**
+     * @dev Deposit, borrow, payback and withdraw assets from the vault.
+     * @notice Single function which handles supply, withdraw, borrow & payback
+     * @param helper_ Helper struct for collateral and debt data.
+     */
     function operateWithIds(
         OperateWIthIdsHelper memory helper_
     )
@@ -59,7 +83,7 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
         );
         helper_.newDebt_ = _adjustTokenValues(
             helper_.getIds[5],
-            helper_.getIds[7],
+            helper_.getIds[6],
             helper_.newDebt_
         );
 
@@ -127,7 +151,19 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
         setUint(helper_.setIds[0], helper_.nftId);
         _setIds(helper_.setIds[1], helper_.setIds[3], helper_.newColToken0);
         _setIds(helper_.setIds[2], helper_.setIds[4], helper_.newColToken1);
-        _setIds(helper_.setIds[5], helper_.setIds[7], helper_.newDebt_);
+        _setIds(helper_.setIds[5], helper_.setIds[6], helper_.newDebt_);
+
+        // Revoke Allowances
+        if (
+            helper_.newDebt_ < 0 &&
+            vaultT2Details_.borrowToken.token0 != getEthAddr()
+        ) {
+            approve(
+                TokenInterface(vaultT2Details_.borrowToken.token0),
+                helper_.vaultAddress,
+                0
+            );
+        }
 
         _eventName = "LogOperateWithIds(address,uint256,int256,int256,int256,int256,uint256,uint256[],uint256[])";
         _eventParam = abi.encode(
@@ -142,7 +178,16 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
             helper_.setIds
         );
     }
-
+    /**
+     * @param vaultAddress_ Vault address.
+     * @param nftId_ NFT ID for interaction. If 0 then create new NFT/position.
+     * @param newColToken0_ Token 0 new collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
+     * @param newColToken1_ Token 1 new collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
+     * No max or min values allowed. Need to send exact values.
+     * @param colSharesMinMax_ Min or max collateral shares to mint or burn (positive for deposit, negative for withdrawal)
+     * @param newDebt_ New debt. If positive then borrow, if negative then payback, if 0 then do nothing
+     * @param repayApproveAmt_ Amount to approve for repay. If 0 then no approval needed.
+    */
     struct OperateHelper {
         address vaultAddress;
         uint256 nftId;
@@ -153,6 +198,11 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
         uint256 repayApproveAmt_;
     }
 
+    /**
+     * @dev Deposit, borrow, payback and withdraw assets from the vault.
+     * @notice Single function which handles supply, withdraw, borrow & payback
+     * @param helper_ Helper struct for collateral and debt data.
+     */
     function operate(
         OperateHelper memory helper_
     )
@@ -221,6 +271,18 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
             address(this)
         );
 
+        // Revoke Allowances
+        if (
+            helper_.newDebt_ < 0 &&
+            vaultT2Details_.borrowToken.token0 != getEthAddr()
+        ) {
+            approve(
+                TokenInterface(vaultT2Details_.borrowToken.token0),
+                helper_.vaultAddress,
+                0
+            );
+        }
+
         _eventName = "LogOperate(address,uint256,int256,int256,int256,int256, uint256)";
         _eventParam = abi.encode(
             helper_.vaultAddress,
@@ -232,7 +294,25 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
             helper_.repayApproveAmt_
         );
     }
-
+    /**
+     * @param vaultAddress_ Vault address.
+     * @param nftId_ NFT ID for interaction. If 0 then create new NFT/position.
+     * @param perfectColShares_ The change in collateral shares (positive for deposit, negative for withdrawal)
+     * Send Min int for max withdraw.
+     * @param colToken0MinMax_ Min or max collateral amount of token0 to withdraw or deposit (positive for deposit, negative for withdrawal)
+     * @param colToken1MinMax_ Min or max collateral amount of token1 to withdraw or deposit (positive for deposit, negative for withdrawal)
+     * @param newDebt_ New debt. If positive then borrow, if negative then payback, if 0 then do nothing
+     * @param repayApproveAmt_ Amount to approve for repay. If 0 then no approval needed.
+     * @param getNftId_ Id to retrieve Nft Id
+     * @param setIds_ Array of 9 elements to set IDs:
+     *              0 - nft id
+     *              1 - token0 deposit amount
+     *              2 - token0 withdraw amount
+     *              3 - token1 deposit amount
+     *              4 - token1 withdraw amount
+     *              5 - borrow amount
+     *              6 - payback amount
+     */
     struct OperatePerfectWithIdsHelper {
         address vaultAddress;
         uint256 nftId;
@@ -245,6 +325,11 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
         uint256[] setIds;
     }
 
+    /**
+     * @dev Deposit, borrow, payback and withdraw perfect amounts of assets from the vault.
+     * @notice Single function which handles supply, withdraw, borrow & payback
+     * @param helper_ Helper struct for collateral and debt data.
+     */
     function operatePerfectWithIds(
         OperatePerfectWithIdsHelper memory helper_
     )
@@ -350,7 +435,16 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
             helper_.setIds
         );
     }
-
+    /**
+     * @param vaultAddress_ Vault address.
+     * @param nftId_ NFT ID for interaction. If 0 then create new NFT/position.
+     * @param perfectColShares_ The change in collateral shares (positive for deposit, negative for withdrawal)
+     * Send Min int for max withdraw.
+     * @param colToken0MinMax_ Min or max collateral amount of token0 to withdraw or deposit (positive for deposit, negative for withdrawal)
+     * @param colToken1MinMax_ Min or max collateral amount of token1 to withdraw or deposit (positive for deposit, negative for withdrawal)
+     * @param newDebt_ New debt. If positive then borrow, if negative then payback, if 0 then do nothing
+     * @param repayApproveAmt_ Amount to approve for repay. If 0 then no approval needed.
+     */
     struct OperatePerfectHelper {
         address vaultAddress;
         uint256 nftId;
