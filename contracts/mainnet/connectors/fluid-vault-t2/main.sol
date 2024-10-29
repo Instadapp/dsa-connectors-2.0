@@ -408,7 +408,7 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
             helper_.setIds[4]
         );
         _handleOperatePerfectSetIds(
-            internalVar_.r[4],
+            internalVar_.r[3],
             helper_.setIds[5],
             helper_.setIds[6]
         );
@@ -429,7 +429,7 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
             helper_.perfectColShares,
             internalVar_.r[1],
             internalVar_.r[2],
-            internalVar_.r[4],
+            internalVar_.r[3],
             helper_.repayApproveAmt,
             helper_.getNftId,
             helper_.setIds
@@ -536,7 +536,7 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
             helper_.perfectColShares,
             internalVar_.r[1],
             internalVar_.r[2],
-            internalVar_.r[4],
+            internalVar_.r[3],
             helper_.repayApproveAmt
         );
     }

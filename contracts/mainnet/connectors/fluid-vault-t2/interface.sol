@@ -18,6 +18,12 @@ interface IVaultT2 {
             int256 // final borrow amount. if - then payback
         );
 
+        /// @return nftId_ The ID of the NFT representing the updated vault position
+        /// @return r_ int256 array of return values:
+        ///              0 - final col shares amount (can only change on max withdrawal)
+        ///              1 - token0 deposit or withdraw amount
+        ///              2 - token1 deposit or withdraw amount
+        ///              3 - newDebt_ will only change if user sent type(int).min
     function operatePerfect(
         uint nftId_,
         int perfectColShares_,

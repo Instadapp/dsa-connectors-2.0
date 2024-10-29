@@ -370,17 +370,17 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
 
         setUint(helper_.setIds[0], helper_.nftId);
         _handleOperatePerfectSetIds(
-            internalVar_.r[1],
+            internalVar_.r[0],
             helper_.setIds[1],
             helper_.setIds[2]
         );
         _handleOperatePerfectSetIds(
-            internalVar_.r[4],
+            internalVar_.r[2],
             helper_.setIds[3],
             helper_.setIds[4]
         );
         _handleOperatePerfectSetIds(
-            internalVar_.r[5],
+            internalVar_.r[3],
             helper_.setIds[5],
             helper_.setIds[6]
         );
@@ -410,8 +410,8 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
             helper_.nftId,
             internalVar_.r[1],
             helper_.perfectDebtShares,
-            internalVar_.r[4],
-            internalVar_.r[5],
+            internalVar_.r[2],
+            internalVar_.r[3],
             helper_.getNftId,
             helper_.setIds
         );
@@ -528,8 +528,8 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
             helper_.nftId,
             internalVar_.r[1],
             helper_.perfectDebtShares,
-            internalVar_.r[4],
-            internalVar_.r[5]
+            internalVar_.r[2],
+            internalVar_.r[3]
         );
     }
 }

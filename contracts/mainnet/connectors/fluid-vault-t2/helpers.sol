@@ -28,24 +28,10 @@ contract Helpers is Basic {
         }
 
         if (
-            _bothPositive(getIds_[5], getIds_[7]) ||
-            _bothPositive(getIds_[6], getIds_[8])
-        ) {
-            revert("Borrow and payback get IDs cannot both be > 0.");
-        }
-
-        if (
             _bothPositive(setIds_[1], setIds_[3]) ||
             _bothPositive(setIds_[2], setIds_[4])
         ) {
             revert("Supply and withdraw set IDs cannot both be > 0.");
-        }
-
-        if (
-            _bothPositive(setIds_[5], setIds_[7]) ||
-            _bothPositive(setIds_[6], setIds_[8])
-        ) {
-            revert("Borrow and payback set IDs cannot both be > 0.");
         }
     }
 

@@ -18,6 +18,12 @@ interface IVaultT3 {
             int256 // final borrow amount. if - then payback
         );
 
+    /// @return nftId_ The ID of the NFT representing the updated vault position
+    /// @return r_ int256 array of return values:
+    ///              0 - col amount, will only change if user sends type(int).min
+    ///              1 - final debt shares amount (can only change on max payback)
+    ///              2 - token0 borrow or payback amount
+    ///              3 - token1 borrow or payback amount
     function operatePerfect(
         uint nftId_,
         int newCol_,
