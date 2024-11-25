@@ -72,7 +72,7 @@ abstract contract FluidDex is Basic, Events {
             token0Amt_,
             token1Amt_,
             minSharesAmt_,
-            true
+            false
         );
 
         _eventName = "LogFluidDexDeposit(address,uint256,uint256,uint256)";
