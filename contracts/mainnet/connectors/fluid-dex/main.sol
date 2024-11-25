@@ -25,14 +25,12 @@ abstract contract FluidDex is Basic, Events {
      * @param token0Amt_ The amount of token0 to deposit
      * @param token1Amt_ The amount of token1 to deposit
      * @param minSharesAmt_ The minimum amount of shares the user expects to receive
-     * @param estimate_ If true, function will revert with estimated shares without executing the deposit
      */
-    function depositInDex(
+    function deposit(
         address dex_,
         uint256 token0Amt_,
         uint256 token1Amt_,
-        uint256 minSharesAmt_,
-        bool estimate_
+        uint256 minSharesAmt_
     )
         external
         payable
@@ -77,15 +75,12 @@ abstract contract FluidDex is Basic, Events {
             true
         );
 
-        _eventName = "LogFluidDexDeposit(address,uint256,uint256,uint256,bool)";
+        _eventName = "LogFluidDexDeposit(address,uint256,uint256,uint256)";
         _eventParam = abi.encode(
             dex_,
-            constantsView_.token0,
-            constantsView_.token1,
             token0Amt_,
             token1Amt_,
-            minSharesAmt_,
-            estimate_
+            minSharesAmt_
         );
     }
 }
