@@ -36,5 +36,5 @@ contract BasicERC20Connector is Events, Basic {
 }
 
 contract ConnectV2BasicERC20 is BasicERC20Connector {
-    string public constant name = "Basic-ERC20-v1.0";
+    string public constant name = "Basic-ERC20-Approve-v1.0";
 }
