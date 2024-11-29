@@ -12,7 +12,7 @@ import {ISparkPsm} from "./interface.sol";
  * @dev Connector to interact with Spark PSM to convert DAI to USDC in 1:1 Ratio.
  */
 
-contract SparkPsmConnector is Basic, Helpers, Events {
+contract SparkPSMConnector is Basic, Helpers, Events {
     /**
      * @dev Buy Gem from Spark PSM.
      * @param amt Amount of DAI.
@@ -46,6 +46,6 @@ contract SparkPsmConnector is Basic, Helpers, Events {
     }
 }
 
-contract ConnectV2SparkPsm is SparkPsmConnector {
+contract ConnectV2SparkPSM is SparkPSMConnector {
     string public constant name = "Spark-PSM-v1.0";
 }
