@@ -4,7 +4,7 @@ pragma solidity ^0.8.2;
 import "./helpers.sol";
 import "./events.sol";
 import {Stores} from "../../common/stores.sol";
-import {TokenInterface} from "../../common/basic.sol";
+import {TokenInterface, Basic} from "../../common/basic.sol";
 import {IMakerPsm} from "./interface.sol";
 
 /**
@@ -12,7 +12,7 @@ import {IMakerPsm} from "./interface.sol";
  * @dev Connector to interact with Maker PSM to convert DAI to USDC in 1:1 Ratio.
  */
 
-contract MakerPsmConnector is Stores, Helpers, Events {
+contract MakerPsmConnector is Stores, Basic, Helpers, Events {
     /**
      * @dev Buy Gem from Maker PSM.
      * @param amt Amount of USDC.
@@ -29,7 +29,10 @@ contract MakerPsmConnector is Stores, Helpers, Events {
         uint256 usdcBalanceBefore = TokenInterface(usdcAddr).balanceOf(
             address(this)
         );
+
+        approve(TokenInterface(daiAddr), MakerPsmAddr, _amt);
         IMakerPsm(MakerPsmAddr).buyGem(address(this), _amt);
+
         uint256 usdcBalanceAfter = TokenInterface(usdcAddr).balanceOf(
             address(this)
         );
