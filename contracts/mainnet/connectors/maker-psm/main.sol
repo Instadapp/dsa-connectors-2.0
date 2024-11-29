@@ -15,7 +15,7 @@ import {IMakerPsm} from "./interface.sol";
 contract MakerPsmConnector is Stores, Helpers, Events {
     /**
      * @dev Buy Gem from Maker PSM.
-     * @param amt Amount of DAI.
+     * @param amt Amount of USDC.
      * @param getId Get token amount at this ID from `InstaMemory` Contract.
      * @param setId Set token amount at this ID from `InstaMemory` Contract.
      */
