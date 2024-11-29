@@ -25,10 +25,14 @@ contract MakerPsmConnector is Stores, Helpers, Events {
         uint256 setId
     ) external returns (string memory _eventName, bytes memory _eventParam) {
         uint256 _amt = getUint(getId, amt);
-        
-        uint256 usdcBalanceBefore = TokenInterface(usdcAddr).balanceOf(address(this));
+
+        uint256 usdcBalanceBefore = TokenInterface(usdcAddr).balanceOf(
+            address(this)
+        );
         IMakerPsm(MakerPsmAddr).buyGem(address(this), _amt);
-        uint256 usdcBalanceAfter = TokenInterface(usdcAddr).balanceOf(address(this));
+        uint256 usdcBalanceAfter = TokenInterface(usdcAddr).balanceOf(
+            address(this)
+        );
 
         uint256 _usdcAmt = usdcBalanceAfter - usdcBalanceBefore;
         setUint(setId, _usdcAmt);
