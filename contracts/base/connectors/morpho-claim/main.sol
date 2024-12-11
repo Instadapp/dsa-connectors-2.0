@@ -54,6 +54,6 @@ abstract contract MorphoClaimConnector is Stores, Events {
     }
 }
 
-contract ConnectV2MorphoClaim is MorphoClaimConnector {
-    string public constant name = "Morpho-Claim-v1.0";
+contract ConnectV2MorphoClaimBase is MorphoClaimConnector {
+    string public constant name = "Morpho-Claim-Base-v1.0";
 }
