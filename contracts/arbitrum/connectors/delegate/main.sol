@@ -17,5 +17,5 @@ contract DelegateConnector is Events {
 }
 
 contract ConnectV2DelegateArbitrum is DelegateConnector {
-    string public constant name = "Delegate-v1.1";
+    string public constant name = "Delegate-v1.0";
 }
