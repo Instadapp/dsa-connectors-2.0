@@ -14,6 +14,10 @@ contract SUSDSConnector is Helpers, Basic {
     ) external returns (string memory _eventName, bytes memory _eventParam) {
         uint256 _amountIn = getUint(getId, amountIn);
 
+        _amountIn = _amountIn == type(uint256).max
+            ? TokenInterface(assetAddr).balanceOf(address(this))
+            : _amountIn;
+
         approve(TokenInterface(assetAddr), address(SparkPSM3), _amountIn);
 
         uint256 minAmountOut = SparkPSM3.previewSwapExactIn(
@@ -45,6 +49,10 @@ contract SUSDSConnector is Helpers, Basic {
     ) external returns (string memory _eventName, bytes memory _eventParam) {
         uint256 _amountOut = getUint(getId, amountOut);
 
+        _amountOut = _amountOut == type(uint256).max
+            ? TokenInterface(assetAddr).balanceOf(address(this))
+            : _amountOut;
+
         uint256 maxAmountIn = SparkPSM3.previewSwapExactOut(
             assetAddr,
             SUSDSAddr,
@@ -61,7 +69,7 @@ contract SUSDSConnector is Helpers, Basic {
             address(this),
             referralCode
         );
-        
+
         setUint(setId, _amountOut);
 
         _eventName = "LogSwapExactOut(address,uint256,uint256,uint256)";
