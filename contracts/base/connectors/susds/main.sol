@@ -1,11 +1,23 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
+/**
+ * @title SUSDS Connectors.
+ * @dev Interface for Spark PSM3 contract for DSA.
+ */
+
 import "./helpers.sol";
 import {Basic} from "../../common/basic.sol";
 import {TokenInterface} from "../../common/basic.sol";
 
 contract SUSDSConnector is Helpers, Basic {
+    /**
+     * 
+     * @param assetAddr Address of the asset to swap (e.g. USDS, USDC)
+     * @param amountIn Amount of asset to swap in (e.g. USDS, USDC amount)
+	 * @param getId ID to retrieve amount.
+	 * @param setId ID stores the amount of tokens swapped in.
+     */
     function swapExactIn(
         address assetAddr,
         uint256 amountIn,
@@ -41,6 +53,13 @@ contract SUSDSConnector is Helpers, Basic {
         _eventParam = abi.encode(assetAddr, SUSDSAddr, _amountIn, getId);
     }
 
+    /**
+     * 
+     * @param assetAddr Address of the asset to swap (e.g. USDS, USDC)
+     * @param amountOut Amount of asset to swap out (e.g. USDS, USDC amount)
+	 * @param getId ID to retrieve amount.
+	 * @param setId ID stores the amount of tokens swapped out.
+     */
     function swapExactOut(
         address assetAddr,
         uint256 amountOut,
