@@ -145,6 +145,11 @@ abstract contract FluidMerkleClaim is Basic, Events {
         );
     }
 
+    struct ClaimOnBehalfHelper{
+        uint256 rewardsBeforeBal_;
+        uint256 rewardsClaimed_;
+    }
+
     function claimOnBehalfV2(
         address merkleDistributorContract,
         address rewardToken,
@@ -166,7 +171,9 @@ abstract contract FluidMerkleClaim is Basic, Events {
                 merkleDistributorContract
             );
 
-        uint256 rewardsBeforeBal_ = REWARD_TOKEN.balanceOf(address(this));
+        ClaimOnBehalfHelper memory helper_;
+
+        helper_.rewardsBeforeBal_ = REWARD_TOKEN.balanceOf(address(this));
         MERKLE_DISTRIBUTOR.claim(
             recipient_,
             cumulativeAmount_,
@@ -177,9 +184,9 @@ abstract contract FluidMerkleClaim is Basic, Events {
             metadata_
         );
 
-        uint256 rewardsClaimed_ = REWARD_TOKEN.balanceOf(address(this)) -
-            rewardsBeforeBal_;
-        setUint(setId_, rewardsClaimed_);
+        helper_.rewardsClaimed_ = REWARD_TOKEN.balanceOf(address(this)) -
+            helper_.rewardsBeforeBal_;
+        setUint(setId_, helper_.rewardsClaimed_);
 
         _eventName = "LogClaimOnBehalfV2(address,address,uint256,bytes32,uint256,bytes32[],uint256,uint256)";
         _eventParam = abi.encode(
@@ -190,7 +197,7 @@ abstract contract FluidMerkleClaim is Basic, Events {
             positionId_,
             cycle_,
             merkleProof_,
-            rewardsClaimed_,
+            helper_.rewardsClaimed_,
             setId_
         );
     }
