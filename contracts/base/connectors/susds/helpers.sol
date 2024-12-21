@@ -9,6 +9,6 @@ contract Helpers {
     address internal constant SUSDSAddr =
         0x5875eEE11Cf8398102FdAd704C9E96607675467a;
         
-    ISparkPSM3 internal SparkPSM3 =
+    ISparkPSM3 internal constant SparkPSM3 =
         ISparkPSM3(0x1601843c5E9bC251A3272907010AFa41Fa18347E);
 }
