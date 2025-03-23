@@ -43,7 +43,7 @@ const networkGasPriceConfig: Record<string, number> = {
   arbitrum: 1,
   optimism: 0.001,
   fantom: 210,
-  base: 0.0005
+  base: 0.0092
 };
 
 function createConfig(network: string) {
