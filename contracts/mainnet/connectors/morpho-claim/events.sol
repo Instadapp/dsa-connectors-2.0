@@ -1,0 +1,11 @@
+//SPDX-License-Identifier: MIT
+pragma solidity ^0.8.2;
+
+contract Events {
+    event LogClaimed(
+        address distributor,
+        address rewardToken,
+        uint256 claimableAmount,
+        uint256 setId
+    );
+}
