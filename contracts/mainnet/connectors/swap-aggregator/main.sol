@@ -28,14 +28,21 @@ contract SwapAggregatorConnector is Helpers, Events {
             _buyAmt: 0
         });
 
-        swapData = _swap(swapData, routerAddress, allowanceHolderAddress, setId);
+        swapData = _swap(
+            swapData,
+            routerAddress,
+            allowanceHolderAddress,
+            setId
+        );
 
-        _eventName = "LogSwap(address,address,uint256,uint256,uint256)";
+        _eventName = "LogSwap(address,address,uint256,uint256,address,address,uint256)";
         _eventParam = abi.encode(
             address(swapData.buyToken),
             address(swapData.sellToken),
             swapData._buyAmt,
             swapData._sellAmt,
+            routerAddress,
+            allowanceHolderAddress,
             setId
         );
     }

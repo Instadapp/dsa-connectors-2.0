@@ -57,7 +57,11 @@ contract Helpers is DSMath, Basic {
         if (address(_sellAddr) == ethAddr) {
             ethAmount = swapData._sellAmt;
         } else {
-            approve(TokenInterface(_sellAddr), allowanceHolderAddress, swapData._sellAmt);
+            approve(
+                TokenInterface(_sellAddr),
+                allowanceHolderAddress,
+                swapData._sellAmt
+            );
         }
 
         swapData._buyAmt = _swapHelper(swapData, routerAddress, ethAmount);

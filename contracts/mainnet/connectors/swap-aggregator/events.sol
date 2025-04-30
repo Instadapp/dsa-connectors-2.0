@@ -7,6 +7,8 @@ contract Events {
         address sellToken,
         uint256 buyAmt,
         uint256 sellAmt,
+        address routerAddress,
+        address allowanceHolderAddress,
         uint256 setId
     );
 }
