@@ -6,14 +6,15 @@ pragma solidity ^0.8.2;
  * @dev Lending & Borrowing.
  */
 
-import {Stores} from "../../common/stores.sol";
+import {Basic} from "../../common/basic.sol";
 import {TokenInterface} from "../../common/interfaces.sol";
+
 import {Events} from "./events.sol";
 import {IVault} from "./interface.sol";
 
-abstract contract FluidConnector is Events, Stores {
+abstract contract FluidConnector is Events, Basic {
     /**
-     * @dev Returns Eth address
+     * @dev Returns Matic address
      */
     function getMaticAddr() internal pure returns (address) {
         return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -103,8 +104,9 @@ abstract contract FluidConnector is Events, Stores {
                     );
                 }
 
-                TokenInterface(vaultDetails_.supplyToken).approve(
-                    vaultAddress_,
+                approve(
+                    TokenInterface(vaultDetails_.supplyToken), 
+                    vaultAddress_, 
                     uint256(newCol_)
                 );
             }
@@ -121,12 +123,14 @@ abstract contract FluidConnector is Events, Stores {
                     : uint256(-newDebt_);
             } else {
                 isPaybackMin_
-                    ? TokenInterface(vaultDetails_.borrowToken).approve(
-                        vaultAddress_,
+                    ? approve(
+                        TokenInterface(vaultDetails_.borrowToken), 
+                        vaultAddress_, 
                         repayApproveAmt_
                     )
-                    : TokenInterface(vaultDetails_.borrowToken).approve(
-                        vaultAddress_,
+                    : approve(
+                        TokenInterface(vaultDetails_.borrowToken), 
+                        vaultAddress_, 
                         uint256(-newDebt_)
                     );
             }
@@ -148,6 +152,24 @@ abstract contract FluidConnector is Events, Stores {
         setIds_[3] > 0
             ? setUint(setIds_[3], uint256(newDebt_))
             : setUint(setIds_[4], uint256(newDebt_)); // If setIds_[4] != 0, it will set the ID.
+
+        // Revoke supply approvals in case of deposit
+        if (newCol_ > 0 && vaultDetails_.supplyToken != getMaticAddr()) {
+            approve(
+                TokenInterface(vaultDetails_.supplyToken),
+                vaultAddress_,
+                0
+            );
+        }
+
+        // Revoke borrow approvals in case of payback
+        if (newDebt_ < 0 && vaultDetails_.borrowToken != getMaticAddr()) {
+            approve(
+                TokenInterface(vaultDetails_.borrowToken),
+                vaultAddress_,
+                0
+            );
+        }
 
         _eventName = "LogOperateWithIds(address,uint256,int256,int256,uint256[],uint256[])";
         _eventParam = abi.encode(
@@ -208,8 +230,9 @@ abstract contract FluidConnector is Events, Stores {
                     );
                 }
 
-                TokenInterface(vaultDetails_.supplyToken).approve(
-                    vaultAddress_,
+                approve(
+                    TokenInterface(vaultDetails_.supplyToken), 
+                    vaultAddress_, 
                     uint256(newCol_)
                 );
             }
@@ -223,16 +246,18 @@ abstract contract FluidConnector is Events, Stores {
                 // Needs to be positive as it will be send in msg.value
                 maticAmount_ = isPaybackMin_
                     ? repayApproveAmt_
-                    : uint256(-1 * newDebt_);
+                    : uint256(-newDebt_);
             } else {
                 isPaybackMin_
-                    ? TokenInterface(vaultDetails_.borrowToken).approve(
-                        vaultAddress_,
+                    ? approve(
+                        TokenInterface(vaultDetails_.borrowToken), 
+                        vaultAddress_, 
                         repayApproveAmt_
                     )
-                    : TokenInterface(vaultDetails_.borrowToken).approve(
-                        vaultAddress_,
-                        uint256(-1 * newDebt_)
+                    : approve(
+                        TokenInterface(vaultDetails_.borrowToken), 
+                        vaultAddress_, 
+                        uint256(-newDebt_)
                     );
             }
         }
@@ -245,6 +270,24 @@ abstract contract FluidConnector is Events, Stores {
             address(this)
         );
 
+        // Revoke supply approvals in case of deposit
+        if (newCol_ > 0 && vaultDetails_.supplyToken != getMaticAddr()) {
+            approve(
+                TokenInterface(vaultDetails_.supplyToken),
+                vaultAddress_,
+                0
+            );
+        }
+
+        // Revoke borrow approvals in case of payback
+        if (newDebt_ < 0 && vaultDetails_.borrowToken != getMaticAddr()) {
+            approve(
+                TokenInterface(vaultDetails_.borrowToken),
+                vaultAddress_,
+                0
+            );
+        }
+
         _eventName = "LogOperate(address,uint256,int256,int256)";
         _eventParam = abi.encode(
             vaultAddress_,
@@ -256,5 +299,5 @@ abstract contract FluidConnector is Events, Stores {
 }
 
 contract ConnectV2FluidPolygon is FluidConnector {
-    string public constant name = "Fluid-v1.0";
+    string public constant name = "Fluid-v1.1";
 }

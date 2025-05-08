@@ -34,8 +34,6 @@ interface IVault {
         uint8 supplyDecimals;
         uint8 borrowDecimals;
         uint vaultId;
-        bytes32 liquidityTotalSupplySlot;
-        bytes32 liquidityTotalBorrowSlot;
         bytes32 liquiditySupplyExchangePriceSlot;
         bytes32 liquidityBorrowExchangePriceSlot;
         bytes32 liquidityUserSupplySlot;
