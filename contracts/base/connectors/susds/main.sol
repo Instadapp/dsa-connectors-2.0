@@ -40,7 +40,7 @@ contract SUSDSConnector is Helpers, Basic {
             _amountIn
         );
 
-        SparkPSM3.swapExactIn(
+        uint256 _amountOut = SparkPSM3.swapExactIn(
             assetInAddr,
             assetOutAddr,
             _amountIn,
@@ -49,7 +49,7 @@ contract SUSDSConnector is Helpers, Basic {
             referralCode
         );
 
-        setUint(setId, _amountIn);
+        setUint(setId, _amountOut);
 
         _eventName = "LogSwapExactIn(address,address,uint256,uint256,uint256)";
         _eventParam = abi.encode(assetInAddr, assetOutAddr, _amountIn, getId, setId);
@@ -80,7 +80,7 @@ contract SUSDSConnector is Helpers, Basic {
 
         approve(TokenInterface(assetInAddr), address(SparkPSM3), maxAmountIn);
 
-        SparkPSM3.swapExactOut(
+        uint256 _amountIn = SparkPSM3.swapExactOut(
             assetInAddr,
             assetOutAddr,
             _amountOut,
@@ -89,7 +89,7 @@ contract SUSDSConnector is Helpers, Basic {
             referralCode
         );
 
-        setUint(setId, _amountOut);
+        setUint(setId, _amountIn);
 
         _eventName = "LogSwapExactOut(address,address,uint256,uint256,uint256)";
         _eventParam = abi.encode(assetInAddr, assetOutAddr, _amountOut, getId, setId);
@@ -97,5 +97,5 @@ contract SUSDSConnector is Helpers, Basic {
 }
 
 contract ConnectV2SUSDSBase is SUSDSConnector {
-    string public constant name = "SUSD-Base-v1.1";
+    string public constant name = "SUSD-Base-v1.2";
 }
