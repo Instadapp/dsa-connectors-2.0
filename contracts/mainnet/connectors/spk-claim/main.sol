@@ -60,3 +60,7 @@ contract SPKClaimConnector is Helpers, Events {
         );
     }
 }
+
+contract ConnectV2SPKClaimConnector is SPKClaimConnector {
+    string public constant name = "SPK-Claim-v1.0";
+}
