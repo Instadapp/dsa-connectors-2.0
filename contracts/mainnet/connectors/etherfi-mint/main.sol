@@ -16,7 +16,7 @@ contract EtherfiMintConnector is Helpers, Events {
         returns (string memory _eventName, bytes memory _eventParam)
     {
         if (depositAmount_ == type(uint256).max) {
-            depositAmount_ = address(this).balance;
+            depositAmount_ = TokenInterface(STETH_ADDRESS).balanceOf(address(this));
         }
 
         // Approve the Etherfi Vampire contract to spend the specified amount of stETH
