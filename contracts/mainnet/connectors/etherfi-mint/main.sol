@@ -46,7 +46,7 @@ contract EtherfiMintConnector is Helpers, Events {
         // but keeping a buffer of 1 Gwei
         require(eEthAmount_ >= (depositAmount_ - 1e9), "Amount received is less");
 
-        _eventName = "LogMintEtherfi(address,uint256)";
+        _eventName = "LogMintEtherfi(uint256,uint256)";
         _eventParam = abi.encode(depositAmount_, eEthAmount_);
     }
 }
