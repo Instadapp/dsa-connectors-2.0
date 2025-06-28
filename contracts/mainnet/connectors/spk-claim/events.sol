@@ -3,6 +3,7 @@ pragma solidity ^0.8.2;
 
 contract Events {
     event LogClaim(
+        uint256 claimType,
         uint256 epoch,
         address account,
         uint256 cumulativeAmount,

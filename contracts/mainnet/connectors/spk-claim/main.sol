@@ -11,7 +11,7 @@ import {Events} from "./events.sol";
  */
 contract SPKClaimConnector is Helpers, Events {
     /**
-     * @param claimType The type of claim to perform. 0 = old_user, 1 = new_user
+     * @param claimType The type of claim to perform. 0 = ignition, 1 = pfl3, 2 = cookie3
      * @param epoch The epoch number to claim.
      * @param account The account to claim for.
      * @param cumulativeAmount The cumulative amount to claim.
@@ -31,7 +31,7 @@ contract SPKClaimConnector is Helpers, Events {
         returns (string memory _eventName, bytes memory _eventParam)
     {
         if (claimType == 0) {
-            ISparkRewards(SPARK_REWARDS_OLD).claim(
+            ISparkRewards(IGNITION_REWARDS).claim(
                 epoch,
                 account,
                 SPK_TOKEN,
@@ -39,8 +39,17 @@ contract SPKClaimConnector is Helpers, Events {
                 expectedMerkleRoot,
                 merkleProof
             );
-        } else {
-            ISparkRewards(SPARK_REWARDS_NEW).claim(
+        } else if (claimType == 1) {
+            ISparkRewards(PFL3_REWARDS).claim(
+                epoch,
+                account,
+                SPK_TOKEN,
+                cumulativeAmount,
+                expectedMerkleRoot,
+                merkleProof
+            );
+        } else if (claimType == 2) {
+            ISparkRewards(COOKIE3_REWARDS).claim(
                 epoch,
                 account,
                 SPK_TOKEN,
@@ -52,6 +61,7 @@ contract SPKClaimConnector is Helpers, Events {
 
         _eventName = "LogClaim(uint256,address,uint256,bytes32,bytes32[])";
         _eventParam = abi.encode(
+            claimType,
             epoch,
             account,
             cumulativeAmount,
