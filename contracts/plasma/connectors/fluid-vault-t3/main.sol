@@ -534,6 +534,6 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
     }
 }
 
-contract ConnectV2FluidVaultT3 is FluidVaultT3Connector {
-    string public constant name = "Fluid-vaultT3-v1.0";
+contract ConnectV2FluidVaultT3Plasma is FluidVaultT3Connector {
+    string public constant name = "Fluid-VaultT3-v1.0";
 }

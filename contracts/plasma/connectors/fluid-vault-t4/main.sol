@@ -12,7 +12,6 @@ import {IVaultT4} from "./interface.sol";
 import {TokenInterface} from "../../common/interfaces.sol";
 
 abstract contract FluidVaultT4Connector is Helpers, Events {
-
     /**
      * @param vaultAddress_ Vault address.
      * @param nftId_ NFT ID for interaction. If 0 then create new NFT/position.
@@ -48,7 +47,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
     }
 
     struct OperateInternalVariables {
-        uint256 ethAmount;
+        uint256 xplAmount;
         int256 colShares;
         int256 debtShares;
     }
@@ -96,10 +95,10 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
 
         // Deposit token 0
         if (helper_.newColToken0 > 0) {
-            // Assumes ethAmount_ would either be token0 or token1
-            (internalVar_.ethAmount, helper_.newColToken0) = _handleDeposit(
+            // Assumes xplAmount_ would either be token0 or token1
+            (internalVar_.xplAmount, helper_.newColToken0) = _handleDeposit(
                 HandleDepositData({
-                    isEth: vaultT4Details_.supplyToken.token0 == getEthAddr(),
+                    isXpl: vaultT4Details_.supplyToken.token0 == getXplAddr(),
                     isMax: helper_.newColToken0 == type(int256).max,
                     vaultAddress: helper_.vaultAddress,
                     token: vaultT4Details_.supplyToken.token0,
@@ -110,10 +109,10 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
 
         // Deposit token 1
         if (helper_.newColToken1 > 0) {
-            // Assumes ethAmount_ would either be token0 or token1
-            (internalVar_.ethAmount, helper_.newColToken1) = _handleDeposit(
+            // Assumes xplAmount_ would either be token0 or token1
+            (internalVar_.xplAmount, helper_.newColToken1) = _handleDeposit(
                 HandleDepositData({
-                    isEth: vaultT4Details_.supplyToken.token1 == getEthAddr(),
+                    isXpl: vaultT4Details_.supplyToken.token1 == getXplAddr(),
                     isMax: helper_.newColToken1 == type(int256).max,
                     vaultAddress: helper_.vaultAddress,
                     token: vaultT4Details_.supplyToken.token1,
@@ -124,9 +123,9 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
 
         // Payback token 0
         if (helper_.newDebtToken0 < 0) {
-            internalVar_.ethAmount = _handlePayback(
+            internalVar_.xplAmount = _handlePayback(
                 HandlePaybackData({
-                    isEth: vaultT4Details_.borrowToken.token0 == getEthAddr(),
+                    isXpl: vaultT4Details_.borrowToken.token0 == getXplAddr(),
                     isMin: false,
                     token: vaultT4Details_.borrowToken.token0,
                     repayApproveAmt: uint256(-helper_.newDebtToken0),
@@ -138,9 +137,9 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
 
         // Payback token 1
         if (helper_.newDebtToken1 < 0) {
-            internalVar_.ethAmount = _handlePayback(
+            internalVar_.xplAmount = _handlePayback(
                 HandlePaybackData({
-                    isEth: vaultT4Details_.borrowToken.token1 == getEthAddr(),
+                    isXpl: vaultT4Details_.borrowToken.token1 == getXplAddr(),
                     isMin: false,
                     token: vaultT4Details_.borrowToken.token1,
                     repayApproveAmt: uint256(-helper_.newDebtToken1),
@@ -154,7 +153,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
             helper_.nftId,
             internalVar_.colShares,
             internalVar_.debtShares
-        ) = vaultT4_.operate{value: internalVar_.ethAmount}(
+        ) = vaultT4_.operate{value: internalVar_.xplAmount}(
             helper_.nftId,
             helper_.newColToken0,
             helper_.newColToken1,
@@ -166,26 +165,10 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
         );
 
         setUint(helper_.setIds[0], helper_.nftId);
-        _setIds(
-            helper_.setIds[1],
-            helper_.setIds[3],
-            helper_.newColToken0
-        );
-        _setIds(
-            helper_.setIds[2],
-            helper_.setIds[4],
-            helper_.newColToken1
-        );
-        _setIds(
-            helper_.setIds[5],
-            helper_.setIds[7],
-            helper_.newDebtToken0
-        );
-        _setIds(
-            helper_.setIds[6],
-            helper_.setIds[8],
-            helper_.newDebtToken1
-        );
+        _setIds(helper_.setIds[1], helper_.setIds[3], helper_.newColToken0);
+        _setIds(helper_.setIds[2], helper_.setIds[4], helper_.newColToken1);
+        _setIds(helper_.setIds[5], helper_.setIds[7], helper_.newDebtToken0);
+        _setIds(helper_.setIds[6], helper_.setIds[8], helper_.newDebtToken1);
 
         _eventName = "LogOperateWithIds(address,uint256,int256,int256,int256,int256,int256,int256,uint256[],uint256[])";
         _eventParam = abi.encode(
@@ -212,7 +195,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
      * @param newDebtToken0_ Token 0 new debt. If positive then borrow, if negative then payback, if 0 then do nothing
      * @param newDebtToken1_ Token 1 new debt. If positive then borrow, if negative then payback, if 0 then do nothing
      * @param debtSharesMinMax_ Min or max debt shares to burn or mint (positive for borrowing, negative for repayment)
-    */
+     */
     struct OperateHelper {
         address vaultAddress;
         uint256 nftId;
@@ -244,10 +227,10 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
 
         // Deposit token 0
         if (helper_.newColToken0 > 0) {
-            // Assumes ethAmount_ would either be token0 or token1
-            (internalVar_.ethAmount, helper_.newColToken0) = _handleDeposit(
+            // Assumes xplAmount_ would either be token0 or token1
+            (internalVar_.xplAmount, helper_.newColToken0) = _handleDeposit(
                 HandleDepositData({
-                    isEth: vaultT4Details_.supplyToken.token0 == getEthAddr(),
+                    isXpl: vaultT4Details_.supplyToken.token0 == getXplAddr(),
                     isMax: helper_.newColToken0 == type(int256).max,
                     vaultAddress: helper_.vaultAddress,
                     token: vaultT4Details_.supplyToken.token0,
@@ -258,10 +241,10 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
 
         // Deposit token 1
         if (helper_.newColToken1 > 0) {
-            // Assumes ethAmount_ would either be token0 or token1
-            (internalVar_.ethAmount, helper_.newColToken1) = _handleDeposit(
+            // Assumes xplAmount_ would either be token0 or token1
+            (internalVar_.xplAmount, helper_.newColToken1) = _handleDeposit(
                 HandleDepositData({
-                    isEth: vaultT4Details_.supplyToken.token1 == getEthAddr(),
+                    isXpl: vaultT4Details_.supplyToken.token1 == getXplAddr(),
                     isMax: helper_.newColToken1 == type(int256).max,
                     vaultAddress: helper_.vaultAddress,
                     token: vaultT4Details_.supplyToken.token1,
@@ -272,9 +255,9 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
 
         // Payback token 0
         if (helper_.newDebtToken0 < 0) {
-            internalVar_.ethAmount = _handlePayback(
+            internalVar_.xplAmount = _handlePayback(
                 HandlePaybackData({
-                    isEth: vaultT4Details_.borrowToken.token0 == getEthAddr(),
+                    isXpl: vaultT4Details_.borrowToken.token0 == getXplAddr(),
                     isMin: false,
                     token: vaultT4Details_.borrowToken.token0,
                     repayApproveAmt: uint256(-helper_.newDebtToken0),
@@ -286,9 +269,9 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
 
         // Payback token 1
         if (helper_.newDebtToken1 < 0) {
-            internalVar_.ethAmount = _handlePayback(
+            internalVar_.xplAmount = _handlePayback(
                 HandlePaybackData({
-                    isEth: vaultT4Details_.borrowToken.token1 == getEthAddr(),
+                    isXpl: vaultT4Details_.borrowToken.token1 == getXplAddr(),
                     isMin: false,
                     token: vaultT4Details_.borrowToken.token1,
                     repayApproveAmt: uint256(-helper_.newDebtToken1),
@@ -302,7 +285,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
             helper_.nftId,
             internalVar_.colShares,
             internalVar_.debtShares
-        ) = vaultT4_.operate{value: internalVar_.ethAmount}(
+        ) = vaultT4_.operate{value: internalVar_.xplAmount}(
             helper_.nftId,
             helper_.newColToken0,
             helper_.newColToken1,
@@ -363,10 +346,10 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
     }
 
     struct OperatePerfectInternalVariables {
-        uint256 ethAmount;
+        uint256 xplAmount;
         bool isDebtMin;
-        bool isDebtToken0Eth;
-        bool isDebtToken1Eth;
+        bool isDebtToken0Xpl;
+        bool isDebtToken1Xpl;
         int256[] r;
     }
 
@@ -390,9 +373,9 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
         OperatePerfectInternalVariables memory internalVar_;
 
         if (helper_.perfectColShares > 0) {
-            (internalVar_.ethAmount, ) = _handleDeposit(
+            (internalVar_.xplAmount, ) = _handleDeposit(
                 HandleDepositData({
-                    isEth: vaultT4Details_.supplyToken.token0 == getEthAddr(),
+                    isXpl: vaultT4Details_.supplyToken.token0 == getXplAddr(),
                     isMax: helper_.perfectColShares == type(int256).max,
                     vaultAddress: helper_.vaultAddress,
                     token: vaultT4Details_.supplyToken.token0,
@@ -400,9 +383,9 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
                 })
             );
 
-            (internalVar_.ethAmount, ) = _handleDeposit(
+            (internalVar_.xplAmount, ) = _handleDeposit(
                 HandleDepositData({
-                    isEth: vaultT4Details_.supplyToken.token1 == getEthAddr(),
+                    isXpl: vaultT4Details_.supplyToken.token1 == getXplAddr(),
                     isMax: helper_.perfectColShares == type(int256).max,
                     vaultAddress: helper_.vaultAddress,
                     token: vaultT4Details_.supplyToken.token1,
@@ -412,16 +395,16 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
         }
 
         internalVar_.isDebtMin = helper_.perfectDebtShares == type(int256).min;
-        internalVar_.isDebtToken0Eth =
-            vaultT4Details_.borrowToken.token0 == getEthAddr();
-        internalVar_.isDebtToken1Eth =
-            vaultT4Details_.borrowToken.token1 == getEthAddr();
+        internalVar_.isDebtToken0Xpl =
+            vaultT4Details_.borrowToken.token0 == getXplAddr();
+        internalVar_.isDebtToken1Xpl =
+            vaultT4Details_.borrowToken.token1 == getXplAddr();
 
         // Payback
         if (helper_.perfectDebtShares < 0) {
-            internalVar_.ethAmount = _handlePayback(
+            internalVar_.xplAmount = _handlePayback(
                 HandlePaybackData({
-                    isEth: internalVar_.isDebtToken0Eth,
+                    isXpl: internalVar_.isDebtToken0Xpl,
                     isMin: internalVar_.isDebtMin,
                     token: vaultT4Details_.borrowToken.token0,
                     repayApproveAmt: uint256(-helper_.debtToken0MinMax),
@@ -430,9 +413,9 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
                 })
             );
 
-            internalVar_.ethAmount = _handlePayback(
+            internalVar_.xplAmount = _handlePayback(
                 HandlePaybackData({
-                    isEth: internalVar_.isDebtToken1Eth,
+                    isXpl: internalVar_.isDebtToken1Xpl,
                     isMin: internalVar_.isDebtMin,
                     token: vaultT4Details_.borrowToken.token1,
                     repayApproveAmt: uint256(-helper_.debtToken1MinMax),
@@ -442,7 +425,9 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
             );
         }
 
-        (helper_.nftId, internalVar_.r) = vaultT4_.operatePerfect{value: internalVar_.ethAmount}(
+        (helper_.nftId, internalVar_.r) = vaultT4_.operatePerfect{
+            value: internalVar_.xplAmount
+        }(
             helper_.nftId,
             helper_.perfectColShares,
             helper_.colToken0MinMax,
@@ -477,7 +462,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
 
         // Make approval 0
         if (internalVar_.isDebtMin) {
-            if (!internalVar_.isDebtToken0Eth) {
+            if (!internalVar_.isDebtToken0Xpl) {
                 approve(
                     TokenInterface(vaultT4Details_.borrowToken.token0),
                     helper_.vaultAddress,
@@ -485,7 +470,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
                 );
             }
 
-            if (!internalVar_.isDebtToken1Eth) {
+            if (!internalVar_.isDebtToken1Xpl) {
                 approve(
                     TokenInterface(vaultT4Details_.borrowToken.token1),
                     helper_.vaultAddress,
@@ -553,9 +538,9 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
         OperatePerfectInternalVariables memory internalVar_;
 
         if (helper_.perfectColShares > 0) {
-            (internalVar_.ethAmount, ) = _handleDeposit(
+            (internalVar_.xplAmount, ) = _handleDeposit(
                 HandleDepositData({
-                    isEth: vaultT4Details_.supplyToken.token0 == getEthAddr(),
+                    isXpl: vaultT4Details_.supplyToken.token0 == getXplAddr(),
                     isMax: helper_.perfectColShares == type(int256).max,
                     vaultAddress: helper_.vaultAddress,
                     token: vaultT4Details_.supplyToken.token0,
@@ -563,9 +548,9 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
                 })
             );
 
-            (internalVar_.ethAmount, ) = _handleDeposit(
+            (internalVar_.xplAmount, ) = _handleDeposit(
                 HandleDepositData({
-                    isEth: vaultT4Details_.supplyToken.token1 == getEthAddr(),
+                    isXpl: vaultT4Details_.supplyToken.token1 == getXplAddr(),
                     isMax: helper_.perfectColShares == type(int256).max,
                     vaultAddress: helper_.vaultAddress,
                     token: vaultT4Details_.supplyToken.token1,
@@ -575,16 +560,16 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
         }
 
         internalVar_.isDebtMin = helper_.perfectDebtShares == type(int256).min;
-        internalVar_.isDebtToken0Eth =
-            vaultT4Details_.borrowToken.token0 == getEthAddr();
-        internalVar_.isDebtToken1Eth =
-            vaultT4Details_.borrowToken.token1 == getEthAddr();
+        internalVar_.isDebtToken0Xpl =
+            vaultT4Details_.borrowToken.token0 == getXplAddr();
+        internalVar_.isDebtToken1Xpl =
+            vaultT4Details_.borrowToken.token1 == getXplAddr();
 
         // Payback
         if (helper_.perfectDebtShares < 0) {
-            internalVar_.ethAmount = _handlePayback(
+            internalVar_.xplAmount = _handlePayback(
                 HandlePaybackData({
-                    isEth: internalVar_.isDebtToken0Eth,
+                    isXpl: internalVar_.isDebtToken0Xpl,
                     isMin: internalVar_.isDebtMin,
                     token: vaultT4Details_.borrowToken.token0,
                     repayApproveAmt: uint256(-helper_.debtToken0MinMax),
@@ -593,9 +578,9 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
                 })
             );
 
-            internalVar_.ethAmount = _handlePayback(
+            internalVar_.xplAmount = _handlePayback(
                 HandlePaybackData({
-                    isEth: internalVar_.isDebtToken1Eth,
+                    isXpl: internalVar_.isDebtToken1Xpl,
                     isMin: internalVar_.isDebtMin,
                     token: vaultT4Details_.borrowToken.token1,
                     repayApproveAmt: uint256(-helper_.debtToken1MinMax),
@@ -605,7 +590,9 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
             );
         }
 
-        (helper_.nftId, internalVar_.r) = vaultT4_.operatePerfect{value: internalVar_.ethAmount}(
+        (helper_.nftId, internalVar_.r) = vaultT4_.operatePerfect{
+            value: internalVar_.xplAmount
+        }(
             helper_.nftId,
             helper_.perfectColShares,
             helper_.colToken0MinMax,
@@ -618,7 +605,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
 
         // Make approval 0
         if (internalVar_.isDebtMin) {
-            if (!internalVar_.isDebtToken0Eth) {
+            if (!internalVar_.isDebtToken0Xpl) {
                 approve(
                     TokenInterface(vaultT4Details_.borrowToken.token0),
                     helper_.vaultAddress,
@@ -626,7 +613,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
                 );
             }
 
-            if (!internalVar_.isDebtToken1Eth) {
+            if (!internalVar_.isDebtToken1Xpl) {
                 approve(
                     TokenInterface(vaultT4Details_.borrowToken.token1),
                     helper_.vaultAddress,
@@ -649,6 +636,6 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
     }
 }
 
-contract ConnectV2FluidVaultT4 is FluidVaultT4Connector {
-    string public constant name = "Fluid-vaultT4-v1.0";
+contract ConnectV2FluidVaultT4Plasma is FluidVaultT4Connector {
+    string public constant name = "Fluid-VaultT4-v1.0";
 }
