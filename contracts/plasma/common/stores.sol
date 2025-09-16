@@ -23,13 +23,6 @@ abstract contract Stores {
         MemoryInterface(0xA4BF319968986D2352FA1c550D781bBFCCE3FcaB);
 
     /**
-     * @dev Return InstaDApp Mapping Addresses
-     */
-    // @TODO: check!
-    InstaMapping internal constant instaMapping =
-        InstaMapping(0xe81F70Cc7C0D46e12d70efc60607F16bbD617E88);
-
-    /**
      * @dev Return InstaList Address
      */
     ListInterface internal constant instaList =
