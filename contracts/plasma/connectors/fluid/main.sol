@@ -14,9 +14,9 @@ import {IVault} from "./interface.sol";
 
 abstract contract FluidConnector is Events, Basic {
     /**
-     * @dev Returns Eth address
+     * @dev Returns XPL address
      */
-    function getEthAddr() internal pure returns (address) {
+    function getXplAddr() internal pure returns (address) {
         return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     }
 
@@ -83,18 +83,18 @@ abstract contract FluidConnector is Events, Basic {
 
         IVault.ConstantViews memory vaultDetails_ = vault_.constantsView();
 
-        uint256 ethAmount_;
+        uint256 xplAmount_;
 
         bool isColMax_ = newCol_ == type(int256).max;
 
         // Deposit
         if (newCol_ > 0) {
-            if (vaultDetails_.supplyToken == getEthAddr()) {
-                ethAmount_ = isColMax_
+            if (vaultDetails_.supplyToken == getXplAddr()) {
+                xplAmount_ = isColMax_
                     ? address(this).balance
                     : uint256(newCol_);
 
-                newCol_ = int256(ethAmount_);
+                newCol_ = int256(xplAmount_);
             } else {
                 if (isColMax_) {
                     newCol_ = int256(
@@ -105,8 +105,8 @@ abstract contract FluidConnector is Events, Basic {
                 }
 
                 approve(
-                    TokenInterface(vaultDetails_.supplyToken), 
-                    vaultAddress_, 
+                    TokenInterface(vaultDetails_.supplyToken),
+                    vaultAddress_,
                     uint256(newCol_)
                 );
             }
@@ -116,28 +116,28 @@ abstract contract FluidConnector is Events, Basic {
 
         // Payback
         if (newDebt_ < 0) {
-            if (vaultDetails_.borrowToken == getEthAddr()) {
+            if (vaultDetails_.borrowToken == getXplAddr()) {
                 // Needs to be positive as it will be send in msg.value
-                ethAmount_ = isPaybackMin_
+                xplAmount_ = isPaybackMin_
                     ? repayApproveAmt_
                     : uint256(-newDebt_);
             } else {
                 isPaybackMin_
                     ? approve(
-                        TokenInterface(vaultDetails_.borrowToken), 
-                        vaultAddress_, 
+                        TokenInterface(vaultDetails_.borrowToken),
+                        vaultAddress_,
                         repayApproveAmt_
                     )
                     : approve(
-                        TokenInterface(vaultDetails_.borrowToken), 
-                        vaultAddress_, 
+                        TokenInterface(vaultDetails_.borrowToken),
+                        vaultAddress_,
                         uint256(-newDebt_)
                     );
             }
         }
 
         // Note max withdraw will be handled by Fluid contract
-        (nftId_, newCol_, newDebt_) = vault_.operate{value: ethAmount_}(
+        (nftId_, newCol_, newDebt_) = vault_.operate{value: xplAmount_}(
             nftId_,
             newCol_,
             newDebt_,
@@ -154,7 +154,7 @@ abstract contract FluidConnector is Events, Basic {
             : setUint(setIds_[4], uint256(newDebt_)); // If setIds_[4] != 0, it will set the ID.
 
         // Revoke supply approvals in case of deposit
-        if (newCol_ > 0 && vaultDetails_.supplyToken != getEthAddr()) {
+        if (newCol_ > 0 && vaultDetails_.supplyToken != getXplAddr()) {
             approve(
                 TokenInterface(vaultDetails_.supplyToken),
                 vaultAddress_,
@@ -163,7 +163,7 @@ abstract contract FluidConnector is Events, Basic {
         }
 
         // Revoke borrow approvals in case of payback
-        if (newDebt_ < 0 && vaultDetails_.borrowToken != getEthAddr()) {
+        if (newDebt_ < 0 && vaultDetails_.borrowToken != getXplAddr()) {
             approve(
                 TokenInterface(vaultDetails_.borrowToken),
                 vaultAddress_,
@@ -209,18 +209,18 @@ abstract contract FluidConnector is Events, Basic {
 
         IVault.ConstantViews memory vaultDetails_ = vault_.constantsView();
 
-        uint256 ethAmount_;
+        uint256 xplAmount_;
 
         bool isColMax_ = newCol_ == type(int256).max;
 
         // Deposit
         if (newCol_ > 0) {
-            if (vaultDetails_.supplyToken == getEthAddr()) {
-                ethAmount_ = isColMax_
+            if (vaultDetails_.supplyToken == getXplAddr()) {
+                xplAmount_ = isColMax_
                     ? address(this).balance
                     : uint256(newCol_);
 
-                newCol_ = int256(ethAmount_);
+                newCol_ = int256(xplAmount_);
             } else {
                 if (isColMax_) {
                     newCol_ = int256(
@@ -231,8 +231,8 @@ abstract contract FluidConnector is Events, Basic {
                 }
 
                 approve(
-                    TokenInterface(vaultDetails_.supplyToken), 
-                    vaultAddress_, 
+                    TokenInterface(vaultDetails_.supplyToken),
+                    vaultAddress_,
                     uint256(newCol_)
                 );
             }
@@ -242,28 +242,28 @@ abstract contract FluidConnector is Events, Basic {
 
         // Payback
         if (newDebt_ < 0) {
-            if (vaultDetails_.borrowToken == getEthAddr()) {
+            if (vaultDetails_.borrowToken == getXplAddr()) {
                 // Needs to be positive as it will be send in msg.value
-                ethAmount_ = isPaybackMin_
+                xplAmount_ = isPaybackMin_
                     ? repayApproveAmt_
                     : uint256(-newDebt_);
             } else {
                 isPaybackMin_
                     ? approve(
-                        TokenInterface(vaultDetails_.borrowToken), 
-                        vaultAddress_, 
+                        TokenInterface(vaultDetails_.borrowToken),
+                        vaultAddress_,
                         repayApproveAmt_
                     )
                     : approve(
-                        TokenInterface(vaultDetails_.borrowToken), 
-                        vaultAddress_, 
+                        TokenInterface(vaultDetails_.borrowToken),
+                        vaultAddress_,
                         uint256(-newDebt_)
                     );
             }
         }
 
         // Note max withdraw will be handled by Fluid contract
-        (nftId_, newCol_, newDebt_) = vault_.operate{value: ethAmount_}(
+        (nftId_, newCol_, newDebt_) = vault_.operate{value: xplAmount_}(
             nftId_,
             newCol_,
             newDebt_,
@@ -271,7 +271,7 @@ abstract contract FluidConnector is Events, Basic {
         );
 
         // Revoke supply approvals in case of deposit
-        if (newCol_ > 0 && vaultDetails_.supplyToken != getEthAddr()) {
+        if (newCol_ > 0 && vaultDetails_.supplyToken != getXplAddr()) {
             approve(
                 TokenInterface(vaultDetails_.supplyToken),
                 vaultAddress_,
@@ -280,7 +280,7 @@ abstract contract FluidConnector is Events, Basic {
         }
 
         // Revoke borrow approvals in case of payback
-        if (newDebt_ < 0 && vaultDetails_.borrowToken != getEthAddr()) {
+        if (newDebt_ < 0 && vaultDetails_.borrowToken != getXplAddr()) {
             approve(
                 TokenInterface(vaultDetails_.borrowToken),
                 vaultAddress_,
@@ -289,15 +289,10 @@ abstract contract FluidConnector is Events, Basic {
         }
 
         _eventName = "LogOperate(address,uint256,int256,int256)";
-        _eventParam = abi.encode(
-            vaultAddress_,
-            nftId_,
-            newCol_,
-            newDebt_
-        );
+        _eventParam = abi.encode(vaultAddress_, nftId_, newCol_, newDebt_);
     }
 }
 
-contract ConnectV2Fluid is FluidConnector {
+contract ConnectV2FluidPlasma is FluidConnector {
     string public constant name = "Fluid-v1.3";
 }
