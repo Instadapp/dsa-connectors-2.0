@@ -6,9 +6,9 @@ import {TokenInterface} from "../../common/interfaces.sol";
 
 contract Helpers is Basic {
     /**
-     * @dev Returns Eth address
+     * @dev Returns XPL address
      */
-    function getEthAddr() internal pure returns (address) {
+    function getXplAddr() internal pure returns (address) {
         return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     }
 
@@ -63,7 +63,7 @@ contract Helpers is Basic {
     }
 
     struct HandleDepositData {
-        bool isEth;
+        bool isXpl;
         bool isMax;
         address vaultAddress;
         address token;
@@ -72,13 +72,13 @@ contract Helpers is Basic {
 
     function _handleDeposit(
         HandleDepositData memory depositData_
-    ) internal returns (uint256 ethAmt_, int256) {
-        if (depositData_.isEth) {
-            ethAmt_ = depositData_.isMax
+    ) internal returns (uint256 xplAmt_, int256) {
+        if (depositData_.isXpl) {
+            xplAmt_ = depositData_.isMax
                 ? address(this).balance
                 : uint256(depositData_.colAmt);
 
-            depositData_.colAmt = int256(ethAmt_);
+            depositData_.colAmt = int256(xplAmt_);
         } else {
             if (depositData_.isMax) {
                 depositData_.colAmt = int256(
@@ -93,11 +93,11 @@ contract Helpers is Basic {
             );
         }
 
-        return (ethAmt_, depositData_.colAmt);
+        return (xplAmt_, depositData_.colAmt);
     }
 
     struct HandlePaybackData {
-        bool isEth;
+        bool isXpl;
         bool isMin;
         address token;
         uint256 repayApproveAmt;
@@ -107,9 +107,9 @@ contract Helpers is Basic {
 
     function _handlePayback(
         HandlePaybackData memory paybackData_
-    ) internal returns (uint256 ethAmt_) {
-        if (paybackData_.isEth) {
-            ethAmt_ = paybackData_.isMin
+    ) internal returns (uint256 xplAmt_) {
+        if (paybackData_.isXpl) {
+            xplAmt_ = paybackData_.isMin
                 ? paybackData_.repayApproveAmt
                 : uint256(-paybackData_.debtAmt);
         } else {
