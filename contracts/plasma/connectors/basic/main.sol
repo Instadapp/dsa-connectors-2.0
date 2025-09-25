@@ -6,7 +6,7 @@ pragma solidity ^0.8.2;
  * @dev Deposit & Withdraw from DSA.
  */
 
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {DSMath} from "../../common/math.sol";
@@ -37,13 +37,13 @@ abstract contract BasicResolver is Events, DSMath, Basic {
         uint _amt = getUint(getId, amt);
         if (token != xplAddr) {
             IERC20 tokenContract = IERC20(token);
-            _amt = _amt == uint(-1)
+            _amt = _amt == type(uint256).max
                 ? tokenContract.balanceOf(msg.sender)
                 : _amt;
             tokenContract.safeTransferFrom(msg.sender, address(this), _amt);
         } else {
             require(
-                msg.value == _amt || _amt == uint(-1),
+                msg.value == _amt || _amt == type(uint256).max,
                 "invalid-xpl-amount"
             );
             _amt = msg.value;
@@ -77,7 +77,7 @@ abstract contract BasicResolver is Events, DSMath, Basic {
         uint _amt = getUint(getId, amt);
         require(token != xplAddr, "xpl-not-supported");
         IERC20 tokenContract = IERC20(token);
-        _amt = _amt == uint(-1) ? tokenContract.balanceOf(from) : _amt;
+        _amt = _amt == type(uint256).max ? tokenContract.balanceOf(from) : _amt;
         tokenContract.safeTransferFrom(from, address(this), _amt);
 
         setUint(setId, _amt);
@@ -108,11 +108,11 @@ abstract contract BasicResolver is Events, DSMath, Basic {
     {
         uint _amt = getUint(getId, amt);
         if (token == xplAddr) {
-            _amt = _amt == uint(-1) ? address(this).balance : _amt;
+            _amt = _amt == type(uint256).max ? address(this).balance : _amt;
             to.call{value: _amt}("");
         } else {
             IERC20 tokenContract = IERC20(token);
-            _amt = _amt == uint(-1)
+            _amt = _amt == type(uint256).max
                 ? tokenContract.balanceOf(address(this))
                 : _amt;
             tokenContract.safeTransfer(to, _amt);

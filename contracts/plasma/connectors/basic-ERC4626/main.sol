@@ -39,7 +39,7 @@ abstract contract BasicConnector is Events, DSMath, Basic {
             vaultTokenContract.asset()
         );
 
-        _underlyingAmt = _underlyingAmt == uint256(-1)
+        _underlyingAmt = _underlyingAmt == type(uint256).max
             ? _underlyingTokenContract.balanceOf(address(this))
             : _underlyingAmt;
 
@@ -139,7 +139,7 @@ abstract contract BasicConnector is Events, DSMath, Basic {
             vaultTokenContract.asset()
         );
 
-        _underlyingAmt = _underlyingAmt == uint256(-1)
+        _underlyingAmt = _underlyingAmt == type(uint256).max
             ? underlyingTokenContract.balanceOf(address(this))
             : _underlyingAmt;
 
@@ -191,7 +191,7 @@ abstract contract BasicConnector is Events, DSMath, Basic {
             vaultTokenContract.asset()
         );
 
-        _shareAmt = _shareAmt == uint256(-1)
+        _shareAmt = _shareAmt == type(uint256).max
             ? vaultTokenContract.balanceOf(address(this))
             : _shareAmt;
 
