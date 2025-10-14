@@ -9,7 +9,7 @@ contract SwapHelpers {
      * @dev Instadapp Connectors Registry
      */
     InstaConnectors internal constant instaConnectors =
-        InstaConnectors(0x97b0B3A8bDeFE8cB9563a3c610019Ad10DB8aD11);
+        InstaConnectors(0x01fEF4d2B513C9F69E34b2f93Ef707FA9Ff60109);
 
     /**
      *@dev Swap using the dex aggregators.
