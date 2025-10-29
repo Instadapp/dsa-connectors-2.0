@@ -5,6 +5,17 @@ import {InstaConnectors} from "../../common/interfaces.sol";
 import {TokenInterface} from "../../common/interfaces.sol";
 
 contract SwapHelpers {
+    struct SwapAmounts {
+        uint256 sellAmount;
+        uint256 buyAmount;
+    }
+
+    struct SwapResult {
+        bool success;
+        bytes returnData;
+        string connector;
+    }
+
     /**
      * @dev Instadapp Connectors Registry
      */
@@ -21,7 +32,7 @@ contract SwapHelpers {
         bytes[] memory datas_
     )
         internal
-        returns (bool success, bytes memory returnData, string memory connector)
+        returns (SwapResult memory swapResult_)
     {
         uint256 length_ = connectors_.length;
         require(length_ > 0, "zero-length-not-allowed");
@@ -33,9 +44,9 @@ contract SwapHelpers {
         require(isOk, "connector-names-invalid");
 
         for (uint256 i = 0; i < length_; i++) {
-            (success, returnData) = connectors[i].delegatecall(datas_[i]);
-            if (success) {
-                connector = connectors_[i];
+            (swapResult_.success, swapResult_.returnData) = connectors[i].delegatecall(datas_[i]);
+            if (swapResult_.success) {
+                swapResult_.connector = connectors_[i];
                 break;
             }
         }

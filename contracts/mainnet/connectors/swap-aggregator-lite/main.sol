@@ -37,48 +37,38 @@ abstract contract SwapAggregatorLite is SwapHelpers, Events {
         payable
         returns (string memory eventName_, bytes memory eventParam_)
     {
-        // Initialize sell amount with current balance of sellToken
-        uint256 sellAmount_ = TokenInterface(sellTokenAddr_).balanceOf(
-            address(this)
-        );
+        SwapAmounts memory swapAmounts_ = SwapAmounts({
+            sellAmount: TokenInterface(sellTokenAddr_).balanceOf(address(this)),
+            buyAmount: TokenInterface(buyTokenAddr_).balanceOf(address(this))
+        });
 
-        // Initialize buy amount with current balance of buyToken
-        uint256 buyAmount_ = TokenInterface(buyTokenAddr_).balanceOf(
-            address(this)
-        );
-
-        (
-            bool success,
-            bytes memory returnData,
-            string memory connector
-        ) = _swap(connectors_, datas_);
-
-        require(success, "swap-Aggregator-failed");
+        SwapResult memory swapResult_ = _swap(connectors_, datas_);
+        require(swapResult_.success, "swap-Aggregator-failed");
         (string memory eventName, bytes memory eventParam) = abi.decode(
-            returnData,
+            swapResult_.returnData,
             (string, bytes)
         );
 
         // Calculate the swapped amounts
-        sellAmount_ =
-            sellAmount_ -
+        swapAmounts_.sellAmount =
+            swapAmounts_.sellAmount -
             TokenInterface(sellTokenAddr_).balanceOf(address(this));
-        buyAmount_ =
-            buyAmount_ -
+        swapAmounts_.buyAmount =
+            swapAmounts_.buyAmount -
             TokenInterface(buyTokenAddr_).balanceOf(address(this));
 
         // maxSwapLossPercentage_ check
         require(
-            _getAmountInUsd(sellTokenAddr_, sellAmount_, sellTokenExchangePrice_) <
-            (_getAmountInUsd(buyTokenAddr_, buyAmount_, buyTokenExchangePrice_) * (1e4 + maxSwapLossPercentage_)) /1e4,
+            _getAmountInUsd(sellTokenAddr_, swapAmounts_.sellAmount, sellTokenExchangePrice_) <
+            (_getAmountInUsd(buyTokenAddr_, swapAmounts_.buyAmount, buyTokenExchangePrice_) * (1e4 + maxSwapLossPercentage_)) /1e4,
             "loss-greater-than-max-swap-loss-percentage"
         );
 
         // minBuyAmount_ check
-        require( minBuyAmount_ < buyAmount_, "amount-received-less");
+        require( minBuyAmount_ < swapAmounts_.buyAmount, "amount-received-less");
 
         eventName_ = "LogSwapAggregator(string[],string,string,bytes)";
-        eventParam_ = abi.encode(connectors_, connector, eventName, eventParam);
+        eventParam_ = abi.encode(connectors_, swapResult_.connector, eventName, eventParam);
     }
 }
 
