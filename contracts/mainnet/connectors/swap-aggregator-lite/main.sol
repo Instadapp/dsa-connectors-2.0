@@ -60,7 +60,7 @@ abstract contract SwapAggregatorLite is SwapHelpers, Events {
         // maxSwapLossPercentage_ check
         require(
             _getAmountInUsd(sellTokenAddr_, swapAmounts_.sellAmount, sellTokenExchangePrice_) <
-            (_getAmountInUsd(buyTokenAddr_, swapAmounts_.buyAmount, buyTokenExchangePrice_) * (1e4 + maxSwapLossPercentage_)) /1e4,
+            (_getAmountInUsd(buyTokenAddr_, swapAmounts_.buyAmount, buyTokenExchangePrice_) * (1e4 + maxSwapLossPercentage_)) / 1e4,
             "loss-greater-than-max-swap-loss-percentage"
         );
 
