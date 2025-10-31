@@ -4,7 +4,7 @@ pragma solidity ^0.8.2;
 import {InstaConnectors} from "../../common/interfaces.sol";
 import {TokenInterface} from "../../common/interfaces.sol";
 
-contract SwapHelpers {
+abstract contract SwapHelpers {
     struct SwapAmounts {
         uint256 sellAmount;
         uint256 buyAmount;
@@ -19,7 +19,7 @@ contract SwapHelpers {
     /**
      * @dev Instadapp Connectors Registry
      */
-    InstaConnectors internal constant instaConnectors =
+    InstaConnectors internal constant INSTA_CONNECTORS =
         InstaConnectors(0x97b0B3A8bDeFE8cB9563a3c610019Ad10DB8aD11);
 
     /**
@@ -38,13 +38,13 @@ contract SwapHelpers {
         require(length_ > 0, "zero-length-not-allowed");
         require(datas_.length == length_, "calldata-length-invalid");
 
-        (bool isOk, address[] memory connectors) = instaConnectors.isConnectors(
+        (bool isOk, address[] memory connectorAddresses_) = INSTA_CONNECTORS.isConnectors(
             connectors_
         );
         require(isOk, "connector-names-invalid");
 
         for (uint256 i = 0; i < length_; i++) {
-            (swapResult_.success, swapResult_.returnData) = connectors[i].delegatecall(datas_[i]);
+            (swapResult_.success, swapResult_.returnData) = connectorAddresses_[i].delegatecall(datas_[i]);
             if (swapResult_.success) {
                 swapResult_.connector = connectors_[i];
                 break;

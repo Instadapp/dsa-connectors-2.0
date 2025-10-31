@@ -51,11 +51,9 @@ abstract contract SwapAggregatorLite is SwapHelpers, Events {
 
         // Calculate the swapped amounts
         swapAmounts_.sellAmount =
-            swapAmounts_.sellAmount -
-            TokenInterface(sellTokenAddr_).balanceOf(address(this));
+            swapAmounts_.sellAmount - TokenInterface(sellTokenAddr_).balanceOf(address(this));
         swapAmounts_.buyAmount =
-            swapAmounts_.buyAmount -
-            TokenInterface(buyTokenAddr_).balanceOf(address(this));
+            TokenInterface(buyTokenAddr_).balanceOf(address(this)) - swapAmounts_.buyAmount;
 
         // maxSwapLossPercentage_ check
         require(
