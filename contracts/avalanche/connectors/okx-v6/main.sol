@@ -39,6 +39,6 @@ contract OKXV6Connector is Helpers, Events {
     }
 }
 
-contract ConnectV2OKXV6 is OKXV6Connector {
-    string public constant name = "OKX-v6";
+contract ConnectV2OKXV6Avalanche is OKXV6Connector {
+    string public constant name = "OKX-v6-Avalanche";
 }
