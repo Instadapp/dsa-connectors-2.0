@@ -44,7 +44,7 @@ const networkGasPriceConfig: Record<string, number> = {
   optimism: 0.01,
   fantom: 210,
   base: 0.0005,
-  plasma: 1,
+  plasma: 0.001,
 };
 
 function createConfig(network: string) {
@@ -155,21 +155,52 @@ const config: any = {
   },
   etherscan: {
     apiKey: {
-      mainnet: String(process.env.MAIN_ETHSCAN_KEY),
-      optimisticEthereum: String(process.env.OPT_ETHSCAN_KEY),
-      polygon: String(process.env.POLY_ETHSCAN_KEY),
-      arbitrumOne: String(process.env.ARB_ETHSCAN_KEY),
+      mainnet: process.env.ETHERSCAN_V2_API_KEY,
+      optimism: process.env.ETHERSCAN_V2_API_KEY,
+      arbitrum: process.env.ETHERSCAN_V2_API_KEY,
+      polygon: process.env.ETHERSCAN_V2_API_KEY,
+      base: process.env.ETHERSCAN_V2_API_KEY,
       avalanche: String(process.env.AVAX_ETHSCAN_KEY),
-      opera: String(process.env.FTM_ETHSCAN_KEY),
-      base: String(process.env.BASE_ETHSCAN_KEY),
       plasma: String(process.env.PLASMA_ETHSCAN_KEY)
     },
     customChains: [
       {
+        network: "mainnet",
+        chainId: 1,
+        urls: {
+         apiURL: "https://api.etherscan.io/v2/api?chainid=1",
+         browserURL: "https://etherscan.io"
+        }
+      },
+      {
+        network: "polygon",
+        chainId: 137,
+        urls: {
+         apiURL: "https://api.etherscan.io/v2/api?chainid=137",
+         browserURL: "https://polygonscan.com"
+        }
+      },
+      {
+        network: "optimism",
+        chainId: 10,
+        urls: {
+         apiURL: "https://api.etherscan.io/v2/api?chainid=10",
+         browserURL: "https://optimistic.etherscan.io"
+        }
+      },
+      {
+        network: "arbitrum",
+        chainId: 42161,
+        urls: {
+         apiURL: "https://api.etherscan.io/v2/api?chainid=42161",
+         browserURL: "https://arbiscan.io"
+        }
+      },
+      {
         network: "base",
         chainId: 8453,
         urls: {
-         apiURL: "https://api.basescan.org/api",
+         apiURL: "https://api.etherscan.io/v2/api?chainid=8453",
          browserURL: "https://basescan.org"
         }
       },
@@ -190,10 +221,6 @@ const config: any = {
   mocha: {
     timeout: 10000 * 1000 // 10,000 seconds
   }
-  // tenderly: {
-  //   project: process.env.TENDERLY_PROJECT,
-  //   username: process.env.TENDERLY_USERNAME,
-  // },
 };
 
 export default config;
