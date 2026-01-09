@@ -15,10 +15,10 @@ contract Helpers is DSMath, Basic {
         bytes callData;
     }
 
-    address internal constant OKX_V6_ROUTER =
+    address internal constant OKX_ROUTER =
         0x509c370Da4Dc569f45D48A2318a54c5442Bc23CF;
 
-    address internal constant OKX_V6_TOKEN_SPENDER =
+    address internal constant OKX_TOKEN_SPENDER =
         0x9FD43F5E4c24543b2eBC807321E58e6D350d6a5A;
 
     function _swapHelper(
@@ -38,7 +38,7 @@ contract Helpers is DSMath, Basic {
 
         uint256 initalBal = getTokenBal(buyToken);
 
-        (bool success, ) = OKX_V6_ROUTER.call{value: xplAmt}(
+        (bool success, ) = OKX_ROUTER.call{value: xplAmt}(
             swapData.callData
         );
         if (!success) revert("okx-swap-failed");
@@ -63,7 +63,7 @@ contract Helpers is DSMath, Basic {
         } else {
             approve(
                 TokenInterface(_sellAddr),
-                OKX_V6_TOKEN_SPENDER,
+                OKX_TOKEN_SPENDER,
                 swapData._sellAmt
             );
         }

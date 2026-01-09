@@ -4,7 +4,7 @@ pragma solidity ^0.8.2;
 import "./helpers.sol";
 import "./events.sol";
 
-contract OKXV6Connector is Helpers, Events {
+contract OKXConnector is Helpers, Events {
     function swap(
         address buyAddr,
         address sellAddr,
@@ -39,6 +39,6 @@ contract OKXV6Connector is Helpers, Events {
     }
 }
 
-contract ConnectV2OKXV6Plasma is OKXV6Connector {
-    string public constant name = "OKX-v6-Plasma";
+contract ConnectV2OKXPlasma is OKXConnector {
+    string public constant name = "OKX-v1";
 }

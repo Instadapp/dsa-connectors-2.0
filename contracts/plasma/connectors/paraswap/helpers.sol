@@ -5,7 +5,7 @@ import {DSMath} from "../../common/math.sol";
 import {Basic} from "../../common/basic.sol";
 import {TokenInterface} from "../../common/interfaces.sol";
 
-contract Helpers is DSMath, Basic {
+abstract contract Helpers is DSMath, Basic {
     struct SwapData {
         TokenInterface sellToken;
         TokenInterface buyToken;
@@ -15,11 +15,8 @@ contract Helpers is DSMath, Basic {
         bytes callData;
     }
 
-    address internal constant OKX_V6_ROUTER =
-        0x509c370Da4Dc569f45D48A2318a54c5442Bc23CF;
-
-    address internal constant OKX_V6_TOKEN_SPENDER =
-        0x9FD43F5E4c24543b2eBC807321E58e6D350d6a5A;
+    address internal constant AUGUSTUS_V6 =
+        0x6A000F20005980200259B80c5102003040001068;
 
     function _swapHelper(
         SwapData memory swapData,
@@ -38,10 +35,8 @@ contract Helpers is DSMath, Basic {
 
         uint256 initalBal = getTokenBal(buyToken);
 
-        (bool success, ) = OKX_V6_ROUTER.call{value: xplAmt}(
-            swapData.callData
-        );
-        if (!success) revert("okx-swap-failed");
+        (bool success, ) = AUGUSTUS_V6.call{value: xplAmt}(swapData.callData);
+        if (!success) revert("paraswap-failed");
 
         uint256 finalBal = getTokenBal(buyToken);
 
@@ -56,19 +51,15 @@ contract Helpers is DSMath, Basic {
     ) internal returns (SwapData memory) {
         TokenInterface _sellAddr = swapData.sellToken;
 
-        uint256 xplAmount;
+        uint256 xplAmt;
 
         if (address(_sellAddr) == xplAddr) {
-            xplAmount = swapData._sellAmt;
+            xplAmt = swapData._sellAmt;
         } else {
-            approve(
-                TokenInterface(_sellAddr),
-                OKX_V6_TOKEN_SPENDER,
-                swapData._sellAmt
-            );
+            approve(TokenInterface(_sellAddr), AUGUSTUS_V6, swapData._sellAmt);
         }
 
-        swapData._buyAmt = _swapHelper(swapData, xplAmount);
+        swapData._buyAmt = _swapHelper(swapData, xplAmt);
 
         setUint(setId, swapData._buyAmt);
 
