@@ -26,6 +26,7 @@ const chainIds = {
   optimism: 10,
   fantom: 250,
   base: 8453,
+  bsc: 56,
 };
 
 const alchemyApiKey = process.env.ALCHEMY_API_KEY;
@@ -45,6 +46,7 @@ const networkGasPriceConfig: Record<string, number> = {
   fantom: 210,
   base: 0.0005,
   plasma: 1,
+  bsc: 0.1
 };
 
 function createConfig(network: string) {
@@ -63,6 +65,7 @@ function getNetworkUrl(networkType: string) {
   else if (networkType === "fantom") return `https://rpc.ftm.tools/`;
   else if (networkType === "base") return `https://1rpc.io/base`;
   else if (networkType === "plasma") return `https://rpc.plasma.to`;
+  else if (networkType === "bsc") return `https://public-bsc-mainnet.fastnode.io`;
   else return `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`;
 }
 
@@ -145,7 +148,8 @@ const config: any = {
     optimism: createConfig("optimism"),
     fantom: createConfig("fantom"),
     base: createConfig("base"),
-    plasma: createConfig("plasma")
+    plasma: createConfig("plasma"),
+    bsc: createConfig("bsc")
   },
   paths: {
     artifacts: "./artifacts",
@@ -162,7 +166,8 @@ const config: any = {
       avalanche: String(process.env.AVAX_ETHSCAN_KEY),
       opera: String(process.env.FTM_ETHSCAN_KEY),
       base: String(process.env.BASE_ETHSCAN_KEY),
-      plasma: String(process.env.PLASMA_ETHSCAN_KEY)
+      plasma: String(process.env.PLASMA_ETHSCAN_KEY),
+      bsc: String(process.env.ETHERSCAN_V2_API_KEY)
     },
     customChains: [
       {
@@ -179,6 +184,14 @@ const config: any = {
         urls: {
           apiURL: "https://api.routescan.io/v2/network/mainnet/evm/9745/etherscan/api",
           browserURL: "https://plasmascan.to/"
+        }
+      },
+      {
+        network: "bsc",
+        chainId: 56,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=56",
+          browserURL: "https://bscscan.com"
         }
       }
     ]
