@@ -1,0 +1,547 @@
+//SPDX-License-Identifier: MIT
+pragma solidity ^0.8.2;
+
+/**
+ * @title Fluid Vault T2.
+ * @dev Smart Collateral - Normal Debt.
+ * @dev Dex.
+ */
+
+import {Helpers} from "./helpers.sol";
+import {Events} from "./events.sol";
+import {IVaultT2} from "./interface.sol";
+import {TokenInterface} from "../../common/interfaces.sol";
+
+abstract contract FluidVaultT2Connector is Helpers, Events {
+    struct OperateInternalVariables {
+        uint256 bnbAmount;
+        int256 colShares;
+        int256 debtShares;
+    }
+
+    struct OperatePerfectInternalVariables {
+        uint256 bnbAmount;
+        bool isDebtMin;
+        bool isDebtTokenBnb;
+        int256[] r;
+    }
+
+    /**
+     * @param vaultAddress Vault address.
+     * @param nftId NFT ID for interaction. If 0 then create new NFT/position.
+     * @param newColToken0 Token 0 new collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
+     * @param newColToken1 Token 1 new collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
+     * No max or min values allowed. Need to send exact values.
+     * @param colSharesMinMax Min or max collateral shares to mint or burn (positive for deposit, negative for withdrawal)
+     * @param newDebt Token 0 new debt. If positive then borrow, if negative then payback, if 0 then do nothing.
+     * @param repayApproveAmt Amount to approve for renpay. If 0 then no approval needed.
+     * @param getIds Array of 7 elements to get IDs:
+     * @param setIds Array of 7 elements to set IDs:
+     * Nft Id
+     * Supply amount token 0
+     * Supply amount token 1
+     * Withdraw amount token 0
+     * Withdraw amount token 1
+     * Borrow amount of debt token
+     * Payback amount of debt token
+     */
+    struct OperateWIthIdsHelper {
+        address vaultAddress;
+        uint256 nftId;
+        int256 newColToken0;
+        int256 newColToken1;
+        int256 colSharesMinMax;
+        int256 newDebt;
+        uint256 repayApproveAmt;
+        uint256[] getIds;
+        uint256[] setIds;
+    }
+
+    /**
+     * @dev Deposit, borrow, payback and withdraw assets from the vault.
+     * @notice Single function which handles supply, withdraw, borrow & payback
+     * @param helper_ Helper struct for collateral and debt data.
+     */
+    function operateWithIds(
+        OperateWIthIdsHelper memory helper_
+    )
+        external
+        payable
+        returns (string memory _eventName, bytes memory _eventParam)
+    {
+        _validateIds(helper_.getIds, helper_.setIds);
+        helper_.nftId = getUint(helper_.getIds[0], helper_.nftId);
+        helper_.newColToken0 = _adjustTokenValues(
+            helper_.getIds[1],
+            helper_.getIds[3],
+            helper_.newColToken0
+        );
+        helper_.newColToken1 = _adjustTokenValues(
+            helper_.getIds[2],
+            helper_.getIds[4],
+            helper_.newColToken1
+        );
+        helper_.newDebt = _adjustTokenValues(
+            helper_.getIds[5],
+            helper_.getIds[6],
+            helper_.newDebt
+        );
+
+        IVaultT2 vaultT2_ = IVaultT2(helper_.vaultAddress);
+        IVaultT2.ConstantViews memory vaultT2Details_ = vaultT2_
+            .constantsView();
+
+        OperateInternalVariables memory internalVar_;
+
+        // Deposit token 0
+        if (helper_.newColToken0 > 0) {
+            // Assumes bnbAmount_ would either be token0 or token1
+            (internalVar_.bnbAmount, helper_.newColToken0) = _handleDeposit(
+                HandleDepositData({
+                    isBnb: vaultT2Details_.supplyToken.token0 == getBnbAddr(),
+                    isMax: helper_.newColToken0 == type(int256).max,
+                    vaultAddress: helper_.vaultAddress,
+                    token: vaultT2Details_.supplyToken.token0,
+                    colAmt: helper_.newColToken0
+                })
+            );
+        }
+
+        // Deposit token 1
+        if (helper_.newColToken1 > 0) {
+            // Assumes bnbAmount_ would either be token0 or token1
+            (internalVar_.bnbAmount, helper_.newColToken1) = _handleDeposit(
+                HandleDepositData({
+                    isBnb: vaultT2Details_.supplyToken.token1 == getBnbAddr(),
+                    isMax: helper_.newColToken1 == type(int256).max,
+                    vaultAddress: helper_.vaultAddress,
+                    token: vaultT2Details_.supplyToken.token1,
+                    colAmt: helper_.newColToken1
+                })
+            );
+        }
+
+        // Payback (Normal Debt)
+        if (helper_.newDebt < 0) {
+            (internalVar_.bnbAmount) = _handlePayback(
+                HandlePaybackData({
+                    isBnb: vaultT2Details_.borrowToken.token0 == getBnbAddr(),
+                    isMin: helper_.newDebt == type(int256).min,
+                    token: vaultT2Details_.borrowToken.token0,
+                    repayApproveAmt: helper_.repayApproveAmt,
+                    debtAmt: helper_.newDebt,
+                    vaultAddress: helper_.vaultAddress
+                })
+            );
+        }
+
+        (
+            helper_.nftId,
+            internalVar_.colShares,
+            internalVar_.debtShares
+        ) = vaultT2_.operate{value: internalVar_.bnbAmount}(
+            helper_.nftId,
+            helper_.newColToken0,
+            helper_.newColToken1,
+            helper_.colSharesMinMax,
+            helper_.newDebt,
+            address(this)
+        );
+
+        setUint(helper_.setIds[0], helper_.nftId);
+        _setIds(helper_.setIds[1], helper_.setIds[3], helper_.newColToken0);
+        _setIds(helper_.setIds[2], helper_.setIds[4], helper_.newColToken1);
+        _setIds(helper_.setIds[5], helper_.setIds[6], helper_.newDebt);
+
+        // Revoke Allowances
+        if (
+            helper_.newDebt < 0 &&
+            vaultT2Details_.borrowToken.token0 != getBnbAddr()
+        ) {
+            approve(
+                TokenInterface(vaultT2Details_.borrowToken.token0),
+                helper_.vaultAddress,
+                0
+            );
+        }
+
+        _eventName = "LogOperateWithIds(address,uint256,int256,int256,int256,int256,uint256,uint256[],uint256[])";
+        _eventParam = abi.encode(
+            helper_.vaultAddress,
+            helper_.nftId,
+            helper_.newColToken0,
+            helper_.newColToken1,
+            helper_.colSharesMinMax,
+            helper_.newDebt,
+            helper_.repayApproveAmt,
+            helper_.getIds,
+            helper_.setIds
+        );
+    }
+    /**
+     * @param vaultAddress Vault address.
+     * @param nftId NFT ID for interaction. If 0 then create new NFT/position.
+     * @param newColToken0 Token 0 new collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
+     * @param newColToken1 Token 1 new collateral. If positive then deposit, if negative then withdraw, if 0 then do nothing.
+     * No max or min values allowed. Need to send exact values.
+     * @param colSharesMinMax Min or max collateral shares to mint or burn (positive for deposit, negative for withdrawal)
+     * @param newDebt New debt. If positive then borrow, if negative then payback, if 0 then do nothing
+     * @param repayApproveAmt Amount to approve for repay. If 0 then no approval needed.
+     */
+    struct OperateHelper {
+        address vaultAddress;
+        uint256 nftId;
+        int256 newColToken0;
+        int256 newColToken1;
+        int256 colSharesMinMax;
+        int256 newDebt;
+        uint256 repayApproveAmt;
+    }
+
+    /**
+     * @dev Deposit, borrow, payback and withdraw assets from the vault.
+     * @notice Single function which handles supply, withdraw, borrow & payback
+     * @param helper_ Helper struct for collateral and debt data.
+     */
+    function operate(
+        OperateHelper memory helper_
+    )
+        external
+        payable
+        returns (string memory _eventName, bytes memory _eventParam)
+    {
+        IVaultT2 vaultT2_ = IVaultT2(helper_.vaultAddress);
+        IVaultT2.ConstantViews memory vaultT2Details_ = vaultT2_
+            .constantsView();
+
+        OperateInternalVariables memory internalVar_;
+
+        // Deposit token 0
+        if (helper_.newColToken0 > 0) {
+            // Assumes bnbAmount_ would either be token0 or token1
+            (internalVar_.bnbAmount, helper_.newColToken0) = _handleDeposit(
+                HandleDepositData({
+                    isBnb: vaultT2Details_.supplyToken.token0 == getBnbAddr(),
+                    isMax: helper_.newColToken0 == type(int256).max,
+                    vaultAddress: helper_.vaultAddress,
+                    token: vaultT2Details_.supplyToken.token0,
+                    colAmt: helper_.newColToken0
+                })
+            );
+        }
+
+        // Deposit token 1
+        if (helper_.newColToken1 > 0) {
+            // Assumes bnbAmount_ would either be token0 or token1
+            (internalVar_.bnbAmount, helper_.newColToken1) = _handleDeposit(
+                HandleDepositData({
+                    isBnb: vaultT2Details_.supplyToken.token1 == getBnbAddr(),
+                    isMax: helper_.newColToken1 == type(int256).max,
+                    vaultAddress: helper_.vaultAddress,
+                    token: vaultT2Details_.supplyToken.token1,
+                    colAmt: helper_.newColToken1
+                })
+            );
+        }
+
+        // Payback (Normal Debt)
+        if (helper_.newDebt < 0) {
+            (internalVar_.bnbAmount) = _handlePayback(
+                HandlePaybackData({
+                    isBnb: vaultT2Details_.borrowToken.token0 == getBnbAddr(),
+                    isMin: helper_.newDebt == type(int256).min,
+                    token: vaultT2Details_.borrowToken.token0,
+                    repayApproveAmt: helper_.repayApproveAmt,
+                    debtAmt: helper_.newDebt,
+                    vaultAddress: helper_.vaultAddress
+                })
+            );
+        }
+
+        (
+            helper_.nftId,
+            internalVar_.colShares,
+            internalVar_.debtShares
+        ) = vaultT2_.operate{value: internalVar_.bnbAmount}(
+            helper_.nftId,
+            helper_.newColToken0,
+            helper_.newColToken1,
+            helper_.colSharesMinMax,
+            helper_.newDebt,
+            address(this)
+        );
+
+        // Revoke Allowances
+        if (
+            helper_.newDebt < 0 &&
+            vaultT2Details_.borrowToken.token0 != getBnbAddr()
+        ) {
+            approve(
+                TokenInterface(vaultT2Details_.borrowToken.token0),
+                helper_.vaultAddress,
+                0
+            );
+        }
+
+        _eventName = "LogOperate(address,uint256,int256,int256,int256,int256, uint256)";
+        _eventParam = abi.encode(
+            helper_.vaultAddress,
+            helper_.nftId,
+            helper_.newColToken0,
+            helper_.newColToken1,
+            helper_.colSharesMinMax,
+            helper_.newDebt,
+            helper_.repayApproveAmt
+        );
+    }
+    /**
+     * @param vaultAddress Vault address.
+     * @param nftId NFT ID for interaction. If 0 then create new NFT/position.
+     * @param perfectColShares The change in collateral shares (positive for deposit, negative for withdrawal)
+     * Send Min int for max withdraw.
+     * @param colToken0MinMax Min or max collateral amount of token0 to withdraw or deposit (positive for deposit, negative for withdrawal)
+     * @param colToken1MinMax Min or max collateral amount of token1 to withdraw or deposit (positive for deposit, negative for withdrawal)
+     * @param newDebt New debt. If positive then borrow, if negative then payback, if 0 then do nothing
+     * @param repayApproveAmt Amount to approve for repay. If 0 then no approval needed.
+     * @param getNftId Id to retrieve Nft Id
+     * @param setIds Array of 7 elements to set IDs:
+     *              0 - nft id
+     *              1 - token0 deposit amount
+     *              2 - token0 withdraw amount
+     *              3 - token1 deposit amount
+     *              4 - token1 withdraw amount
+     *              5 - borrow amount
+     *              6 - payback amount
+     */
+    struct OperatePerfectWithIdsHelper {
+        address vaultAddress;
+        uint256 nftId;
+        int256 perfectColShares;
+        int256 colToken0MinMax; // if +, max to deposit, if -, min to withdraw
+        int256 colToken1MinMax; // if +, max to deposit, if -, min to withdraw
+        int256 newDebt;
+        uint256 repayApproveAmt;
+        uint256 getNftId;
+        uint256[] setIds;
+    }
+
+    /**
+     * @dev Deposit, borrow, payback and withdraw perfect amounts of assets from the vault.
+     * @notice Single function which handles supply, withdraw, borrow & payback
+     * @param helper_ Helper struct for collateral and debt data.
+     */
+    function operatePerfectWithIds(
+        OperatePerfectWithIdsHelper memory helper_
+    )
+        external
+        payable
+        returns (string memory _eventName, bytes memory _eventParam)
+    {
+        helper_.nftId = getUint(helper_.getNftId, helper_.nftId);
+        IVaultT2 vaultT2_ = IVaultT2(helper_.vaultAddress);
+        IVaultT2.ConstantViews memory vaultT2Details_ = vaultT2_
+            .constantsView();
+
+        OperatePerfectInternalVariables memory internalVar_;
+
+        // Deposit
+        if (helper_.perfectColShares > 0) {
+            (internalVar_.bnbAmount, ) = _handleDeposit(
+                HandleDepositData({
+                    isBnb: vaultT2Details_.supplyToken.token0 == getBnbAddr(),
+                    isMax: helper_.perfectColShares == type(int256).max,
+                    vaultAddress: helper_.vaultAddress,
+                    token: vaultT2Details_.supplyToken.token0,
+                    colAmt: helper_.colToken0MinMax
+                })
+            );
+
+            (internalVar_.bnbAmount, ) = _handleDeposit(
+                HandleDepositData({
+                    isBnb: vaultT2Details_.supplyToken.token1 == getBnbAddr(),
+                    isMax: helper_.perfectColShares == type(int256).max,
+                    vaultAddress: helper_.vaultAddress,
+                    token: vaultT2Details_.supplyToken.token1,
+                    colAmt: helper_.colToken1MinMax
+                })
+            );
+        }
+
+        internalVar_.isDebtMin = helper_.newDebt == type(int256).min;
+        internalVar_.isDebtTokenBnb =
+            vaultT2Details_.borrowToken.token0 == getBnbAddr();
+
+        // Payback
+        if (helper_.newDebt < 0) {
+            internalVar_.bnbAmount = _handlePayback(
+                HandlePaybackData({
+                    isBnb: internalVar_.isDebtTokenBnb,
+                    isMin: internalVar_.isDebtMin,
+                    token: vaultT2Details_.borrowToken.token0,
+                    repayApproveAmt: helper_.repayApproveAmt,
+                    debtAmt: helper_.newDebt,
+                    vaultAddress: helper_.vaultAddress
+                })
+            );
+        }
+
+        (helper_.nftId, internalVar_.r) = vaultT2_.operatePerfect{
+            value: internalVar_.bnbAmount
+        }(
+            helper_.nftId,
+            helper_.perfectColShares,
+            helper_.colToken0MinMax,
+            helper_.colToken1MinMax,
+            helper_.newDebt,
+            address(this)
+        );
+
+        setUint(helper_.setIds[0], helper_.nftId);
+        _handleOperatePerfectSetIds(
+            internalVar_.r[1],
+            helper_.setIds[1],
+            helper_.setIds[2]
+        );
+        _handleOperatePerfectSetIds(
+            internalVar_.r[2],
+            helper_.setIds[3],
+            helper_.setIds[4]
+        );
+        _handleOperatePerfectSetIds(
+            internalVar_.r[3],
+            helper_.setIds[5],
+            helper_.setIds[6]
+        );
+
+        // Make approval 0
+        if (internalVar_.isDebtMin && !internalVar_.isDebtTokenBnb) {
+            approve(
+                TokenInterface(vaultT2Details_.borrowToken.token0),
+                helper_.vaultAddress,
+                0
+            );
+        }
+
+        _eventName = "LogOperatePerfectWithIds(address,uint256,int256,int256,int256,int256,uint256,uint256,uint256[])";
+        _eventParam = abi.encode(
+            helper_.vaultAddress,
+            helper_.nftId,
+            helper_.perfectColShares,
+            internalVar_.r[1],
+            internalVar_.r[2],
+            internalVar_.r[3],
+            helper_.repayApproveAmt,
+            helper_.getNftId,
+            helper_.setIds
+        );
+    }
+    /**
+     * @param vaultAddress Vault address.
+     * @param nftId NFT ID for interaction. If 0 then create new NFT/position.
+     * @param perfectColShares The change in collateral shares (positive for deposit, negative for withdrawal)
+     * Send Min int for max withdraw.
+     * @param colToken0MinMax Min or max collateral amount of token0 to withdraw or deposit (positive for deposit, negative for withdrawal)
+     * @param colToken1MinMax Min or max collateral amount of token1 to withdraw or deposit (positive for deposit, negative for withdrawal)
+     * @param newDebt New debt. If positive then borrow, if negative then payback, if 0 then do nothing
+     * @param repayApproveAmt Amount to approve for repay. If 0 then no approval needed.
+     */
+    struct OperatePerfectHelper {
+        address vaultAddress;
+        uint256 nftId;
+        int256 perfectColShares;
+        int256 colToken0MinMax; // if +, max to deposit, if -, min to withdraw
+        int256 colToken1MinMax; // if +, max to deposit, if -, min to withdraw
+        int256 newDebt;
+        uint256 repayApproveAmt;
+    }
+
+    function operatePerfect(
+        OperatePerfectHelper memory helper_
+    )
+        external
+        payable
+        returns (string memory _eventName, bytes memory _eventParam)
+    {
+        IVaultT2 vaultT2_ = IVaultT2(helper_.vaultAddress);
+        IVaultT2.ConstantViews memory vaultT2Details_ = vaultT2_
+            .constantsView();
+
+        OperatePerfectInternalVariables memory internalVar_;
+
+        // Deposit
+        if (helper_.perfectColShares > 0) {
+            (internalVar_.bnbAmount, ) = _handleDeposit(
+                HandleDepositData({
+                    isBnb: vaultT2Details_.supplyToken.token0 == getBnbAddr(),
+                    isMax: helper_.perfectColShares == type(int256).max,
+                    vaultAddress: helper_.vaultAddress,
+                    token: vaultT2Details_.supplyToken.token0,
+                    colAmt: helper_.colToken0MinMax
+                })
+            );
+
+            (internalVar_.bnbAmount, ) = _handleDeposit(
+                HandleDepositData({
+                    isBnb: vaultT2Details_.supplyToken.token1 == getBnbAddr(),
+                    isMax: helper_.perfectColShares == type(int256).max,
+                    vaultAddress: helper_.vaultAddress,
+                    token: vaultT2Details_.supplyToken.token1,
+                    colAmt: helper_.colToken1MinMax
+                })
+            );
+        }
+
+        internalVar_.isDebtMin = helper_.newDebt == type(int256).min;
+        internalVar_.isDebtTokenBnb =
+            vaultT2Details_.borrowToken.token0 == getBnbAddr();
+
+        // Payback
+        if (helper_.newDebt < 0) {
+            internalVar_.bnbAmount = _handlePayback(
+                HandlePaybackData({
+                    isBnb: internalVar_.isDebtTokenBnb,
+                    isMin: internalVar_.isDebtMin,
+                    token: vaultT2Details_.borrowToken.token0,
+                    repayApproveAmt: helper_.repayApproveAmt,
+                    debtAmt: helper_.newDebt,
+                    vaultAddress: helper_.vaultAddress
+                })
+            );
+        }
+
+        (helper_.nftId, internalVar_.r) = vaultT2_.operatePerfect{
+            value: internalVar_.bnbAmount
+        }(
+            helper_.nftId,
+            helper_.perfectColShares,
+            helper_.colToken0MinMax,
+            helper_.colToken1MinMax,
+            helper_.newDebt,
+            address(this)
+        );
+
+        // Make approval 0
+        if (internalVar_.isDebtMin && !internalVar_.isDebtTokenBnb) {
+            approve(
+                TokenInterface(vaultT2Details_.borrowToken.token0),
+                helper_.vaultAddress,
+                0
+            );
+        }
+
+        _eventName = "LogOperatePerfect(address,uint256,int256,int256,int256,int256,uint256)";
+        _eventParam = abi.encode(
+            helper_.vaultAddress,
+            helper_.nftId,
+            helper_.perfectColShares,
+            internalVar_.r[1],
+            internalVar_.r[2],
+            internalVar_.r[3],
+            helper_.repayApproveAmt
+        );
+    }
+}
+
+contract ConnectV2FluidVaultT2BSC is FluidVaultT2Connector {
+    string public constant name = "Fluid-VaultT2-v1.0";
+}
