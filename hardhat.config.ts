@@ -166,6 +166,14 @@ const config: any = {
     },
     customChains: [
       {
+        network: "mainnet",
+        chainId: 1,
+        urls: {
+         apiURL: "https://api.etherscan.io/v2/api?chainid=1",
+         browserURL: "https://etherscan.io"
+        }
+      },
+      {
         network: "base",
         chainId: 8453,
         urls: {
