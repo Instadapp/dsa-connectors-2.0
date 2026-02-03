@@ -7,6 +7,7 @@ contract FluidDexV2Helpers {
 
     modifier validatePositionType(uint8 positionType_) {
         require(
+         positionType_ == 0 || // Collect Fees
          positionType_ == 1 || // Normal Collateral
          positionType_ == 2 || // Normal Debt
          positionType_ == 3 || // Smart Collateral

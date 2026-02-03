@@ -6,7 +6,7 @@ interface IFluidDexV2 {
         uint256 nftId_,
         uint256 positionIndex_,
         bytes calldata actionData_
-    ) external returns (uint256, uint256);
+    ) external payable returns (uint256, uint256);
 
     function changeEmode(uint256 nftId_, uint256 newEmode_) external payable;
 }
@@ -31,4 +31,14 @@ struct OperateWithIdsVariables {
     uint256 operateCollateralAmount1;
     uint256 operateDebtAmount0;
     uint256 operateDebtAmount1;
+}
+
+struct TokenAddressParams {
+    address token0Address;
+    address token1Address;
+}
+
+struct ApproveAmountParams {
+    uint256 approveAmount0;
+    uint256 approveAmount1;
 }
