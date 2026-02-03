@@ -129,6 +129,10 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                     // Handle Withdraw Amount
                     operateWithIdsVariables_.operateCollateralAmount0 = getUint(getIds_[2], uint256(-amountInt));
                     actionData_ = abi.encode(-int256(operateWithIdsVariables_.operateCollateralAmount0), address(this));
+
+                    if (amountInt == -int256(type(uint256).max)) {
+                        operateWithIdsVariables_.operateCollateralAmount0 = 0;
+                    }
                 }
             }
         } else if (positionType_ == 2) {
@@ -153,6 +157,10 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                         value_ += approveAmountParams_.approveAmount0;
                     } else {
                         TokenInterface(tokenAddressParams_.token0Address).approve(FLUID_DEX_V2_MM_ADDRESS, approveAmountParams_.approveAmount0);
+                    }
+
+                    if (amountInt == -int256(type(uint256).max)) {
+                        operateWithIdsVariables_.operateDebtAmount0 = 0;
                     }
                 }
             }
@@ -195,6 +203,10 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                     // Handle withdraw amount for token0
                     operateWithIdsVariables_.operateCollateralAmount0 = getUint(getIds_[2], uint256(-amount0Int));
                     amount0Int = -int256(operateWithIdsVariables_.operateCollateralAmount0);
+
+                    if (amount0Int == -int256(type(uint256).max)) {
+                        operateWithIdsVariables_.operateCollateralAmount0 = 0;
+                    }
                 }
 
                 if (amount1Int >= 0) {
@@ -211,6 +223,10 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                     // Handle withdraw amount for token1
                     operateWithIdsVariables_.operateCollateralAmount1 = getUint(getIds_[3], uint256(-amount1Int));
                     amount1Int = -int256(operateWithIdsVariables_.operateCollateralAmount1);
+
+                    if (amount1Int == -int256(type(uint256).max)) {
+                        operateWithIdsVariables_.operateCollateralAmount1 = 0;
+                    }
                 }
 
                 actionData_ = abi.encode(amount0Int, amount1Int, 0, 0, address(this));
@@ -241,6 +257,10 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                     } else {
                         TokenInterface(tokenAddressParams_.token0Address).approve(FLUID_DEX_V2_MM_ADDRESS, approveAmountParams_.approveAmount0);
                     }
+
+                    if (amount0Int == -int256(type(uint256).max)) {
+                        operateWithIdsVariables_.operateDebtAmount0 = 0;
+                    }
                 }
                 if (amount1Int >= 0) {
                     // Handle borrow amount for token1
@@ -255,6 +275,10 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                         value_ += approveAmountParams_.approveAmount1;
                     } else {
                         TokenInterface(tokenAddressParams_.token1Address).approve(FLUID_DEX_V2_MM_ADDRESS, approveAmountParams_.approveAmount1);
+                    }
+
+                    if (amount1Int == -int256(type(uint256).max)) {
+                        operateWithIdsVariables_.operateDebtAmount1 = 0;
                     }
                 }
 
