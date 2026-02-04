@@ -98,9 +98,7 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
         // positionIndex_
         positionIndex_ = getUint(getIds_[1], positionIndex_);
         
-        if (positionType_ == 0) {
-            // No actions required for collecting fees
-        } else if (positionType_ == 1) {
+        if (positionType_ == 1) {
             if (_isNewPosition(nftId_)) {
                 // Handle only supply amount
                 uint256 tokenIndex;
