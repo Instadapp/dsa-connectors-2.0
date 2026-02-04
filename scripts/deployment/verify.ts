@@ -1,7 +1,7 @@
 import hre, { ethers } from "hardhat";
 
 async function main() {
-  const address = "0xa2FC5e13A7130413958e9434F21D92bCe527d27D";
+  const address = "0xA126B30C6719dD676B140386f45a4A254A88924B";
   const chain = String(hre.network.name);
   if (chain !== "hardhat") {
     await hre.run("verify:verify", {

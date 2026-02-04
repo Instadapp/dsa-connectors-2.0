@@ -38,7 +38,7 @@ const mnemonic = process.env.MNEMONIC ?? "test test test test test test test tes
 
 const networkGasPriceConfig: Record<string, number> = {
   mainnet: 7.1,
-  polygon: 46,
+  polygon: 950,
   avalanche: 2,
   arbitrum: 1,
   optimism: 0.01,
@@ -155,13 +155,13 @@ const config: any = {
   },
   etherscan: {
     apiKey: {
-      mainnet: String(process.env.MAIN_ETHSCAN_KEY),
-      optimisticEthereum: String(process.env.OPT_ETHSCAN_KEY),
-      polygon: String(process.env.POLY_ETHSCAN_KEY),
-      arbitrumOne: String(process.env.ARB_ETHSCAN_KEY),
+      mainnet: String(process.env.ETHERSCAN_V2_API_KEY),
+      optimisticEthereum: String(process.env.ETHERSCAN_V2_API_KEY),
+      polygon: String(process.env.ETHERSCAN_V2_API_KEY),
+      arbitrumOne: String(process.env.ETHERSCAN_V2_API_KEY),
       avalanche: String(process.env.AVAX_ETHSCAN_KEY),
       opera: String(process.env.FTM_ETHSCAN_KEY),
-      base: String(process.env.BASE_ETHSCAN_KEY),
+      base: String(process.env.ETHERSCAN_V2_API_KEY),
       plasma: String(process.env.PLASMA_ETHSCAN_KEY)
     },
     customChains: [
@@ -171,6 +171,14 @@ const config: any = {
         urls: {
          apiURL: "https://api.etherscan.io/v2/api?chainid=1",
          browserURL: "https://etherscan.io"
+        }
+      },
+      {
+        network: "polygon",
+        chainId: 137,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=137",
+         browserURL: "https://polygonscan.com"
         }
       },
       {

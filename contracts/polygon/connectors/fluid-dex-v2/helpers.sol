@@ -18,5 +18,11 @@ contract FluidDexV2Helpers {
         return nftId_ == 0;
     }
 
-    // modifier validateIds
+    function _getApproveAmount(uint256 amount_) internal pure returns (uint256) {
+        if (amount_ == type(uint256).max || amount_ == uint256(type(int256).max)) {
+            return amount_;
+        }
+        
+        return amount_ + 10;
+    }
 }

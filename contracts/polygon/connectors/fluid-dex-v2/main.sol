@@ -36,15 +36,26 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
         if (tokenAddressParams_.token0Address == maticAddr) {
             value_ += approveAmountParams_.approveAmount0;
         } else {
-            TokenInterface(tokenAddressParams_.token0Address).approve(FLUID_DEX_V2_MM_ADDRESS, approveAmountParams_.approveAmount0);
+            approve(
+                TokenInterface(tokenAddressParams_.token0Address),
+                FLUID_DEX_V2_MM_ADDRESS,
+                approveAmountParams_.approveAmount0
+            );
         }
 
         /// @dev Only handle approval if the amount is greater than 0 and it's a valid token address
-        if (approveAmountParams_.approveAmount1 > 0 && tokenAddressParams_.token1Address != address(0)) {
+        if (
+            approveAmountParams_.approveAmount1 > 0 &&
+            tokenAddressParams_.token1Address != address(0)
+        ) {
             if (tokenAddressParams_.token1Address == maticAddr) {
                 value_ += approveAmountParams_.approveAmount1;
             } else {
-                TokenInterface(tokenAddressParams_.token1Address).approve(FLUID_DEX_V2_MM_ADDRESS, approveAmountParams_.approveAmount1);
+                approve(
+                    TokenInterface(tokenAddressParams_.token1Address),
+                    FLUID_DEX_V2_MM_ADDRESS,
+                    approveAmountParams_.approveAmount1
+                );
             }
         }
 
@@ -70,7 +81,7 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
     /// @param positionIndex_ The index of the position to operate
     /// @param actionData_ The data to operate
     /// @param tokenAddressParams_ The parameters of the token addresses (addresses required for approvals)
-    /// @param approveAmountParams_ The parameters of the approve amounts (amounts required for approvals)
+    /// @param paybackApproveAmountParams_ The parameters of the payback approve amounts. To be used as value if the payback token is native.
     /// @param getIds_ The IDs to get - [nftId_, positionIndex_, operateCollateralAmount0, operateCollateralAmount1, operateDebtAmount0, operateDebtAmount1]
     /// @param setIds_ The IDs to set - [nftId_, positionIndex_, operateCollateralAmount0, operateCollateralAmount1, operateDebtAmount0, operateDebtAmount1]
     /// @return _eventName The name of the event
@@ -81,7 +92,7 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
         uint256 positionIndex_,
         bytes memory actionData_,
         TokenAddressParams memory tokenAddressParams_,
-        ApproveAmountParams memory approveAmountParams_,
+        ApproveAmountParams memory paybackApproveAmountParams_,
         uint256[] memory getIds_,
         uint256[] memory setIds_
     )
@@ -97,38 +108,85 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
         nftId_ = getUint(getIds_[0], nftId_);
         // positionIndex_
         positionIndex_ = getUint(getIds_[1], positionIndex_);
-        
+
         if (positionType_ == 1) {
             if (_isNewPosition(nftId_)) {
                 // Handle only supply amount
                 uint256 tokenIndex;
-                (, tokenIndex, operateWithIdsVariables_.operateCollateralAmount0) = abi.decode(actionData_, (uint256, uint256, uint256));
-                operateWithIdsVariables_.operateCollateralAmount0 = getUint(getIds_[2], operateWithIdsVariables_.operateCollateralAmount0);
-                actionData_ = abi.encode(1, tokenIndex, operateWithIdsVariables_.operateCollateralAmount0);
-                
+                (
+                    ,
+                    tokenIndex,
+                    operateWithIdsVariables_.operateCollateralAmount0
+                ) = abi.decode(actionData_, (uint256, uint256, uint256));
+                operateWithIdsVariables_.operateCollateralAmount0 = getUint(
+                    getIds_[2],
+                    operateWithIdsVariables_.operateCollateralAmount0
+                );
+                actionData_ = abi.encode(
+                    1,
+                    tokenIndex,
+                    operateWithIdsVariables_.operateCollateralAmount0
+                );
+
                 if (tokenAddressParams_.token0Address == maticAddr) {
-                    value_ += approveAmountParams_.approveAmount0;
+                    value_ += _getApproveAmount(
+                        operateWithIdsVariables_.operateCollateralAmount0
+                    );
                 } else {
-                    TokenInterface(tokenAddressParams_.token0Address).approve(FLUID_DEX_V2_MM_ADDRESS, approveAmountParams_.approveAmount0);
+                    approve(
+                        TokenInterface(tokenAddressParams_.token0Address),
+                        FLUID_DEX_V2_MM_ADDRESS,
+                        _getApproveAmount(
+                            operateWithIdsVariables_.operateCollateralAmount0
+                        )
+                    );
                 }
             } else {
-                (int256 amountInt, ) = abi.decode(actionData_, (int256, address));
+                (int256 amountInt, ) = abi.decode(
+                    actionData_,
+                    (int256, address)
+                );
                 if (amountInt >= 0) {
                     // Handle Supply Amount
-                    operateWithIdsVariables_.operateCollateralAmount0 = getUint(getIds_[2], uint256(amountInt));
-                    actionData_ = abi.encode(int256(operateWithIdsVariables_.operateCollateralAmount0), address(0));
+                    operateWithIdsVariables_.operateCollateralAmount0 = getUint(
+                        getIds_[2],
+                        uint256(amountInt)
+                    );
+                    actionData_ = abi.encode(
+                        int256(
+                            operateWithIdsVariables_.operateCollateralAmount0
+                        ),
+                        address(0)
+                    );
 
                     if (tokenAddressParams_.token0Address == maticAddr) {
-                        value_ += approveAmountParams_.approveAmount0;
+                        value_ += _getApproveAmount(
+                            operateWithIdsVariables_.operateCollateralAmount0
+                        );
                     } else {
-                        TokenInterface(tokenAddressParams_.token0Address).approve(FLUID_DEX_V2_MM_ADDRESS, approveAmountParams_.approveAmount0);
+                        approve(
+                            TokenInterface(tokenAddressParams_.token0Address),
+                            FLUID_DEX_V2_MM_ADDRESS,
+                            _getApproveAmount(
+                                operateWithIdsVariables_
+                                    .operateCollateralAmount0
+                            )
+                        );
                     }
                 } else {
                     // Handle Withdraw Amount
-                    operateWithIdsVariables_.operateCollateralAmount0 = getUint(getIds_[2], uint256(-amountInt));
-                    actionData_ = abi.encode(-int256(operateWithIdsVariables_.operateCollateralAmount0), address(this));
+                    operateWithIdsVariables_.operateCollateralAmount0 = getUint(
+                        getIds_[2],
+                        uint256(-amountInt)
+                    );
+                    actionData_ = abi.encode(
+                        -int256(
+                            operateWithIdsVariables_.operateCollateralAmount0
+                        ),
+                        address(this)
+                    );
 
-                    if (amountInt == -int256(type(uint256).max)) {
+                    if (amountInt == type(int256).min) {
                         operateWithIdsVariables_.operateCollateralAmount0 = 0;
                     }
                 }
@@ -137,150 +195,299 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
             if (_isNewPosition(nftId_)) {
                 // Handle only borrow amount
                 uint256 tokenIndex;
-                (, tokenIndex, operateWithIdsVariables_.operateDebtAmount0) = abi.decode(actionData_, (uint256, uint256, uint256));
-                operateWithIdsVariables_.operateDebtAmount0 = getUint(getIds_[4], operateWithIdsVariables_.operateDebtAmount0);
-                actionData_ = abi.encode(2, tokenIndex, operateWithIdsVariables_.operateDebtAmount0, address(this));
+                (
+                    ,
+                    tokenIndex,
+                    operateWithIdsVariables_.operateDebtAmount0
+                ) = abi.decode(actionData_, (uint256, uint256, uint256));
+                operateWithIdsVariables_.operateDebtAmount0 = getUint(
+                    getIds_[4],
+                    operateWithIdsVariables_.operateDebtAmount0
+                );
+                actionData_ = abi.encode(
+                    2,
+                    tokenIndex,
+                    operateWithIdsVariables_.operateDebtAmount0,
+                    address(this)
+                );
             } else {
-                (int256 amountInt, ) = abi.decode(actionData_, (int256, address));
+                (int256 amountInt, ) = abi.decode(
+                    actionData_,
+                    (int256, address)
+                );
                 if (amountInt >= 0) {
                     // Handle borrow amount
-                    operateWithIdsVariables_.operateDebtAmount0 = getUint(getIds_[4], uint256(amountInt));
-                    actionData_ = abi.encode(int256(operateWithIdsVariables_.operateDebtAmount0), address(this));
+                    operateWithIdsVariables_.operateDebtAmount0 = getUint(
+                        getIds_[4],
+                        uint256(amountInt)
+                    );
+                    actionData_ = abi.encode(
+                        int256(operateWithIdsVariables_.operateDebtAmount0),
+                        address(this)
+                    );
                 } else {
                     // Handle payback amount
-                    operateWithIdsVariables_.operateDebtAmount0 = getUint(getIds_[4], uint256(-amountInt));
-                    actionData_ = abi.encode(-int256(operateWithIdsVariables_.operateDebtAmount0), address(this));
+                    operateWithIdsVariables_.operateDebtAmount0 = getUint(
+                        getIds_[4],
+                        uint256(-amountInt)
+                    );
+                    actionData_ = abi.encode(
+                        -int256(operateWithIdsVariables_.operateDebtAmount0),
+                        address(this)
+                    );
 
                     if (tokenAddressParams_.token0Address == maticAddr) {
-                        value_ += approveAmountParams_.approveAmount0;
+                        value_ += _getApproveAmount(
+                            operateWithIdsVariables_.operateDebtAmount0
+                        );
                     } else {
-                        TokenInterface(tokenAddressParams_.token0Address).approve(FLUID_DEX_V2_MM_ADDRESS, approveAmountParams_.approveAmount0);
+                        approve(
+                            TokenInterface(tokenAddressParams_.token0Address),
+                            FLUID_DEX_V2_MM_ADDRESS,
+                            _getApproveAmount(
+                                operateWithIdsVariables_.operateDebtAmount0
+                            )
+                        );
                     }
 
-                    if (amountInt == -int256(type(uint256).max)) {
+                    if (amountInt == type(int256).min) {
                         operateWithIdsVariables_.operateDebtAmount0 = 0;
                     }
                 }
             }
         } else if (positionType_ == 3) {
             if (_isNewPosition(nftId_)) {
-                (, PositionParams memory positionParams_) = abi.decode(actionData_, (uint256, PositionParams));
-                operateWithIdsVariables_.operateCollateralAmount0 = getUint(getIds_[2], positionParams_.amount0);
-                operateWithIdsVariables_.operateCollateralAmount1 = getUint(getIds_[3], positionParams_.amount1);
+                (, PositionParams memory positionParams_) = abi.decode(
+                    actionData_,
+                    (uint256, PositionParams)
+                );
+                operateWithIdsVariables_.operateCollateralAmount0 = getUint(
+                    getIds_[2],
+                    positionParams_.amount0
+                );
+                operateWithIdsVariables_.operateCollateralAmount1 = getUint(
+                    getIds_[3],
+                    positionParams_.amount1
+                );
 
-                positionParams_.amount0 = operateWithIdsVariables_.operateCollateralAmount0;
-                positionParams_.amount1 = operateWithIdsVariables_.operateCollateralAmount1;
+                positionParams_.amount0 = operateWithIdsVariables_
+                    .operateCollateralAmount0;
+                positionParams_.amount1 = operateWithIdsVariables_
+                    .operateCollateralAmount1;
                 positionParams_.to = address(this);
 
                 actionData_ = abi.encode(3, positionParams_);
 
                 if (tokenAddressParams_.token0Address == maticAddr) {
-                    value_ += approveAmountParams_.approveAmount0;
+                    value_ += _getApproveAmount(positionParams_.amount0);
                 } else {
-                    TokenInterface(tokenAddressParams_.token0Address).approve(FLUID_DEX_V2_MM_ADDRESS, approveAmountParams_.approveAmount0);
+                    approve(
+                        TokenInterface(tokenAddressParams_.token0Address),
+                        FLUID_DEX_V2_MM_ADDRESS,
+                        _getApproveAmount(positionParams_.amount0)
+                    );
                 }
 
                 if (tokenAddressParams_.token1Address == maticAddr) {
-                    value_ += approveAmountParams_.approveAmount1;
+                    value_ += _getApproveAmount(positionParams_.amount1);
                 } else {
-                    TokenInterface(tokenAddressParams_.token1Address).approve(FLUID_DEX_V2_MM_ADDRESS, approveAmountParams_.approveAmount1);
+                    approve(
+                        TokenInterface(tokenAddressParams_.token1Address),
+                        FLUID_DEX_V2_MM_ADDRESS,
+                        _getApproveAmount(positionParams_.amount1)
+                    );
                 }
             } else {
-                (int256 amount0Int, int256 amount1Int, , , ) = abi.decode(actionData_, (int256, int256, uint256, uint256, address));
+                (int256 amount0Int, int256 amount1Int, , , ) = abi.decode(
+                    actionData_,
+                    (int256, int256, uint256, uint256, address)
+                );
                 if (amount0Int >= 0) {
                     // Handle supply amount for token0
-                    operateWithIdsVariables_.operateCollateralAmount0 = getUint(getIds_[2], uint256(amount0Int));
-                    amount0Int = int256(operateWithIdsVariables_.operateCollateralAmount0);
+                    operateWithIdsVariables_.operateCollateralAmount0 = getUint(
+                        getIds_[2],
+                        uint256(amount0Int)
+                    );
+                    amount0Int = int256(
+                        operateWithIdsVariables_.operateCollateralAmount0
+                    );
 
                     if (tokenAddressParams_.token0Address == maticAddr) {
-                        value_ += approveAmountParams_.approveAmount0;
+                        value_ += _getApproveAmount(
+                            operateWithIdsVariables_.operateCollateralAmount0
+                        );
                     } else {
-                        TokenInterface(tokenAddressParams_.token0Address).approve(FLUID_DEX_V2_MM_ADDRESS, approveAmountParams_.approveAmount0);
+                        approve(
+                            TokenInterface(tokenAddressParams_.token0Address),
+                            FLUID_DEX_V2_MM_ADDRESS,
+                            _getApproveAmount(
+                                operateWithIdsVariables_
+                                    .operateCollateralAmount0
+                            )
+                        );
                     }
                 } else {
                     // Handle withdraw amount for token0
-                    operateWithIdsVariables_.operateCollateralAmount0 = getUint(getIds_[2], uint256(-amount0Int));
-                    amount0Int = -int256(operateWithIdsVariables_.operateCollateralAmount0);
+                    operateWithIdsVariables_.operateCollateralAmount0 = getUint(
+                        getIds_[2],
+                        uint256(-amount0Int)
+                    );
+                    amount0Int = -int256(
+                        operateWithIdsVariables_.operateCollateralAmount0
+                    );
 
-                    if (amount0Int == -int256(type(uint256).max)) {
+                    if (amount0Int == type(int256).min) {
                         operateWithIdsVariables_.operateCollateralAmount0 = 0;
                     }
                 }
 
                 if (amount1Int >= 0) {
                     // Handle supply amount for token1
-                    operateWithIdsVariables_.operateCollateralAmount1 = getUint(getIds_[3], uint256(amount1Int));
-                    amount1Int = int256(operateWithIdsVariables_.operateCollateralAmount1);
+                    operateWithIdsVariables_.operateCollateralAmount1 = getUint(
+                        getIds_[3],
+                        uint256(amount1Int)
+                    );
+                    amount1Int = int256(
+                        operateWithIdsVariables_.operateCollateralAmount1
+                    );
 
                     if (tokenAddressParams_.token1Address == maticAddr) {
-                        value_ += approveAmountParams_.approveAmount1;
+                        value_ += _getApproveAmount(
+                            operateWithIdsVariables_.operateCollateralAmount1
+                        );
                     } else {
-                        TokenInterface(tokenAddressParams_.token1Address).approve(FLUID_DEX_V2_MM_ADDRESS, approveAmountParams_.approveAmount1);
+                        approve(
+                            TokenInterface(tokenAddressParams_.token1Address),
+                            FLUID_DEX_V2_MM_ADDRESS,
+                            _getApproveAmount(
+                                operateWithIdsVariables_
+                                    .operateCollateralAmount1
+                            )
+                        );
                     }
                 } else {
                     // Handle withdraw amount for token1
-                    operateWithIdsVariables_.operateCollateralAmount1 = getUint(getIds_[3], uint256(-amount1Int));
-                    amount1Int = -int256(operateWithIdsVariables_.operateCollateralAmount1);
+                    operateWithIdsVariables_.operateCollateralAmount1 = getUint(
+                        getIds_[3],
+                        uint256(-amount1Int)
+                    );
+                    amount1Int = -int256(
+                        operateWithIdsVariables_.operateCollateralAmount1
+                    );
 
-                    if (amount1Int == -int256(type(uint256).max)) {
+                    if (amount1Int == type(int256).min) {
                         operateWithIdsVariables_.operateCollateralAmount1 = 0;
                     }
                 }
 
-                actionData_ = abi.encode(amount0Int, amount1Int, 0, 0, address(this));
+                actionData_ = abi.encode(
+                    amount0Int,
+                    amount1Int,
+                    0,
+                    0,
+                    address(this)
+                );
             }
         } else if (positionType_ == 4) {
             if (_isNewPosition(nftId_)) {
-                (, PositionParams memory positionParams_) = abi.decode(actionData_, (uint256, PositionParams));
-                operateWithIdsVariables_.operateDebtAmount0 = getUint(getIds_[4], positionParams_.amount0);
-                operateWithIdsVariables_.operateDebtAmount1 = getUint(getIds_[5], positionParams_.amount1);
+                (, PositionParams memory positionParams_) = abi.decode(
+                    actionData_,
+                    (uint256, PositionParams)
+                );
+                operateWithIdsVariables_.operateDebtAmount0 = getUint(
+                    getIds_[4],
+                    positionParams_.amount0
+                );
+                operateWithIdsVariables_.operateDebtAmount1 = getUint(
+                    getIds_[5],
+                    positionParams_.amount1
+                );
 
-                positionParams_.amount0 = operateWithIdsVariables_.operateDebtAmount0;
-                positionParams_.amount1 = operateWithIdsVariables_.operateDebtAmount1;
+                positionParams_.amount0 = operateWithIdsVariables_
+                    .operateDebtAmount0;
+                positionParams_.amount1 = operateWithIdsVariables_
+                    .operateDebtAmount1;
                 positionParams_.to = address(this);
                 actionData_ = abi.encode(4, positionParams_);
             } else {
-                (int256 amount0Int, int256 amount1Int, , , ) = abi.decode(actionData_, (int256, int256, uint256, uint256, address));
+                (int256 amount0Int, int256 amount1Int, , , ) = abi.decode(
+                    actionData_,
+                    (int256, int256, uint256, uint256, address)
+                );
                 if (amount0Int >= 0) {
                     // Handle borrow amount for token0
-                    operateWithIdsVariables_.operateDebtAmount0 = getUint(getIds_[4], uint256(amount0Int));
-                    amount0Int = int256(operateWithIdsVariables_.operateDebtAmount0);
+                    operateWithIdsVariables_.operateDebtAmount0 = getUint(
+                        getIds_[4],
+                        uint256(amount0Int)
+                    );
+                    amount0Int = int256(
+                        operateWithIdsVariables_.operateDebtAmount0
+                    );
                 } else {
                     // Handle payback amount for token0
-                    operateWithIdsVariables_.operateDebtAmount0 = getUint(getIds_[4], uint256(-amount0Int));
-                    amount0Int = -int256(operateWithIdsVariables_.operateDebtAmount0);
+                    operateWithIdsVariables_.operateDebtAmount0 = getUint(
+                        getIds_[4],
+                        uint256(-amount0Int)
+                    );
+                    amount0Int = -int256(
+                        operateWithIdsVariables_.operateDebtAmount0
+                    );
 
                     if (tokenAddressParams_.token0Address == maticAddr) {
-                        value_ += approveAmountParams_.approveAmount0;
+                        value_ += paybackApproveAmountParams_.approveAmount0;
                     } else {
-                        TokenInterface(tokenAddressParams_.token0Address).approve(FLUID_DEX_V2_MM_ADDRESS, approveAmountParams_.approveAmount0);
+                        approve(
+                            TokenInterface(tokenAddressParams_.token0Address),
+                            FLUID_DEX_V2_MM_ADDRESS,
+                            paybackApproveAmountParams_.approveAmount0
+                        );
                     }
 
-                    if (amount0Int == -int256(type(uint256).max)) {
+                    if (amount0Int == type(int256).min) {
                         operateWithIdsVariables_.operateDebtAmount0 = 0;
                     }
                 }
                 if (amount1Int >= 0) {
                     // Handle borrow amount for token1
-                    operateWithIdsVariables_.operateDebtAmount1 = getUint(getIds_[5], uint256(amount1Int));
-                    amount1Int = int256(operateWithIdsVariables_.operateDebtAmount1);
+                    operateWithIdsVariables_.operateDebtAmount1 = getUint(
+                        getIds_[5],
+                        uint256(amount1Int)
+                    );
+                    amount1Int = int256(
+                        operateWithIdsVariables_.operateDebtAmount1
+                    );
                 } else {
                     // Handle payback amount for token1
-                    operateWithIdsVariables_.operateDebtAmount1 = getUint(getIds_[5], uint256(-amount1Int));
-                    amount1Int = -int256(operateWithIdsVariables_.operateDebtAmount1);
+                    operateWithIdsVariables_.operateDebtAmount1 = getUint(
+                        getIds_[5],
+                        uint256(-amount1Int)
+                    );
+                    amount1Int = -int256(
+                        operateWithIdsVariables_.operateDebtAmount1
+                    );
 
                     if (tokenAddressParams_.token1Address == maticAddr) {
-                        value_ += approveAmountParams_.approveAmount1;
+                        value_ += paybackApproveAmountParams_.approveAmount1;
                     } else {
-                        TokenInterface(tokenAddressParams_.token1Address).approve(FLUID_DEX_V2_MM_ADDRESS, approveAmountParams_.approveAmount1);
+                        approve(
+                            TokenInterface(tokenAddressParams_.token1Address),
+                            FLUID_DEX_V2_MM_ADDRESS,
+                            paybackApproveAmountParams_.approveAmount1
+                        );
                     }
 
-                    if (amount1Int == -int256(type(uint256).max)) {
+                    if (amount1Int == type(int256).min) {
                         operateWithIdsVariables_.operateDebtAmount1 = 0;
                     }
                 }
 
-                actionData_ = abi.encode(amount0Int, amount1Int, 0, 0, address(this));
+                actionData_ = abi.encode(
+                    amount0Int,
+                    amount1Int,
+                    0,
+                    0,
+                    address(this)
+                );
             }
         }
 
@@ -307,6 +514,29 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
         setUint(setIds_[3], operateWithIdsVariables_.operateCollateralAmount1);
         setUint(setIds_[4], operateWithIdsVariables_.operateDebtAmount0);
         setUint(setIds_[5], operateWithIdsVariables_.operateDebtAmount1);
+
+        // Revoke allowances
+        if (
+            tokenAddressParams_.token0Address != maticAddr &&
+            tokenAddressParams_.token0Address != address(0)
+        ) {
+            approve(
+                TokenInterface(tokenAddressParams_.token0Address),
+                FLUID_DEX_V2_MM_ADDRESS,
+                0
+            );
+        }
+
+        if (
+            tokenAddressParams_.token1Address != maticAddr &&
+            tokenAddressParams_.token1Address != address(0)
+        ) {
+            approve(
+                TokenInterface(tokenAddressParams_.token1Address),
+                FLUID_DEX_V2_MM_ADDRESS,
+                0
+            );
+        }
     }
 
     function changeEMode(
@@ -317,10 +547,10 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
         payable
         returns (string memory _eventName, bytes memory _eventParam)
     {
-       IFluidDexV2(FLUID_DEX_V2_MM_ADDRESS).changeEmode(nftId_, newEmode_);
+        IFluidDexV2(FLUID_DEX_V2_MM_ADDRESS).changeEmode(nftId_, newEmode_);
 
-       _eventName = "LogChangeEmode(uint256,uint256)";
-       _eventParam = abi.encode(nftId_, newEmode_);
+        _eventName = "LogChangeEmode(uint256,uint256)";
+        _eventParam = abi.encode(nftId_, newEmode_);
     }
 }
 
