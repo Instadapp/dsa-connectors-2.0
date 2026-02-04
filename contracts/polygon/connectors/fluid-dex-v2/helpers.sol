@@ -3,7 +3,7 @@ pragma solidity ^0.8.26;
 
 contract FluidDexV2Helpers {
     // @TODO: Update the MM address
-    address internal constant FLUID_DEX_V2_MM_ADDRESS = 0x0000000000000000000000000000000000000000;
+    address internal constant FLUID_DEX_V2_MM_ADDRESS = 0xD8E73B7169C579Cc6c2d08c458Cce3d944a76010;
 
     modifier validatePositionType(uint8 positionType_) {
         require(
