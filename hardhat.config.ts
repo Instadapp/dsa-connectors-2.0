@@ -39,7 +39,7 @@ const mnemonic = process.env.MNEMONIC ?? "test test test test test test test tes
 
 const networkGasPriceConfig: Record<string, number> = {
   mainnet: 7.1,
-  polygon: 950,
+  polygon: 650,
   avalanche: 2,
   arbitrum: 1,
   optimism: 0.01,

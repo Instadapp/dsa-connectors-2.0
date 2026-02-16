@@ -118,29 +118,33 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                     tokenIndex,
                     operateWithIdsVariables_.operateCollateralAmount0
                 ) = abi.decode(actionData_, (uint256, uint256, uint256));
+
                 operateWithIdsVariables_.operateCollateralAmount0 = getUint(
                     getIds_[2],
                     operateWithIdsVariables_.operateCollateralAmount0
                 );
+
+                if (tokenAddressParams_.token0Address == maticAddr) {
+                    value_ += operateWithIdsVariables_.operateCollateralAmount0;
+                } else {
+                    approve(
+                        TokenInterface(tokenAddressParams_.token0Address),
+                        FLUID_DEX_V2_MM_ADDRESS,
+                            operateWithIdsVariables_.operateCollateralAmount0
+                    );
+                }
+
+                // Actual operate amount is 1 wei less than the requested amount
+                operateWithIdsVariables_
+                    .operateCollateralAmount0 = _getActualOperateAmount(
+                    operateWithIdsVariables_.operateCollateralAmount0
+                );
+
                 actionData_ = abi.encode(
                     1,
                     tokenIndex,
                     operateWithIdsVariables_.operateCollateralAmount0
                 );
-
-                if (tokenAddressParams_.token0Address == maticAddr) {
-                    value_ += _getApproveAmount(
-                        operateWithIdsVariables_.operateCollateralAmount0
-                    );
-                } else {
-                    approve(
-                        TokenInterface(tokenAddressParams_.token0Address),
-                        FLUID_DEX_V2_MM_ADDRESS,
-                        _getApproveAmount(
-                            operateWithIdsVariables_.operateCollateralAmount0
-                        )
-                    );
-                }
             } else {
                 (int256 amountInt, ) = abi.decode(
                     actionData_,
@@ -152,6 +156,23 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                         getIds_[2],
                         uint256(amountInt)
                     );
+
+                    if (tokenAddressParams_.token0Address == maticAddr) {
+                        value_ += operateWithIdsVariables_.operateCollateralAmount0;
+                    } else {
+                        approve(
+                            TokenInterface(tokenAddressParams_.token0Address),
+                            FLUID_DEX_V2_MM_ADDRESS,
+                            operateWithIdsVariables_.operateCollateralAmount0
+                        );
+                    }
+
+                    // Actual operate amount is 1 wei less than the requested amount
+                    operateWithIdsVariables_
+                        .operateCollateralAmount0 = _getActualOperateAmount(
+                        operateWithIdsVariables_.operateCollateralAmount0
+                    );
+
                     actionData_ = abi.encode(
                         int256(
                             operateWithIdsVariables_.operateCollateralAmount0
@@ -159,20 +180,7 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                         address(0)
                     );
 
-                    if (tokenAddressParams_.token0Address == maticAddr) {
-                        value_ += _getApproveAmount(
-                            operateWithIdsVariables_.operateCollateralAmount0
-                        );
-                    } else {
-                        approve(
-                            TokenInterface(tokenAddressParams_.token0Address),
-                            FLUID_DEX_V2_MM_ADDRESS,
-                            _getApproveAmount(
-                                operateWithIdsVariables_
-                                    .operateCollateralAmount0
-                            )
-                        );
-                    }
+
                 } else {
                     // Handle Withdraw Amount
                     operateWithIdsVariables_.operateCollateralAmount0 = getUint(
@@ -231,24 +239,27 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                         getIds_[4],
                         uint256(-amountInt)
                     );
-                    actionData_ = abi.encode(
-                        -int256(operateWithIdsVariables_.operateDebtAmount0),
-                        address(this)
-                    );
 
                     if (tokenAddressParams_.token0Address == maticAddr) {
-                        value_ += _getApproveAmount(
-                            operateWithIdsVariables_.operateDebtAmount0
-                        );
+                        value_ += operateWithIdsVariables_.operateDebtAmount0;
                     } else {
                         approve(
                             TokenInterface(tokenAddressParams_.token0Address),
                             FLUID_DEX_V2_MM_ADDRESS,
-                            _getApproveAmount(
-                                operateWithIdsVariables_.operateDebtAmount0
-                            )
+                            operateWithIdsVariables_.operateDebtAmount0
                         );
                     }
+
+                    // Actual operate amount is 1 wei less than the requested amount
+                    operateWithIdsVariables_
+                        .operateDebtAmount0 = _getActualOperateAmount(
+                        operateWithIdsVariables_.operateDebtAmount0
+                    );
+
+                    actionData_ = abi.encode(
+                        -int256(operateWithIdsVariables_.operateDebtAmount0),
+                        address(this)
+                    );
 
                     if (amountInt == type(int256).min) {
                         operateWithIdsVariables_.operateDebtAmount0 = 0;
@@ -270,33 +281,31 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                     positionParams_.amount1
                 );
 
-                positionParams_.amount0 = operateWithIdsVariables_
-                    .operateCollateralAmount0;
-                positionParams_.amount1 = operateWithIdsVariables_
-                    .operateCollateralAmount1;
-                positionParams_.to = address(this);
-
-                actionData_ = abi.encode(3, positionParams_);
-
                 if (tokenAddressParams_.token0Address == maticAddr) {
-                    value_ += _getApproveAmount(positionParams_.amount0);
+                    value_ += operateWithIdsVariables_.operateCollateralAmount0;
                 } else {
                     approve(
                         TokenInterface(tokenAddressParams_.token0Address),
                         FLUID_DEX_V2_MM_ADDRESS,
-                        _getApproveAmount(positionParams_.amount0)
+                        operateWithIdsVariables_.operateCollateralAmount0
                     );
                 }
 
                 if (tokenAddressParams_.token1Address == maticAddr) {
-                    value_ += _getApproveAmount(positionParams_.amount1);
+                    value_ += operateWithIdsVariables_.operateCollateralAmount1;
                 } else {
                     approve(
                         TokenInterface(tokenAddressParams_.token1Address),
                         FLUID_DEX_V2_MM_ADDRESS,
-                        _getApproveAmount(positionParams_.amount1)
+                        operateWithIdsVariables_.operateCollateralAmount1
                     );
                 }
+
+                positionParams_.amount0 = _getActualOperateAmount(operateWithIdsVariables_.operateCollateralAmount0);
+                positionParams_.amount1 = _getActualOperateAmount(operateWithIdsVariables_.operateCollateralAmount1);
+                positionParams_.to = address(this);
+
+                actionData_ = abi.encode(3, positionParams_);
             } else {
                 (int256 amount0Int, int256 amount1Int, , , ) = abi.decode(
                     actionData_,
@@ -308,24 +317,22 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                         getIds_[2],
                         uint256(amount0Int)
                     );
-                    amount0Int = int256(
-                        operateWithIdsVariables_.operateCollateralAmount0
-                    );
 
                     if (tokenAddressParams_.token0Address == maticAddr) {
-                        value_ += _getApproveAmount(
-                            operateWithIdsVariables_.operateCollateralAmount0
-                        );
+                        value_ += operateWithIdsVariables_.operateCollateralAmount0;
                     } else {
                         approve(
                             TokenInterface(tokenAddressParams_.token0Address),
                             FLUID_DEX_V2_MM_ADDRESS,
-                            _getApproveAmount(
-                                operateWithIdsVariables_
-                                    .operateCollateralAmount0
-                            )
+                            operateWithIdsVariables_.operateCollateralAmount0
                         );
                     }
+
+                    // Actual operate amount is 1 wei less than the requested amount
+                    amount0Int = int256(
+                        _getActualOperateAmount(operateWithIdsVariables_.operateCollateralAmount0)
+                    );
+                    
                 } else {
                     // Handle withdraw amount for token0
                     operateWithIdsVariables_.operateCollateralAmount0 = getUint(
@@ -347,24 +354,21 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                         getIds_[3],
                         uint256(amount1Int)
                     );
-                    amount1Int = int256(
-                        operateWithIdsVariables_.operateCollateralAmount1
-                    );
 
                     if (tokenAddressParams_.token1Address == maticAddr) {
-                        value_ += _getApproveAmount(
-                            operateWithIdsVariables_.operateCollateralAmount1
-                        );
+                        value_ += operateWithIdsVariables_.operateCollateralAmount1;
                     } else {
                         approve(
                             TokenInterface(tokenAddressParams_.token1Address),
                             FLUID_DEX_V2_MM_ADDRESS,
-                            _getApproveAmount(
-                                operateWithIdsVariables_
-                                    .operateCollateralAmount1
-                            )
+                            operateWithIdsVariables_.operateCollateralAmount1
                         );
                     }
+
+                    // Actual operate amount is 1 wei less than the requested amount
+                    amount1Int = int256(
+                        _getActualOperateAmount(operateWithIdsVariables_.operateCollateralAmount1)
+                    );
                 } else {
                     // Handle withdraw amount for token1
                     operateWithIdsVariables_.operateCollateralAmount1 = getUint(
