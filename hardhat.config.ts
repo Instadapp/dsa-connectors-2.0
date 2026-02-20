@@ -180,9 +180,7 @@ const config: any = {
       opera: String(process.env.FTM_ETHSCAN_KEY),
       base: String(process.env.BASE_ETHSCAN_KEY),
       plasma: String(process.env.PLASMA_ETHSCAN_KEY),
-      bsc: String(process.env.ETHERSCAN_V2_API_KEY)
-      base: String(process.env.ETHERSCAN_V2_API_KEY),
-      plasma: String(process.env.PLASMA_ETHSCAN_KEY)
+      bsc: String(process.env.ETHERSCAN_V2_API_KEY),
     },
     customChains: [
       {
