@@ -45,7 +45,7 @@ const networkGasPriceConfig: Record<string, number> = {
   optimism: 0.01,
   fantom: 210,
   base: 0.0005,
-  plasma: 1,
+  plasma: 0.0001,
   bsc: 0.1
 };
 
@@ -179,7 +179,7 @@ const config: any = {
       avalanche: String(process.env.AVAX_ETHSCAN_KEY),
       opera: String(process.env.FTM_ETHSCAN_KEY),
       base: String(process.env.BASE_ETHSCAN_KEY),
-      plasma: String(process.env.PLASMA_ETHSCAN_KEY),
+      plasma: String(process.env.ETHERSCAN_V2_API_KEY),
       bsc: String(process.env.ETHERSCAN_V2_API_KEY),
     },
     customChains: [
@@ -211,7 +211,7 @@ const config: any = {
         network: "plasma",
         chainId: 9745,
         urls: {
-          apiURL: "https://api.routescan.io/v2/network/mainnet/evm/9745/etherscan/api",
+          apiURL: "https://api.etherscan.io/v2/api?chainid=9745",
           browserURL: "https://plasmascan.to/"
         }
       },

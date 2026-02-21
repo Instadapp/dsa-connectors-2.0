@@ -10,13 +10,13 @@ abstract contract Helpers is DSMath, Basic {
 	 * @dev Aave Pool Provider
 	 */
 	AavePoolProviderInterface internal constant aaveProvider =
-		AavePoolProviderInterface(0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e);
+		AavePoolProviderInterface(0x061D8e131F26512348ee5FA42e2DF1bA9d6505E9);
 
 	/**
 	 * @dev Aave Pool Data Provider
 	 */
 	AaveDataProviderInterface internal constant aaveData =
-		AaveDataProviderInterface(0x41393e5e337606dc3821075Af65AeE84D7688CBD);
+		AaveDataProviderInterface(0xf2D6E38B407e31E7E7e4a16E6769728b76c7419F);
 
 	/**
 	 * @dev Aave Referral Code
