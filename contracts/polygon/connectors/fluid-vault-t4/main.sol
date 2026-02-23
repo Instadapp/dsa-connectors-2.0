@@ -48,7 +48,8 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
     }
 
     struct OperateInternalVariables {
-        uint256 maticAmount;
+        uint256 maticAmount0;
+        uint256 maticAmount1;
         int256 colShares;
         int256 debtShares;
     }
@@ -97,7 +98,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
         // Deposit token 0
         if (helper_.newColToken0 > 0) {
             // Assumes maticAmount_ would either be token0 or token1
-            (internalVar_.maticAmount, helper_.newColToken0) = _handleDeposit(
+            (internalVar_.maticAmount0, helper_.newColToken0) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT4Details_.supplyToken.token0 == getMaticAddr(),
                     isMax: helper_.newColToken0 == type(int256).max,
@@ -111,7 +112,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
         // Deposit token 1
         if (helper_.newColToken1 > 0) {
             // Assumes maticAmount_ would either be token0 or token1
-            (internalVar_.maticAmount, helper_.newColToken1) = _handleDeposit(
+            (internalVar_.maticAmount1, helper_.newColToken1) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT4Details_.supplyToken.token1 == getMaticAddr(),
                     isMax: helper_.newColToken1 == type(int256).max,
@@ -124,7 +125,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
 
         // Payback token 0
         if (helper_.newDebtToken0 < 0) {
-            internalVar_.maticAmount = _handlePayback(
+            internalVar_.maticAmount0 = _handlePayback(
                 HandlePaybackData({
                     isMatic: vaultT4Details_.borrowToken.token0 == getMaticAddr(),
                     isMin: false,
@@ -138,7 +139,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
 
         // Payback token 1
         if (helper_.newDebtToken1 < 0) {
-            internalVar_.maticAmount = _handlePayback(
+            internalVar_.maticAmount1 = _handlePayback(
                 HandlePaybackData({
                     isMatic: vaultT4Details_.borrowToken.token1 == getMaticAddr(),
                     isMin: false,
@@ -154,7 +155,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
             helper_.nftId,
             internalVar_.colShares,
             internalVar_.debtShares
-        ) = vaultT4_.operate{value: internalVar_.maticAmount}(
+        ) = vaultT4_.operate{value: (internalVar_.maticAmount0 + internalVar_.maticAmount1)}(
             helper_.nftId,
             helper_.newColToken0,
             helper_.newColToken1,
@@ -245,7 +246,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
         // Deposit token 0
         if (helper_.newColToken0 > 0) {
             // Assumes maticAmount_ would either be token0 or token1
-            (internalVar_.maticAmount, helper_.newColToken0) = _handleDeposit(
+            (internalVar_.maticAmount0, helper_.newColToken0) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT4Details_.supplyToken.token0 == getMaticAddr(),
                     isMax: helper_.newColToken0 == type(int256).max,
@@ -259,7 +260,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
         // Deposit token 1
         if (helper_.newColToken1 > 0) {
             // Assumes maticAmount_ would either be token0 or token1
-            (internalVar_.maticAmount, helper_.newColToken1) = _handleDeposit(
+            (internalVar_.maticAmount1, helper_.newColToken1) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT4Details_.supplyToken.token1 == getMaticAddr(),
                     isMax: helper_.newColToken1 == type(int256).max,
@@ -272,7 +273,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
 
         // Payback token 0
         if (helper_.newDebtToken0 < 0) {
-            internalVar_.maticAmount = _handlePayback(
+            internalVar_.maticAmount0 = _handlePayback(
                 HandlePaybackData({
                     isMatic: vaultT4Details_.borrowToken.token0 == getMaticAddr(),
                     isMin: false,
@@ -286,7 +287,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
 
         // Payback token 1
         if (helper_.newDebtToken1 < 0) {
-            internalVar_.maticAmount = _handlePayback(
+            internalVar_.maticAmount1 = _handlePayback(
                 HandlePaybackData({
                     isMatic: vaultT4Details_.borrowToken.token1 == getMaticAddr(),
                     isMin: false,
@@ -302,7 +303,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
             helper_.nftId,
             internalVar_.colShares,
             internalVar_.debtShares
-        ) = vaultT4_.operate{value: internalVar_.maticAmount}(
+        ) = vaultT4_.operate{value: (internalVar_.maticAmount0 + internalVar_.maticAmount1)}(
             helper_.nftId,
             helper_.newColToken0,
             helper_.newColToken1,
@@ -363,7 +364,8 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
     }
 
     struct OperatePerfectInternalVariables {
-        uint256 maticAmount;
+        uint256 maticAmount0;
+        uint256 maticAmount1;
         bool isDebtMin;
         bool isDebtToken0Matic;
         bool isDebtToken1Matic;
@@ -390,7 +392,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
         OperatePerfectInternalVariables memory internalVar_;
 
         if (helper_.perfectColShares > 0) {
-            (internalVar_.maticAmount, ) = _handleDeposit(
+            (internalVar_.maticAmount0, ) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT4Details_.supplyToken.token0 == getMaticAddr(),
                     isMax: helper_.perfectColShares == type(int256).max,
@@ -400,7 +402,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
                 })
             );
 
-            (internalVar_.maticAmount, ) = _handleDeposit(
+            (internalVar_.maticAmount1, ) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT4Details_.supplyToken.token1 == getMaticAddr(),
                     isMax: helper_.perfectColShares == type(int256).max,
@@ -419,7 +421,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
 
         // Payback
         if (helper_.perfectDebtShares < 0) {
-            internalVar_.maticAmount = _handlePayback(
+            internalVar_.maticAmount0 = _handlePayback(
                 HandlePaybackData({
                     isMatic: internalVar_.isDebtToken0Matic,
                     isMin: internalVar_.isDebtMin,
@@ -430,7 +432,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
                 })
             );
 
-            internalVar_.maticAmount = _handlePayback(
+            internalVar_.maticAmount1 = _handlePayback(
                 HandlePaybackData({
                     isMatic: internalVar_.isDebtToken1Matic,
                     isMin: internalVar_.isDebtMin,
@@ -442,7 +444,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
             );
         }
 
-        (helper_.nftId, internalVar_.r) = vaultT4_.operatePerfect{value: internalVar_.maticAmount}(
+        (helper_.nftId, internalVar_.r) = vaultT4_.operatePerfect{value: (internalVar_.maticAmount0 + internalVar_.maticAmount1)}(
             helper_.nftId,
             helper_.perfectColShares,
             helper_.colToken0MinMax,
@@ -553,7 +555,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
         OperatePerfectInternalVariables memory internalVar_;
 
         if (helper_.perfectColShares > 0) {
-            (internalVar_.maticAmount, ) = _handleDeposit(
+            (internalVar_.maticAmount0, ) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT4Details_.supplyToken.token0 == getMaticAddr(),
                     isMax: helper_.perfectColShares == type(int256).max,
@@ -563,7 +565,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
                 })
             );
 
-            (internalVar_.maticAmount, ) = _handleDeposit(
+            (internalVar_.maticAmount1, ) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT4Details_.supplyToken.token1 == getMaticAddr(),
                     isMax: helper_.perfectColShares == type(int256).max,
@@ -582,7 +584,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
 
         // Payback
         if (helper_.perfectDebtShares < 0) {
-            internalVar_.maticAmount = _handlePayback(
+            internalVar_.maticAmount0 = _handlePayback(
                 HandlePaybackData({
                     isMatic: internalVar_.isDebtToken0Matic,
                     isMin: internalVar_.isDebtMin,
@@ -593,7 +595,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
                 })
             );
 
-            internalVar_.maticAmount = _handlePayback(
+            internalVar_.maticAmount1 = _handlePayback(
                 HandlePaybackData({
                     isMatic: internalVar_.isDebtToken1Matic,
                     isMin: internalVar_.isDebtMin,
@@ -605,7 +607,7 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
             );
         }
 
-        (helper_.nftId, internalVar_.r) = vaultT4_.operatePerfect{value: internalVar_.maticAmount}(
+        (helper_.nftId, internalVar_.r) = vaultT4_.operatePerfect{value: (internalVar_.maticAmount0 + internalVar_.maticAmount1)}(
             helper_.nftId,
             helper_.perfectColShares,
             helper_.colToken0MinMax,
@@ -650,5 +652,5 @@ abstract contract FluidVaultT4Connector is Helpers, Events {
 }
 
 contract ConnectV2FluidVaultT4Polygon is FluidVaultT4Connector {
-    string public constant name = "Fluid-vaultT4-v1.0";
+    string public constant name = "Fluid-vaultT4-v1.1";
 }
