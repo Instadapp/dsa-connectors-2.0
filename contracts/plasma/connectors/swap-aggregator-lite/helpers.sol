@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
-import {InstaConnectors} from "../../common/interfaces.sol";
+import {Stores} from "../../common/stores.sol";
 import {TokenInterface} from "../../common/interfaces.sol";
 
-abstract contract SwapHelpers {
+abstract contract SwapHelpers is Stores {
     struct SwapAmounts {
         uint256 sellAmount;
         uint256 buyAmount;
@@ -15,10 +15,6 @@ abstract contract SwapHelpers {
         bytes returnData;
         string connector;
     }
-
-    /// @dev Instadapp Connectors Registry.
-    InstaConnectors internal constant INSTA_CONNECTORS =
-        InstaConnectors(0x01fEF4d2B513C9F69E34b2f93Ef707FA9Ff60109);
 
     /**
      * @dev Swap using the dex aggregators. Tries each connector in order and
@@ -37,7 +33,7 @@ abstract contract SwapHelpers {
         require(length_ > 0, "zero-length-not-allowed");
         require(datas_.length == length_, "calldata-length-invalid");
 
-        (bool isOk, address[] memory connectorAddresses_) = INSTA_CONNECTORS.isConnectors(
+        (bool isOk, address[] memory connectorAddresses_) = instaConnectors.isConnectors(
             connectors_
         );
         require(isOk, "connector-names-invalid");
