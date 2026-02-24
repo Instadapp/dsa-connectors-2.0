@@ -4,7 +4,6 @@ pragma solidity ^0.8.2;
 /**
  * @title Swap Aggregator for Lite Vaults.
  * @dev Swap integration for DEX Aggregators.
- * @dev Connector Name: SWAP-AGGREGATOR-B
  */
 
 import {SwapHelpers} from "./helpers.sol";
@@ -13,15 +12,15 @@ import {TokenInterface} from "../../common/interfaces.sol";
 
 abstract contract SwapAggregatorLite is SwapHelpers, Events {
     /**
-     * @dev Swap the tokens using the connectors.
-     * @param sellTokenAddr_ address of the sell token.
-     * @param buyTokenAddr_ address of the buy token.
-     * @param minBuyAmount_ minimum buy amount.
-     * @param sellTokenExchangePrice_ exchange rate of the sell token.
-     * @param buyTokenExchangePrice_ exchange rate of the buy token.
-     * @param maxSwapLossPercentage_ maximum swap loss percentage in basis points.
-     * @param connectors_ name of the connectors in preference order.
-     * @param datas_ data for the swap cast.
+     * @dev Swap tokens via the first successful connector and enforce loss limits.
+     * @param sellTokenAddr_ Address of the token being sold.
+     * @param buyTokenAddr_ Address of the token being bought.
+     * @param minBuyAmount_ Minimum acceptable buy-token amount (in buy-token decimals).
+     * @param sellTokenExchangePrice_ Sell-token price in USD, scaled to 1e18.
+     * @param buyTokenExchangePrice_ Buy-token price in USD, scaled to 1e18.
+     * @param maxSwapLossPercentage_ Maximum allowed swap-loss percentage where 1e6 = 100%.
+     * @param connectors_ Connector names in preference order.
+     * @param datas_ Encoded calldata for each connector.
      */
     function swap(
         address sellTokenAddr_,
@@ -49,21 +48,19 @@ abstract contract SwapAggregatorLite is SwapHelpers, Events {
             (string, bytes)
         );
 
-        // Calculate the swapped amounts
         swapAmounts_.sellAmount =
             swapAmounts_.sellAmount - TokenInterface(sellTokenAddr_).balanceOf(address(this));
         swapAmounts_.buyAmount =
             TokenInterface(buyTokenAddr_).balanceOf(address(this)) - swapAmounts_.buyAmount;
 
-        // maxSwapLossPercentage_ check
+        // Ensure USD value sold does not exceed bought value beyond the allowed loss tolerance.
         require(
             _getAmountInUsd(sellTokenAddr_, swapAmounts_.sellAmount, sellTokenExchangePrice_) <
-            (_getAmountInUsd(buyTokenAddr_, swapAmounts_.buyAmount, buyTokenExchangePrice_) * (1e4 + maxSwapLossPercentage_)) / 1e4,
+            (_getAmountInUsd(buyTokenAddr_, swapAmounts_.buyAmount, buyTokenExchangePrice_) * (1e6 + maxSwapLossPercentage_)) / 1e6,
             "loss-greater-than-max-swap-loss-percentage"
         );
 
-        // minBuyAmount_ check
-        require( minBuyAmount_ < swapAmounts_.buyAmount, "amount-received-less");
+        require(minBuyAmount_ < swapAmounts_.buyAmount, "amount-received-less");
 
         eventName_ = "LogSwapAggregator(string[],string,string,bytes)";
         eventParam_ = abi.encode(connectors_, swapResult_.connector, eventName, eventParam);

@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
 import {InstaConnectors} from "../../common/interfaces.sol";
@@ -16,16 +16,15 @@ abstract contract SwapHelpers {
         string connector;
     }
 
-    /**
-     * @dev Instadapp Connectors Registry
-     */
+    /// @dev Instadapp Connectors Registry.
     InstaConnectors internal constant INSTA_CONNECTORS =
         InstaConnectors(0x97b0B3A8bDeFE8cB9563a3c610019Ad10DB8aD11);
 
     /**
-     * @dev Swap using the dex aggregators.
-     * @param connectors_ name of the connectors in preference order.
-     * @param datas_ data for the swap cast.
+     * @dev Swap using the dex aggregators. Tries each connector in order and
+     *      returns on the first successful execution.
+     * @param connectors_ Connector names in preference order.
+     * @param datas_ Encoded calldata for each connector.
      */
     function _swap(
         string[] memory connectors_,
@@ -53,10 +52,11 @@ abstract contract SwapHelpers {
     }
 
     /**
-     * @dev Get the amount in USD (1e6 decimals).
-     * @param tokenAddress_ address of the token.
-     * @param amount_ amount of the token.
-     * @param exchangeRate_ exchange rate of the token.
+     * @dev Returns the USD value of `amount_` in 1e18 decimals.
+     * @param tokenAddress_ Token address (used to read its decimals).
+     * @param amount_ Token amount in its native decimals.
+     * @param exchangeRate_ Token price in USD, scaled to 1e18.
+     * @return amountInUsd_ USD value scaled to 1e18.
      */
     function _getAmountInUsd(
         address tokenAddress_,
@@ -66,6 +66,6 @@ abstract contract SwapHelpers {
         uint256 tokenDecimals_ = TokenInterface(tokenAddress_).decimals();
         amountInUsd_ =
             (amount_ * exchangeRate_) /
-            10 ** (2 * tokenDecimals_ - 6);
+            (10 ** tokenDecimals_);
     }
 }
