@@ -63,7 +63,7 @@ function getNetworkUrl(networkType: string) {
   else if (networkType === "fantom") return `https://rpc.ftm.tools/`;
   else if (networkType === "base") return `https://1rpc.io/base`;
   else if (networkType === "plasma") return `https://rpc.plasma.to`;
-  else return `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`;
+  else return `https://eth-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
 }
 
 /**
@@ -155,29 +155,45 @@ const config: any = {
   },
   etherscan: {
     apiKey: {
-      mainnet: String(process.env.MAIN_ETHSCAN_KEY),
-      optimisticEthereum: String(process.env.OPT_ETHSCAN_KEY),
-      polygon: String(process.env.POLY_ETHSCAN_KEY),
-      arbitrumOne: String(process.env.ARB_ETHSCAN_KEY),
-      avalanche: String(process.env.AVAX_ETHSCAN_KEY),
-      opera: String(process.env.FTM_ETHSCAN_KEY),
-      base: String(process.env.BASE_ETHSCAN_KEY),
-      plasma: String(process.env.PLASMA_ETHSCAN_KEY)
+      mainnet: String(process.env.ETHERSCAN_V2_API_KEY),
+      optimisticEthereum: String(process.env.ETHERSCAN_V2_API_KEY),
+      polygon: String(process.env.ETHERSCAN_V2_API_KEY),
+      arbitrumOne: String(process.env.ETHERSCAN_V2_API_KEY),
+      avalanche: String(process.env.ETHERSCAN_V2_API_KEY),
+      opera: String(process.env.ETHERSCAN_V2_API_KEY),
+      base: String(process.env.ETHERSCAN_V2_API_KEY),
+      plasma: String(process.env.ETHERSCAN_V2_API_KEY)
     },
     customChains: [
+      {
+        network: "mainnet",
+        chainId: 1,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=1",
+          browserURL: "https://etherscan.io"
+        }
+      },
+      {
+        network: "arbitrumOne",
+        chainId: 42161,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=42161",
+          browserURL: "https://arbiscan.io"
+        }
+      },
       {
         network: "base",
         chainId: 8453,
         urls: {
-         apiURL: "https://api.basescan.org/api",
-         browserURL: "https://basescan.org"
+          apiURL: "https://api.etherscan.io/v2/api?chainid=8453",
+          browserURL: "https://basescan.org"
         }
       },
       {
         network: "plasma",
         chainId: 9745,
         urls: {
-          apiURL: "https://api.routescan.io/v2/network/mainnet/evm/9745/etherscan/api",
+          apiURL: "https://api.etherscan.io/v2/api?chainid=9745",
           browserURL: "https://plasmascan.to/"
         }
       }
