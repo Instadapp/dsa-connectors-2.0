@@ -4,12 +4,40 @@ pragma solidity ^0.8.2;
 import "../../common/stores.sol";
 import "../../common/basic.sol";
 import "../../common/interfaces.sol";
-
-import {Id, IMoolah, MarketParams, Position, Market} from "./interfaces/IMoolah.sol";
+import {
+    Id,
+    IMoolah,
+    MarketParams,
+    Position,
+    Market
+} from "./interfaces/IMoolah.sol";
 import {MoolahBalancesLib} from "./libraries/periphery/MoolahBalancesLib.sol";
 import {UtilsLib} from "./libraries/UtilsLib.sol";
 import {MarketParamsLib} from "./libraries/MarketParamsLib.sol";
 import {SharesMathLib} from "./libraries/SharesMathLib.sol";
+
+interface IProvider {
+    function supplyCollateral(
+        MarketParams memory marketParams,
+        address onBehalf,
+        bytes memory data
+    ) external payable;
+
+    function withdrawCollateral(
+        MarketParams memory marketParams,
+        uint256 assets,
+        address onBehalf,
+        address receiver
+    ) external;
+
+    function borrow(
+        MarketParams calldata marketParams,
+        uint256 assets,
+        uint256 shares,
+        address onBehalf,
+        address receiver
+    ) external;
+}
 
 abstract contract Helpers is Stores, Basic {
     using MoolahBalancesLib for IMoolah;
@@ -83,12 +111,8 @@ abstract contract Helpers is Stores, Basic {
                     address(this)
                 );
         } else {
-            (
-                uint256 totalSupplyAssets,
-                uint256 totalSupplyShares,
-                ,
-
-            ) = MOOLAH.expectedMarketBalances(_marketParams);
+            (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = MOOLAH
+                .expectedMarketBalances(_marketParams);
 
             _assets = _shareAmt.toAssetsUp(
                 totalSupplyAssets,

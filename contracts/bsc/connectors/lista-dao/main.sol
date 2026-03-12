@@ -13,284 +13,15 @@ abstract contract ListaDaoConnector is Helpers, Events {
     using SharesMathLib for uint256;
 
     /**
-     * @dev Supply BNB/ERC20 Token for lending.
-     * @notice Supplies assets to Lista DAO for lending.
-     * @param _marketParams The market to supply assets to. (For BNB: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
+     * @notice Supply BNB/ERC20 Token for collateralization.
+     * @param _marketParams The market to supply assets to. (For BNB, pass the collateral token as WBNB)
      * @param _assets The amount of assets to supply. (For max: `uint256(-1)`)
      * @param _getId ID to retrieve amt.
      * @param _setId ID stores the amount of tokens deposited.
      */
     function supply(
         MarketParams memory _marketParams,
-        uint256 _assets,
-        uint256 _getId,
-        uint256 _setId
-    )
-        external
-        payable
-        returns (string memory _eventName, bytes memory _eventParam)
-    {
-        uint256 _amt;
-        Id _id;
-        (
-            _id,
-            _marketParams, // Updated token contracts in case of Bnb
-            _amt
-        ) = _performBnbToWbnbConversion(
-            _marketParams,
-            _assets,
-            _getId,
-            false
-        );
-
-        approve(
-            TokenInterface(_marketParams.loanToken),
-            address(MOOLAH),
-            _amt
-        );
-
-        uint256 _shares;
-        (_assets, _shares) = MOOLAH.supply(
-            _marketParams,
-            _amt,
-            0,
-            address(this),
-            new bytes(0)
-        );
-
-        setUint(_setId, _assets);
-
-        _eventName = "LogSupplyAssets(bytes32,unit256,unit256,unit256,unit256)";
-        _eventParam = abi.encode(_id, _assets, _shares, _getId, _setId);
-    }
-
-    /**
-     * @dev Supply BNB/ERC20 Token for lending.
-     * @notice Supplies assets to Lista DAO for lending.
-     * @param _marketParams The market to supply assets to. (For BNB: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
-     * @param _assets The amount of assets to supply. (For max: `uint256(-1)`)
-     * @param _onBehalf The address that will get the shares.
-     * @param _getId ID to retrieve amt.
-     * @param _setId ID stores the amount of tokens deposited.
-     */
-    function supplyOnBehalf(
-        MarketParams memory _marketParams,
-        uint256 _assets,
         address _onBehalf,
-        uint256 _getId,
-        uint256 _setId
-    )
-        external
-        payable
-        returns (string memory _eventName, bytes memory _eventParam)
-    {
-        uint256 _amt;
-        Id _id;
-        (
-            _id,
-            _marketParams, // Updated token contracts in case of Bnb
-            _amt
-        ) = _performBnbToWbnbConversion(
-            _marketParams,
-            _assets,
-            _getId,
-            false
-        );
-
-        approve(
-            TokenInterface(_marketParams.loanToken),
-            address(MOOLAH),
-            _amt
-        );
-
-        uint256 _shares;
-        (_assets, _shares) = MOOLAH.supply(
-            _marketParams,
-            _amt,
-            0,
-            _onBehalf,
-            new bytes(0)
-        );
-
-        setUint(_setId, _assets);
-
-        _eventName = "LogSupplyOnBehalf(bytes32,uint256,uint256,address,uint256,uint256)";
-        _eventParam = abi.encode(
-            _id,
-            _assets,
-            _shares,
-            _onBehalf,
-            _getId,
-            _setId
-        );
-    }
-
-    /**
-     * @dev Supply BNB/ERC20 Token for lending.
-     * @notice Supplies assets for a perfect share amount to Lista DAO for lending.
-     * @param _marketParams The market to supply assets to. (For BNB: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
-     * @param _shares The exact amount of shares to mint. (For max: `uint256(-1)`)
-     * @param _onBehalf The address that will get the shares.
-     * @param _getId ID to retrieve amt.
-     * @param _setId ID stores the amount of tokens deposited.
-     */
-    function supplySharesOnBehalf(
-        MarketParams memory _marketParams,
-        uint256 _shares,
-        address _onBehalf,
-        uint256 _getId,
-        uint256 _setId
-    )
-        external
-        payable
-        returns (string memory _eventName, bytes memory _eventParam)
-    {
-        uint256 _amt;
-        Id _id;
-        (
-            _id,
-            _marketParams, // Updated token contracts in case of Bnb
-            _amt // Share amount converted to assets
-        ) = _performBnbToWbnbSharesConversion(_marketParams, _shares, _getId);
-
-        approve(
-            TokenInterface(_marketParams.loanToken),
-            address(MOOLAH),
-            _amt
-        );
-
-        uint256 _assets;
-        (_assets, _shares) = MOOLAH.supply(
-            _marketParams,
-            _amt,
-            0,
-            _onBehalf,
-            new bytes(0)
-        );
-
-        setUint(_setId, _assets);
-
-        _eventName = "LogSupplyOnBehalf(bytes32,uint256,uint256,address,uint256,uint256)";
-        _eventParam = abi.encode(
-            _id,
-            _assets,
-            _shares,
-            _onBehalf,
-            _getId,
-            _setId
-        );
-    }
-
-    /**
-     * @notice Supply BNB/ERC20 Token for collateralization.
-     * @param _marketParams The market to supply assets to. (For BNB: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
-     * @param _assets The amount of assets to supply. (For max: `uint256(-1)`)
-     * @param _getId ID to retrieve amt.
-     * @param _setId ID stores the amount of tokens deposited.
-     */
-    function supplyCollateral(
-        MarketParams memory _marketParams,
-        uint256 _assets,
-        uint256 _getId,
-        uint256 _setId
-    )
-        external
-        payable
-        returns (string memory _eventName, bytes memory _eventParam)
-    {
-        uint256 _amt;
-        Id _id;
-        (
-            _id,
-            _marketParams, // Updated token contracts in case of Bnb
-            _amt
-        ) = _performBnbToWbnbConversion(
-            _marketParams,
-            _assets,
-            _getId,
-            true
-        );
-
-        approve(
-            TokenInterface(_marketParams.collateralToken),
-            address(MOOLAH),
-            _amt
-        );
-
-        MOOLAH.supplyCollateral(
-            _marketParams,
-            _amt,
-            address(this),
-            new bytes(0)
-        );
-
-        setUint(_setId, _amt);
-
-        _eventName = "LogSupplyCollateral(bytes32,uint256,uint256,uint256)";
-        _eventParam = abi.encode(_id, _assets, _getId, _setId);
-    }
-
-    /**
-     * @notice Supplies `assets` of collateral on behalf of `onBehalf`.
-     * @param _marketParams The market to supply assets to. (For BNB: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
-     * @param _assets The amount of assets to supply. (For max: `uint256(-1)`)
-     * @param _onBehalf The address that will get the shares.
-     * @param _getId ID to retrieve amt.
-     * @param _setId ID stores the amount of tokens deposited.
-     */
-    function supplyCollateralOnBehalf(
-        MarketParams memory _marketParams,
-        uint256 _assets,
-        address _onBehalf,
-        uint256 _getId,
-        uint256 _setId
-    )
-        external
-        payable
-        returns (string memory _eventName, bytes memory _eventParam)
-    {
-        uint256 _amt;
-        Id _id;
-        (
-            _id,
-            _marketParams, // Updated token contracts in case of Bnb
-            _amt
-        ) = _performBnbToWbnbConversion(
-            _marketParams,
-            _assets,
-            _getId,
-            true
-        );
-
-        approve(
-            TokenInterface(_marketParams.collateralToken),
-            address(MOOLAH),
-            _amt
-        );
-
-        MOOLAH.supplyCollateral(
-            _marketParams,
-            _amt,
-            _onBehalf,
-            new bytes(0)
-        );
-
-        setUint(_setId, _amt);
-
-        _eventName = "LogSupplyCollateralOnBehalf(bytes32,uint256,address,uint256,uint256)";
-        _eventParam = abi.encode(_id, _assets, _onBehalf, _getId, _setId);
-    }
-
-    /**
-     * @notice Handles the collateral withdrawals.
-     * @dev The market to withdraw assets from. (For BNB: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
-     * @param _marketParams The market to withdraw assets from.
-     * @param _assets The amount of assets to withdraw. (For max: `uint256(-1)`)
-     * @param _getId ID to retrieve amt.
-     * @param _setId ID stores the amount of tokens deposited.
-     */
-    function withdrawCollateral(
-        MarketParams memory _marketParams,
         uint256 _assets,
         uint256 _getId,
         uint256 _setId
@@ -300,106 +31,59 @@ abstract contract ListaDaoConnector is Helpers, Events {
         returns (string memory _eventName, bytes memory _eventParam)
     {
         uint256 _amt = getUint(_getId, _assets);
-
-        _marketParams = updateTokenAddresses(_marketParams);
-
         Id _id = _marketParams.id();
 
-        // If amount is max, fetch collateral value from Moolah contract
-        if (_amt == type(uint256).max) {
-            Position memory _pos = MOOLAH.position(_id, address(this));
-            _amt = _pos.collateral;
-        }
-
-        MOOLAH.withdrawCollateral(
-            _marketParams,
-            _amt,
-            address(this),
-            address(this)
+        address providerAddress = MOOLAH.providers(
+            _id,
+            _marketParams.collateralToken
         );
+        if (providerAddress == address(0)) {
+            _amt = _amt == type(uint256).max
+                ? TokenInterface(_marketParams.collateralToken).balanceOf(
+                    address(this)
+                )
+                : _amt;
 
-        convertBnbToWbnb(
-            _marketParams.collateralToken == bnbAddr,
-            TokenInterface(wbnbAddr),
-            _amt
-        );
-
-        setUint(_setId, _amt);
-
-        _eventName = "LogWithdrawCollateral(bytes32,uint256,uint256,uint256)";
-        _eventParam = abi.encode(_id, _amt, _getId, _setId);
-    }
-
-    /**
-     * @notice Handles the withdrawal of collateral by a user from a specific market of a specific amount.
-     * @dev The market to withdraw assets from. (For BNB: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
-     * @param _marketParams The market to withdraw assets from.
-     * @param _assets The amount of assets to withdraw. (For max: `uint256(-1)`)
-     * @param _onBehalf The address that already deposited position.
-     * @param _getId ID to retrieve amt.
-     * @param _setId ID stores the amount of tokens deposited.
-     */
-    function withdrawCollateralOnBehalf(
-        MarketParams memory _marketParams,
-        uint256 _assets,
-        address _onBehalf,
-        address _receiver,
-        uint256 _getId,
-        uint256 _setId
-    )
-        external
-        payable
-        returns (string memory _eventName, bytes memory _eventParam)
-    {
-        uint256 _amt = getUint(_getId, _assets);
-
-        _marketParams = updateTokenAddresses(_marketParams);
-
-        Id _id = _marketParams.id();
-
-        // If amount is max, fetch collateral value from Moolah contract
-        if (_amt == type(uint256).max) {
-            Position memory _pos = MOOLAH.position(_id, _onBehalf);
-            _amt = _pos.collateral;
-        }
-
-        MOOLAH.withdrawCollateral(
-            _marketParams,
-            _amt,
-            _onBehalf,
-            _receiver
-        );
-
-        if (_receiver == address(this))
-            convertBnbToWbnb(
-                _marketParams.collateralToken == bnbAddr,
-                TokenInterface(wbnbAddr),
+            approve(
+                TokenInterface(_marketParams.collateralToken),
+                address(MOOLAH),
                 _amt
             );
 
+            MOOLAH.supplyCollateral(
+                _marketParams,
+                _amt,
+                _onBehalf,
+                new bytes(0)
+            );
+        } else {
+            IProvider provider = IProvider(providerAddress);
+            _amt = _amt == type(uint256).max ? address(this).balance : _amt;
+
+            provider.supplyCollateral{value: _amt}(
+                _marketParams,
+                _onBehalf,
+                new bytes(0)
+            );
+        }
+
         setUint(_setId, _amt);
 
-        _eventName = "LogWithdrawCollateralOnBehalf(bytes32,uint256,address,address,uint256,uint256)";
-        _eventParam = abi.encode(
-            _id,
-            _amt,
-            _onBehalf,
-            _receiver,
-            _getId,
-            _setId
-        );
+        _eventName = "LogSupplyCollateral(bytes32,address,uint256,uint256,uint256)";
+        _eventParam = abi.encode(_id, _onBehalf, _assets, _getId, _setId);
     }
 
     /**
-     * @notice Handles the withdrawal of supplied assets.
-     * @dev  The market to withdraw assets from. (For BNB: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
-     * @param _marketParams The market to withdraw assets from.
-     * @param _assets The amount of assets to withdraw. (For max: `uint256(-1)`)
+     * @notice Withdraws collateral from the market.
+     * @param _marketParams The market to withdraw collateral from. (For BNB: use WBNB address)
+     * @param _onBehalf The address whose collateral to withdraw (position owner).
+     * @param _assets The amount of collateral to withdraw. (For max: `uint256(-1)`)
      * @param _getId ID to retrieve amt.
-     * @param _setId ID stores the amount of tokens deposited.
+     * @param _setId ID stores the amount withdrawn.
      */
     function withdraw(
         MarketParams memory _marketParams,
+        address _onBehalf,
         uint256 _assets,
         uint256 _getId,
         uint256 _setId
@@ -414,160 +98,36 @@ abstract contract ListaDaoConnector is Helpers, Events {
 
         Id _id = _marketParams.id();
 
-        uint256 _shares = 0;
-
-        // Using shares for max amounts to make sure no dust is left on the contract
-        if (_amt == type(uint256).max) {
-            Position memory _pos = MOOLAH.position(_id, address(this));
-            _shares = _pos.supplyShares;
-            _amt = 0;
-        }
-
-        // In case of max share amount will be used
-        (_assets, _shares) = MOOLAH.withdraw(
-            _marketParams,
-            _amt,
-            _shares,
-            address(this),
-            address(this)
-        );
-
-        convertBnbToWbnb(
-            _marketParams.loanToken == bnbAddr,
-            TokenInterface(wbnbAddr),
-            _assets
-        );
-
-        setUint(_setId, _assets);
-
-        _eventName = "LogWithdraw(bytes32,uint256,uint256,uint256,uint256)";
-        _eventParam = abi.encode(_id, _assets, _shares, _getId, _setId);
-    }
-
-    /**
-     * @notice Handles the withdrawal of a specified amount of assets by a user from a specific market.
-     * @dev The market to withdraw assets from. (For BNB: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
-     * @param _marketParams The parameters of the market.
-     * @param _assets The amount of assets the user is withdrawing. (For max: `uint256(-1)`)
-     * @param _onBehalf The address who's position to withdraw from.
-     * @param _getId ID to retrieve amt.
-     * @param _setId ID stores the amount of tokens deposited.
-     */
-    function withdrawOnBehalf(
-        MarketParams memory _marketParams,
-        uint256 _assets,
-        address _onBehalf,
-        address _receiver,
-        uint256 _getId,
-        uint256 _setId
-    )
-        external
-        payable
-        returns (string memory _eventName, bytes memory _eventParam)
-    {
-        uint256 _amt = getUint(_getId, _assets);
-
-        _marketParams = updateTokenAddresses(_marketParams);
-
-        Id _id = _marketParams.id();
-
-        uint256 _shares = 0;
-
-        // Using shares for max amounts to make sure no dust is left on the contract
         if (_amt == type(uint256).max) {
             Position memory _pos = MOOLAH.position(_id, _onBehalf);
-            _shares = _pos.supplyShares;
-            _amt = 0;
+            _amt = _pos.collateral;
         }
 
-        (_assets, _shares) = MOOLAH.withdraw(
-            _marketParams,
-            _amt,
-            _shares,
-            _onBehalf,
-            _receiver
-        );
-
-        if (_receiver == address(this))
-            convertBnbToWbnb(
-                _marketParams.loanToken == bnbAddr,
-                TokenInterface(wbnbAddr),
-                _assets
-            );
-
-        setUint(_setId, _assets);
-
-        _eventName = "LogWithdrawOnBehalf(bytes32,uint256,uint256,address,address,uint256,uint256)";
-        _eventParam = abi.encode(
+        address providerAddress = MOOLAH.providers(
             _id,
-            _assets,
-            _shares,
-            _onBehalf,
-            address(this),
-            _getId,
-            _setId
+            _marketParams.collateralToken
         );
-    }
 
-    /**
-     * @notice Handles the withdrawal of a specified amount of assets by a user from a specific market.
-     * @dev The market to withdraw assets from. (For BNB: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
-     * @param _marketParams The parameters of the market.
-     * @param _shares The amount of shares the user is withdrawing. (For max: `uint256(-1)`)
-     * @param _onBehalf The address who's position to withdraw from.
-     * @param _getId ID to retrieve amt.
-     * @param _setId ID stores the amount of tokens deposited.
-     */
-    function withdrawSharesOnBehalf(
-        MarketParams memory _marketParams,
-        uint256 _shares,
-        address _onBehalf,
-        address _receiver,
-        uint256 _getId,
-        uint256 _setId
-    )
-        external
-        payable
-        returns (string memory _eventName, bytes memory _eventParam)
-    {
-        uint256 _shareAmt = getUint(_getId, _shares);
-
-        _marketParams = updateTokenAddresses(_marketParams);
-
-        Id _id = _marketParams.id();
-
-        if (_shareAmt == type(uint256).max) {
-            Position memory _pos = MOOLAH.position(_id, _onBehalf);
-            _shareAmt = _pos.supplyShares;
+        if (providerAddress == address(0)) {
+            MOOLAH.withdrawCollateral(
+                _marketParams,
+                _amt,
+                _onBehalf,
+                address(this)
+            );
+        } else {
+            IProvider(providerAddress).withdrawCollateral(
+                _marketParams,
+                _amt,
+                _onBehalf,
+                address(this)
+            );
         }
 
-        (uint256 _assets, ) = MOOLAH.withdraw(
-            _marketParams,
-            0,
-            _shareAmt,
-            _onBehalf,
-            _receiver
-        );
+        setUint(_setId, _amt);
 
-        if (_receiver == address(this))
-            convertBnbToWbnb(
-                _marketParams.loanToken == bnbAddr,
-                TokenInterface(wbnbAddr),
-                _assets
-            );
-
-        setUint(_setId, _assets);
-
-        _eventName = "LogWithdrawOnBehalf(bytes32,uint256,uint256,address,address,uint256,uint256)";
-        _eventParam = abi.encode(
-            _id,
-            _assets,
-            _shareAmt,
-            _onBehalf,
-            _receiver,
-            _getId,
-            _setId
-        );
+        _eventName = "LogWithdraw(bytes32,address,uint256,uint256,uint256)";
+        _eventParam = abi.encode(_id, _onBehalf, _amt, _getId, _setId);
     }
 
     /**
@@ -580,6 +140,7 @@ abstract contract ListaDaoConnector is Helpers, Events {
      */
     function borrow(
         MarketParams memory _marketParams,
+        address _onBehalf,
         uint256 _assets,
         uint256 _getId,
         uint256 _setId
@@ -589,138 +150,40 @@ abstract contract ListaDaoConnector is Helpers, Events {
         returns (string memory _eventName, bytes memory _eventParam)
     {
         uint256 _amt = getUint(_getId, _assets);
-        bool _isLoanBnb = _marketParams.loanToken == bnbAddr;
 
         _marketParams = updateTokenAddresses(_marketParams);
 
         Id _id = _marketParams.id();
 
-        (, uint256 _shares) = MOOLAH.borrow(
-            _marketParams,
-            _amt,
-            0,
-            address(this),
-            address(this)
+        address providerAddress = MOOLAH.providers(
+            _id,
+            _marketParams.loanToken
         );
 
-        convertBnbToWbnb(
-            _isLoanBnb,
-            TokenInterface(wbnbAddr),
-            _amt
-        );
+        uint256 _shares;
+
+        if (providerAddress == address(0)) {
+            (, _shares) = MOOLAH.borrow(
+                _marketParams,
+                _amt,
+                0,
+                _onBehalf,
+                address(this)
+            );
+        } else {
+            IProvider(providerAddress).borrow(
+                _marketParams,
+                _amt,
+                0,
+                _onBehalf,
+                address(this)
+            );
+        }
 
         setUint(_setId, _amt);
 
-        _eventName = "LogBorrow(bytes32,uint256,uint256,uint256,uint256)";
-        _eventParam = abi.encode(_id, _amt, _shares, _getId, _setId);
-    }
-
-    /**
-     * @notice Borrows `assets` on behalf of `onBehalf` to `receiver`.
-     * @dev The market to borrow assets from. (For BNB: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
-     * @param _marketParams  The market to borrow assets from.
-     * @param _assets The amount of assets to borrow.
-     * @param _onBehalf The address that will recieve the borrowing assets and own the borrow position.
-     * @param _receiver The address that will recieve the borrowed assets.
-     * @param _getId ID to retrieve amt.
-     * @param _setId ID stores the amount of tokens borrowed.
-     */
-    function borrowOnBehalf(
-        MarketParams memory _marketParams,
-        uint256 _assets,
-        address _onBehalf,
-        address _receiver,
-        uint256 _getId,
-        uint256 _setId
-    )
-        external
-        payable
-        returns (string memory _eventName, bytes memory _eventParam)
-    {
-        uint256 _amt = getUint(_getId, _assets);
-        bool _isLoanBnb = _marketParams.loanToken == bnbAddr;
-
-        _marketParams = updateTokenAddresses(_marketParams);
-
-        Id _id = _marketParams.id();
-
-        (, uint256 _shares) = MOOLAH.borrow(
-            _marketParams,
-            _amt,
-            0,
-            _onBehalf,
-            _receiver
-        );
-
-        if (_receiver == address(this))
-            convertBnbToWbnb(_isLoanBnb, TokenInterface(wbnbAddr), _amt);
-
-        setUint(_setId, _amt);
-
-        _eventName = "LogBorrowOnBehalf(bytes32,uint256,uint256,address,address,uint256,uint256)";
-        _eventParam = abi.encode(
-            _id,
-            _amt,
-            _shares,
-            _onBehalf,
-            _receiver,
-            _getId,
-            _setId
-        );
-    }
-
-    /**
-     * @notice Borrows `shares` on behalf of `onBehalf` to `receiver`.
-     * @dev The market to borrow assets from. (For BNB: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
-     * @param _marketParams The market to borrow assets from.
-     * @param _shares The amount of shares to mint.
-     * @param _onBehalf The address that will own the borrow position.
-     * @param _receiver The address that will recieve the borrowed assets.
-     * @param _getId ID to retrieve shares amt.
-     * @param _setId ID stores the amount of tokens borrowed.
-     */
-    function borrowOnBehalfShares(
-        MarketParams memory _marketParams,
-        uint256 _shares,
-        address _onBehalf,
-        address _receiver,
-        uint256 _getId,
-        uint256 _setId
-    )
-        external
-        payable
-        returns (string memory _eventName, bytes memory _eventParam)
-    {
-        uint256 _shareAmt = getUint(_getId, _shares);
-        bool _isLoanBnb = _marketParams.loanToken == bnbAddr;
-
-        _marketParams = updateTokenAddresses(_marketParams);
-
-        Id _id = _marketParams.id();
-
-        (uint256 _assets, ) = MOOLAH.borrow(
-            _marketParams,
-            0,
-            _shareAmt,
-            _onBehalf,
-            _receiver
-        );
-
-        if (_receiver == address(this))
-            convertBnbToWbnb(_isLoanBnb, TokenInterface(wbnbAddr), _assets);
-
-        setUint(_setId, _assets);
-
-        _eventName = "LogBorrowOnBehalf(bytes32,uint256,uint256,address,address,uint256,uint256)";
-        _eventParam = abi.encode(
-            _id,
-            _assets,
-            _shareAmt,
-            _onBehalf,
-            _receiver,
-            _getId,
-            _setId
-        );
+        _eventName = "LogBorrow(bytes32,address,uint256,uint256,uint256,uint256)";
+        _eventParam = abi.encode(_id, _onBehalf, _amt, _shares, _getId, _setId);
     }
 
     /**
@@ -733,6 +196,7 @@ abstract contract ListaDaoConnector is Helpers, Events {
      */
     function repay(
         MarketParams memory _marketParams,
+        address _onBehalf,
         uint256 _assets,
         uint256 _getId,
         uint256 _setId
@@ -742,253 +206,43 @@ abstract contract ListaDaoConnector is Helpers, Events {
         returns (string memory _eventName, bytes memory _eventParam)
     {
         uint256 _amt = getUint(_getId, _assets);
-        uint256 _shares = 0;
-
-        bool _isMax = _amt == type(uint256).max;
         bool _isBnb = _marketParams.loanToken == bnbAddr;
 
         _marketParams = updateTokenAddresses(_marketParams);
 
-        Id _id = _marketParams.id();
-
-        uint256 _maxDsaBalance;
-        uint256 _borrowedShareAmt;
-
         if (_amt == type(uint256).max) {
-            _maxDsaBalance = _isBnb
+            uint256 _maxDsaBalance = _isBnb
                 ? address(this).balance
                 : TokenInterface(_marketParams.loanToken).balanceOf(
                     address(this)
                 );
 
-            uint256 _amtDebt;
-            (_amtDebt, _borrowedShareAmt) = getPaybackBalance(
-                _id,
-                _marketParams,
-                address(this)
-            );
-
-            // Amount is minimum of dsa balance or debt
-            _amt = UtilsLib.min(_maxDsaBalance, _amtDebt);
-        }
-
-        convertBnbToWbnb(
-            _isBnb,
-            TokenInterface(_marketParams.loanToken),
-            _amt
-        );
-
-        approve(
-            TokenInterface(_marketParams.loanToken),
-            address(MOOLAH),
-            _amt
-        );
-
-        if (_isMax && _amt < _maxDsaBalance) {
-            // case of max shares burn
-            _shares = _borrowedShareAmt;
-            _amt = 0;
-        }
-
-        (_assets, _shares) = MOOLAH.repay(
-            _marketParams,
-            _amt,
-            _shares,
-            address(this),
-            new bytes(0)
-        );
-
-        setUint(_setId, _assets);
-
-        _eventName = "LogRepay(bytes32,uint256,uint256,uint256,uint256)";
-        _eventParam = abi.encode(_id, _assets, _shares, _getId, _setId);
-    }
-
-    /**
-     * @notice Repays assets on behalf.
-     * @dev The market to repay assets to. (For BNB: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
-     * @param _marketParams The market to repay assets to.
-     * @param _assets The amount of assets to repay. (For max: `uint256(-1)`)
-     * @param _onBehalf The address whose loan will be repaid.
-     * @param _getId ID to retrieve amt.
-     * @param _setId ID stores the amount of tokens repaid.
-     */
-    function repayOnBehalf(
-        MarketParams memory _marketParams,
-        uint256 _assets,
-        address _onBehalf,
-        uint256 _getId,
-        uint256 _setId
-    )
-        external
-        payable
-        returns (string memory _eventName, bytes memory _eventParam)
-    {
-        uint256 _amt = getUint(_getId, _assets);
-        uint256 _shares = 0;
-
-        bool _isBnb = _marketParams.loanToken == bnbAddr;
-
-        _marketParams = updateTokenAddresses(_marketParams);
-
-        Id _id = _marketParams.id();
-
-        uint256 _maxDsaBalance;
-        uint256 _borrowedShareAmt;
-
-        if (_amt == type(uint256).max) {
-            _maxDsaBalance = _isBnb
-                ? address(this).balance
-                : TokenInterface(_marketParams.loanToken).balanceOf(
-                    address(this)
-                );
-
-            uint256 _amtDebt;
-            (_amtDebt, _borrowedShareAmt) = getPaybackBalance(
-                _id,
+            (uint256 _amtDebt, ) = getPaybackBalance(
+                _marketParams.id(),
                 _marketParams,
                 _onBehalf
             );
 
-            // Amount is minimum of dsa balance or debt
             _amt = UtilsLib.min(_maxDsaBalance, _amtDebt);
         }
 
-        convertBnbToWbnb(
-            _isBnb,
-            TokenInterface(_marketParams.loanToken),
-            _amt
-        );
+        convertBnbToWbnb(_isBnb, TokenInterface(_marketParams.loanToken), _amt);
 
-        approve(
-            TokenInterface(_marketParams.loanToken),
-            address(MOOLAH),
-            _amt
-        );
+        approve(TokenInterface(_marketParams.loanToken), address(MOOLAH), _amt);
 
-        if (_amt == type(uint256).max && _amt < _maxDsaBalance) {
-            // Case for max shares burn
-            _shares = _borrowedShareAmt;
-            _amt = 0;
-        }
-
-        (_assets, _shares) = MOOLAH.repay(
+        (_assets, ) = MOOLAH.repay(
             _marketParams,
             _amt,
-            _shares,
+            0,
             _onBehalf,
             new bytes(0)
         );
-
-        setUint(_setId, _assets);
-
-        _eventName = "LogRepayOnBehalf(bytes32,uint256,uint256,address,uint256,uint256)";
-        _eventParam = abi.encode(
-            _id,
-            _assets,
-            _shares,
-            _onBehalf,
-            _getId,
-            _setId
-        );
-    }
-
-    /**
-     * @notice Repays shares on behalf.
-     * @dev The market to repay assets to. (For BNB: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
-     * @param _marketParams The market to repay assets to.
-     * @param _shares The amount of shares to burn. (For max: `uint256(-1)`)
-     * @param _onBehalf The address whose loan will be repaid.
-     * @param _getId ID to retrieve amt.
-     * @param _setId ID stores the amount of tokens repaid.
-     */
-    function repayOnBehalfShares(
-        MarketParams memory _marketParams,
-        uint256 _shares,
-        address _onBehalf,
-        uint256 _getId,
-        uint256 _setId
-    )
-        external
-        payable
-        returns (string memory _eventName, bytes memory _eventParam)
-    {
-        uint256 _amt;
-        uint256 _shareAmt = getUint(_getId, _shares);
-        
-        bool _isBnb = _marketParams.loanToken == bnbAddr;
-
-        _marketParams = updateTokenAddresses(_marketParams);
 
         Id _id = _marketParams.id();
+        setUint(_setId, _assets);
 
-        uint256 _borrowedShareAmt;
-        uint256 _maxDsaBalance;
-
-        if (_shareAmt == type(uint256).max) {
-            _maxDsaBalance = _isBnb
-                ? address(this).balance
-                : TokenInterface(_marketParams.loanToken).balanceOf(
-                    address(this)
-                );
-
-            uint256 _assetsAmt;
-            (_assetsAmt, _borrowedShareAmt) = getPaybackBalance(
-                _id,
-                _marketParams,
-                _onBehalf
-            );
-
-            _amt = UtilsLib.min(_maxDsaBalance, _assetsAmt);
-        } else {
-            (
-                ,
-                ,
-                uint256 totalBorrowAssets,
-                uint256 totalBorrowShares
-            ) = MOOLAH.expectedMarketBalances(_marketParams);
-
-            _amt = _shareAmt.toAssetsUp(totalBorrowAssets, totalBorrowShares);
-        }
-
-        convertBnbToWbnb(
-            _isBnb,
-            TokenInterface(_marketParams.loanToken),
-            _amt
-        );
-
-        approve(
-            TokenInterface(_marketParams.loanToken),
-            address(MOOLAH),
-            _amt
-        );
-
-        if (_shareAmt == type(uint256).max && _amt < _maxDsaBalance) {
-            _shareAmt = _borrowedShareAmt;
-            _amt = 0;
-        } else {
-            _shareAmt = 0;
-        }
-
-        (_amt, ) = MOOLAH.repay(
-            _marketParams,
-            _amt,
-            _shareAmt,
-            _onBehalf,
-            new bytes(0)
-        );
-
-        setUint(_setId, _amt);
-
-        _eventName = "LogRepayOnBehalf(bytes32,uint256,uint256,address,uint256,uint256)";
-        _eventParam = abi.encode(
-            _id,
-            _amt,
-            _shares,
-            _onBehalf,
-            _getId,
-            _setId
-        );
+        _eventName = "LogRepay(bytes32,address,uint256,uint256,uint256,uint256)";
+        _eventParam = abi.encode(_id, _onBehalf, _assets, 0, _getId, _setId);
     }
 }
 
