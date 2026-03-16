@@ -175,7 +175,7 @@ const config: any = {
       mainnet: String(process.env.ETHERSCAN_V2_API_KEY),
       optimisticEthereum: String(process.env.ETHERSCAN_V2_API_KEY),
       polygon: String(process.env.ETHERSCAN_V2_API_KEY),
-      arbitrumOne: String(process.env.ETHERSCAN_V2_API_KEY),
+      arbitrum: String(process.env.ETHERSCAN_V2_API_KEY),
       avalanche: String(process.env.AVAX_ETHSCAN_KEY),
       opera: String(process.env.FTM_ETHSCAN_KEY),
       base: String(process.env.BASE_ETHSCAN_KEY),
@@ -221,6 +221,14 @@ const config: any = {
         urls: {
           apiURL: "https://api.etherscan.io/v2/api?chainid=56",
           browserURL: "https://bscscan.com"
+        }
+      },
+      {
+        network: "arbitrum",
+        chainId: 42161,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=42161",
+          browserURL: "https://arbiscan.io"
         }
       }
     ]
