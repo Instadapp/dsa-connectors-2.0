@@ -5,6 +5,7 @@ import { addresses as addressesArbitrum } from "./arbitrum/addresses";
 import { addresses as addressesAvalanche } from "./avalanche/addresses";
 import { addresses as addressesOptimism } from "./optimism/addresses";
 import { addresses as addressesFantom } from "./fantom/addresses";
+import { addresses as addressesBsc } from "./bsc/addresses";
 import { abis } from "../constant/abis";
 
 function getAddress(network: string | undefined) {
@@ -13,6 +14,7 @@ function getAddress(network: string | undefined) {
   else if (network === "avalanche") return addressesAvalanche.core.instaIndex;
   else if (network === "optimism") return addressesOptimism.core.instaIndex;
   else if (network === "fantom") return addressesFantom.core.instaIndex;
+  else if (network === "bsc") return addressesBsc.core.instaIndex;
   else return addresses.core.instaIndex;
 }
 

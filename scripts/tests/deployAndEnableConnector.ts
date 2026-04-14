@@ -5,6 +5,7 @@ import { addresses as addressesArbitrum } from "./arbitrum/addresses";
 import { addresses as addressesAvalanche } from "./avalanche/addresses";
 import { addresses as addressesOptimism } from "./optimism/addresses";
 import { addresses as addressesFantom } from "./fantom/addresses";
+import { addresses as addressesBsc } from "./bsc/addresses";
 
 import hre from "hardhat";
 import type { Signer, Contract } from "ethers";
@@ -27,6 +28,7 @@ function getAddress(network: string | undefined) {
   else if (network === "avalanche") return addressesAvalanche;
   else if (network === "optimism") return addressesOptimism;
   else if (network === "fantom") return addressesFantom;
+  else if (network === "bsc") return addressesBsc;
   else return addresses;
 }
 
