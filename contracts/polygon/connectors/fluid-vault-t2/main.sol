@@ -14,13 +14,19 @@ import {TokenInterface} from "../../common/interfaces.sol";
 
 abstract contract FluidVaultT2Connector is Helpers, Events {
     struct OperateInternalVariables {
-        uint256 maticAmount;
+        uint256 maticAmount0;
+        uint256 maticAmount1;
+        uint256 maticAmountDebt;
+        uint256 maticAmountTotal;
         int256 colShares;
         int256 debtShares;
     }
 
     struct OperatePerfectInternalVariables {
-        uint256 maticAmount;
+        uint256 maticAmount0;
+        uint256 maticAmount1;
+        uint256 maticAmountDebt;
+        uint256 maticAmountTotal;
         bool isDebtMin;
         bool isDebtTokenMatic;
         int256[] r;
@@ -96,7 +102,7 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
         // Deposit token 0
         if (helper_.newColToken0 > 0) {
             // Assumes maticAmount_ would either be token0 or token1
-            (internalVar_.maticAmount, helper_.newColToken0) = _handleDeposit(
+            (internalVar_.maticAmount0, helper_.newColToken0) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT2Details_.supplyToken.token0 == getMaticAddr(),
                     isMax: helper_.newColToken0 == type(int256).max,
@@ -110,7 +116,7 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
         // Deposit token 1
         if (helper_.newColToken1 > 0) {
             // Assumes maticAmount_ would either be token0 or token1
-            (internalVar_.maticAmount, helper_.newColToken1) = _handleDeposit(
+            (internalVar_.maticAmount1, helper_.newColToken1) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT2Details_.supplyToken.token1 == getMaticAddr(),
                     isMax: helper_.newColToken1 == type(int256).max,
@@ -123,7 +129,7 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
 
         // Payback (Normal Debt)
         if (helper_.newDebt < 0) {
-            (internalVar_.maticAmount) = _handlePayback(
+            (internalVar_.maticAmountDebt) = _handlePayback(
                 HandlePaybackData({
                     isMatic: vaultT2Details_.borrowToken.token0 == getMaticAddr(),
                     isMin: helper_.newDebt == type(int256).min,
@@ -135,11 +141,13 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
             );
         }
 
+        internalVar_.maticAmountTotal = internalVar_.maticAmount0 + internalVar_.maticAmount1 + internalVar_.maticAmountDebt;
+
         (
             helper_.nftId,
             internalVar_.colShares,
             internalVar_.debtShares
-        ) = vaultT2_.operate{value: internalVar_.maticAmount}(
+        ) = vaultT2_.operate{value: internalVar_.maticAmountTotal}(
             helper_.nftId,
             helper_.newColToken0,
             helper_.newColToken1,
@@ -178,6 +186,7 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
             helper_.setIds
         );
     }
+
     /**
      * @param vaultAddress Vault address.
      * @param nftId NFT ID for interaction. If 0 then create new NFT/position.
@@ -219,7 +228,7 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
         // Deposit token 0
         if (helper_.newColToken0 > 0) {
             // Assumes maticAmount_ would either be token0 or token1
-            (internalVar_.maticAmount, helper_.newColToken0) = _handleDeposit(
+            (internalVar_.maticAmount0, helper_.newColToken0) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT2Details_.supplyToken.token0 == getMaticAddr(),
                     isMax: helper_.newColToken0 == type(int256).max,
@@ -233,7 +242,7 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
         // Deposit token 1
         if (helper_.newColToken1 > 0) {
             // Assumes maticAmount_ would either be token0 or token1
-            (internalVar_.maticAmount, helper_.newColToken1) = _handleDeposit(
+            (internalVar_.maticAmount1, helper_.newColToken1) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT2Details_.supplyToken.token1 == getMaticAddr(),
                     isMax: helper_.newColToken1 == type(int256).max,
@@ -246,7 +255,7 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
 
         // Payback (Normal Debt)
         if (helper_.newDebt < 0) {
-            (internalVar_.maticAmount) = _handlePayback(
+            (internalVar_.maticAmountDebt) = _handlePayback(
                 HandlePaybackData({
                     isMatic: vaultT2Details_.borrowToken.token0 == getMaticAddr(),
                     isMin: helper_.newDebt == type(int256).min,
@@ -258,11 +267,13 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
             );
         }
 
+        internalVar_.maticAmountTotal = internalVar_.maticAmount0 + internalVar_.maticAmount1 + internalVar_.maticAmountDebt;
+
         (
             helper_.nftId,
             internalVar_.colShares,
             internalVar_.debtShares
-        ) = vaultT2_.operate{value: internalVar_.maticAmount}(
+        ) = vaultT2_.operate{value: internalVar_.maticAmountTotal}(
             helper_.nftId,
             helper_.newColToken0,
             helper_.newColToken1,
@@ -346,7 +357,7 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
 
         // Deposit
         if (helper_.perfectColShares > 0) {
-            (internalVar_.maticAmount, ) = _handleDeposit(
+            (internalVar_.maticAmount0, ) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT2Details_.supplyToken.token0 == getMaticAddr(),
                     isMax: helper_.perfectColShares == type(int256).max,
@@ -356,7 +367,7 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
                 })
             );
 
-            (internalVar_.maticAmount, ) = _handleDeposit(
+            (internalVar_.maticAmount1, ) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT2Details_.supplyToken.token1 == getMaticAddr(),
                     isMax: helper_.perfectColShares == type(int256).max,
@@ -373,7 +384,7 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
 
         // Payback
         if (helper_.newDebt < 0) {
-            internalVar_.maticAmount = _handlePayback(
+            internalVar_.maticAmountDebt = _handlePayback(
                 HandlePaybackData({
                     isMatic: internalVar_.isDebtTokenMatic,
                     isMin: internalVar_.isDebtMin,
@@ -385,8 +396,13 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
             );
         }
 
+        internalVar_.maticAmountTotal = 
+            internalVar_.maticAmount0 
+            + internalVar_.maticAmount1 
+            + internalVar_.maticAmountDebt;
+
         (helper_.nftId, internalVar_.r) = vaultT2_.operatePerfect{
-            value: internalVar_.maticAmount
+            value: internalVar_.maticAmountTotal
         }(
             helper_.nftId,
             helper_.perfectColShares,
@@ -470,7 +486,7 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
 
         // Deposit
         if (helper_.perfectColShares > 0) {
-            (internalVar_.maticAmount, ) = _handleDeposit(
+            (internalVar_.maticAmount0, ) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT2Details_.supplyToken.token0 == getMaticAddr(),
                     isMax: helper_.perfectColShares == type(int256).max,
@@ -480,7 +496,7 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
                 })
             );
 
-            (internalVar_.maticAmount, ) = _handleDeposit(
+            (internalVar_.maticAmount1, ) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT2Details_.supplyToken.token1 == getMaticAddr(),
                     isMax: helper_.perfectColShares == type(int256).max,
@@ -497,7 +513,7 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
 
         // Payback
         if (helper_.newDebt < 0) {
-            internalVar_.maticAmount = _handlePayback(
+            internalVar_.maticAmountDebt = _handlePayback(
                 HandlePaybackData({
                     isMatic: internalVar_.isDebtTokenMatic,
                     isMin: internalVar_.isDebtMin,
@@ -509,8 +525,13 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
             );
         }
 
+        internalVar_.maticAmountTotal = 
+            internalVar_.maticAmount0 
+            + internalVar_.maticAmount1 
+            + internalVar_.maticAmountDebt;
+
         (helper_.nftId, internalVar_.r) = vaultT2_.operatePerfect{
-            value: internalVar_.maticAmount
+            value: internalVar_.maticAmountTotal
         }(
             helper_.nftId,
             helper_.perfectColShares,
@@ -543,5 +564,5 @@ abstract contract FluidVaultT2Connector is Helpers, Events {
 }
 
 contract ConnectV2FluidVaultT2Polygon is FluidVaultT2Connector {
-    string public constant name = "Fluid-vaultT2-v1.0";
+    string public constant name = "Fluid-vaultT2-v1.1";
 }

@@ -14,13 +14,19 @@ import {TokenInterface} from "../../common/interfaces.sol";
 
 abstract contract FluidVaultT3Connector is Helpers, Events {
     struct OperateInternalVariables {
-        uint256 maticAmount;
+        uint256 maticAmountCol;
+        uint256 maticAmount0;
+        uint256 maticAmount1;
+        uint256 maticAmountTotal;
         int256 colShares;
         int256 debtShares;
     }
 
     struct OperatePerfectInternalVariables {
-        uint256 maticAmount;
+        uint256 maticAmountCol;
+        uint256 maticAmount0;
+        uint256 maticAmount1;
+        uint256 maticAmountTotal;
         bool isDebtMin;
         bool isDebtToken0Matic;
         bool isDebtToken1Matic;
@@ -95,7 +101,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
 
         // Deposit (Normal Collateral)
         if (helper_.newCol > 0) {
-            (internalVar_.maticAmount, helper_.newCol) = _handleDeposit(
+            (internalVar_.maticAmountCol, helper_.newCol) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT3Details_.supplyToken.token0 == getMaticAddr(),
                     isMax: helper_.newCol == type(int256).max,
@@ -108,7 +114,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
 
         // Payback token 0
         if (helper_.newDebtToken0 < 0) {
-            internalVar_.maticAmount = _handlePayback(
+            internalVar_.maticAmount0 = _handlePayback(
                 HandlePaybackData({
                     isMatic: vaultT3Details_.borrowToken.token0 == getMaticAddr(),
                     isMin: false,
@@ -122,7 +128,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
 
         // Payback token 1
         if (helper_.newDebtToken1 < 0) {
-            internalVar_.maticAmount = _handlePayback(
+            internalVar_.maticAmount1 = _handlePayback(
                 HandlePaybackData({
                     isMatic: vaultT3Details_.borrowToken.token1 == getMaticAddr(),
                     isMin: false,
@@ -134,11 +140,16 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
             );
         }
 
+        internalVar_.maticAmountTotal = 
+            internalVar_.maticAmountCol 
+            + internalVar_.maticAmount0 
+            + internalVar_.maticAmount1;
+
         (
             helper_.nftId,
             internalVar_.colShares,
             internalVar_.debtShares
-        ) = vaultT3_.operate{value: internalVar_.maticAmount}(
+        ) = vaultT3_.operate{value: internalVar_.maticAmountTotal}(
             helper_.nftId,
             helper_.newCol,
             helper_.newDebtToken0,
@@ -202,7 +213,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
 
         // Deposit (Normal Collateral)
         if (helper_.newCol > 0) {
-            (internalVar_.maticAmount, helper_.newCol) = _handleDeposit(
+            (internalVar_.maticAmountCol, helper_.newCol) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT3Details_.supplyToken.token0 == getMaticAddr(),
                     isMax: helper_.newCol == type(int256).max,
@@ -215,7 +226,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
 
         // Payback token 0
         if (helper_.newDebtToken0 < 0) {
-            internalVar_.maticAmount = _handlePayback(
+            internalVar_.maticAmount0 = _handlePayback(
                 HandlePaybackData({
                     isMatic: vaultT3Details_.borrowToken.token0 == getMaticAddr(),
                     isMin: false,
@@ -229,7 +240,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
 
         // Payback token 1
         if (helper_.newDebtToken1 < 0) {
-            internalVar_.maticAmount = _handlePayback(
+            internalVar_.maticAmount1 = _handlePayback(
                 HandlePaybackData({
                     isMatic: vaultT3Details_.borrowToken.token1 == getMaticAddr(),
                     isMin: false,
@@ -241,11 +252,16 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
             );
         }
 
+        internalVar_.maticAmountTotal = 
+            internalVar_.maticAmountCol 
+            + internalVar_.maticAmount0 
+            + internalVar_.maticAmount1;
+
         (
             helper_.nftId,
             internalVar_.colShares,
             internalVar_.debtShares
-        ) = vaultT3_.operate{value: internalVar_.maticAmount}(
+        ) = vaultT3_.operate{value: internalVar_.maticAmountTotal}(
             helper_.nftId,
             helper_.newCol,
             helper_.newDebtToken0,
@@ -315,7 +331,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
 
         // Deposit (Normal Collateral)
         if (helper_.newCol > 0) {
-            (internalVar_.maticAmount, helper_.newCol) = _handleDeposit(
+            (internalVar_.maticAmountCol, helper_.newCol) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT3Details_.supplyToken.token0 == getMaticAddr(),
                     isMax: helper_.newCol == type(int256).max,
@@ -334,7 +350,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
 
         // Payback
         if (helper_.perfectDebtShares < 0) {
-            internalVar_.maticAmount = _handlePayback(
+            internalVar_.maticAmount0 = _handlePayback(
                 HandlePaybackData({
                     isMatic: internalVar_.isDebtToken0Matic,
                     isMin: internalVar_.isDebtMin,
@@ -345,7 +361,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
                 })
             );
 
-            internalVar_.maticAmount = _handlePayback(
+            internalVar_.maticAmount1 = _handlePayback(
                 HandlePaybackData({
                     isMatic: internalVar_.isDebtToken1Matic,
                     isMin: internalVar_.isDebtMin,
@@ -357,8 +373,13 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
             );
         }
 
+        internalVar_.maticAmountTotal = 
+            internalVar_.maticAmountCol 
+            + internalVar_.maticAmount0 
+            + internalVar_.maticAmount1;
+
         (helper_.nftId, internalVar_.r) = vaultT3_.operatePerfect{
-            value: internalVar_.maticAmount
+            value: internalVar_.maticAmountTotal
         }(
             helper_.nftId,
             helper_.newCol,
@@ -450,7 +471,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
 
         // Deposit (Normal Collateral)
         if (helper_.newCol > 0) {
-            (internalVar_.maticAmount, helper_.newCol) = _handleDeposit(
+            (internalVar_.maticAmountCol, helper_.newCol) = _handleDeposit(
                 HandleDepositData({
                     isMatic: vaultT3Details_.supplyToken.token0 == getMaticAddr(),
                     isMax: helper_.newCol == type(int256).max,
@@ -469,7 +490,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
 
         // Payback
         if (helper_.perfectDebtShares < 0) {
-            internalVar_.maticAmount = _handlePayback(
+            internalVar_.maticAmount0 = _handlePayback(
                 HandlePaybackData({
                     isMatic: internalVar_.isDebtToken0Matic,
                     isMin: internalVar_.isDebtMin,
@@ -480,7 +501,7 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
                 })
             );
 
-            internalVar_.maticAmount = _handlePayback(
+            internalVar_.maticAmount1 = _handlePayback(
                 HandlePaybackData({
                     isMatic: internalVar_.isDebtToken1Matic,
                     isMin: internalVar_.isDebtMin,
@@ -492,8 +513,13 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
             );
         }
 
+        internalVar_.maticAmountTotal = 
+            internalVar_.maticAmountCol 
+            + internalVar_.maticAmount0 
+            + internalVar_.maticAmount1;
+
         (helper_.nftId, internalVar_.r) = vaultT3_.operatePerfect{
-            value: internalVar_.maticAmount
+            value: internalVar_.maticAmountTotal
         }(
             helper_.nftId,
             helper_.newCol,
@@ -535,5 +561,5 @@ abstract contract FluidVaultT3Connector is Helpers, Events {
 }
 
 contract ConnectV2FluidVaultT3Polygon is FluidVaultT3Connector {
-    string public constant name = "Fluid-vaultT3-v1.0";
+    string public constant name = "Fluid-vaultT3-v1.1";
 }
