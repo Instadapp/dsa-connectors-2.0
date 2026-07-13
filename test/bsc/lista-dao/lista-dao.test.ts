@@ -62,7 +62,7 @@ describe("Lista-DAO", function () {
         {
           forking: {
             // @ts-ignore
-            jsonRpcUrl: "https://bnb-mainnet.g.alchemy.com/v2/fZKz-IJpDYjN_jA0_YonUqvInvh6zR1O",
+            jsonRpcUrl: `https://bnb-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
             blockNumber: 85986633,
           },
         },

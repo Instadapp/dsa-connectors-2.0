@@ -78,7 +78,7 @@ function getNetworkUrl(networkType: string) {
   else if (networkType === "fantom") return `https://rpc.ftm.tools/`;
   else if (networkType === "base") return `https://1rpc.io/base`;
   else if (networkType === "plasma") return `https://rpc.plasma.to`;
-  else if (networkType === "bsc") return `https://bnb-mainnet.g.alchemy.com/v2/fZKz-IJpDYjN_jA0_YonUqvInvh6zR1O`;
+  else if (networkType === "bsc") return `https://bnb-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
   else return `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`;
 }
 
@@ -150,6 +150,13 @@ const config: any = {
         mnemonic
       },
       chainId: chainIds.hardhat,
+      hardfork: "cancun",
+      chains: Object.fromEntries(
+        Object.values(chainIds)
+          .filter((id) => id !== chainIds.ganache && id !== chainIds.hardhat)
+          .concat(9745) // plasma
+          .map((id) => [id, { hardforkHistory: { cancun: 0 } }])
+      ),
       forking: {
         url: String(getNetworkUrl(String(process.env.networkType)))
       }

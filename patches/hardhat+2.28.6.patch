@@ -1,0 +1,26 @@
+diff --git a/node_modules/hardhat/internal/hardhat-network/provider/provider.js b/node_modules/hardhat/internal/hardhat-network/provider/provider.js
+index 10f3b55..3fce97c 100644
+--- a/node_modules/hardhat/internal/hardhat-network/provider/provider.js
++++ b/node_modules/hardhat/internal/hardhat-network/provider/provider.js
+@@ -91,7 +91,7 @@ class EdrProviderWrapper extends events_1.EventEmitter {
+             return {
+                 chainId: BigInt(chainId),
+                 name: "Unknown",
+-                hardforks: Array.from(hardforkConfig.hardforkHistory, ([hardfork, blockNumber]) => {
++                hardforkActivationOverrides: Array.from(hardforkConfig.hardforkHistory, ([hardfork, blockNumber]) => {
+                     return {
+                         condition: { blockNumber: BigInt(blockNumber) },
+                         hardfork: (0, convertToEdr_1.ethereumsjsHardforkToEdrSpecId)((0, hardforks_1.getHardforkName)(hardfork)),
+diff --git a/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts b/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts
+index d299f5c..41e52a3 100644
+--- a/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts
++++ b/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts
+@@ -183,7 +183,7 @@ export class EdrProviderWrapper
+         return {
+           chainId: BigInt(chainId),
+           name: "Unknown",
+-          hardforks: Array.from(
++          hardforkActivationOverrides: Array.from(
+             hardforkConfig.hardforkHistory,
+             ([hardfork, blockNumber]) => {
+               return {
