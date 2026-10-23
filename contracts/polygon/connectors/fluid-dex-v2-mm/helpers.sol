@@ -2,7 +2,7 @@
 pragma solidity ^0.8.26;
 
 contract FluidDexV2Helpers {
-    address internal constant FLUID_DEX_V2_MM_ADDRESS = 0xD8E73B7169C579Cc6c2d08c458Cce3d944a76010;
+    address internal constant FLUID_DEX_V2_MM_ADDRESS = 0x2536CbF2F657F153A86aCF8435293c60A23D32bf;
 
     modifier validatePositionType(uint8 positionType_) {
         require(
@@ -14,8 +14,14 @@ contract FluidDexV2Helpers {
         _;
     }
 
-    function _isNewPosition(uint256 nftId_) internal pure returns (bool) {
-        return nftId_ == 0;
+    /// @dev nftId 0 mints a new NFT, positionIndex 0 opens a new position on an existing NFT; both take the create layout
+    function _isNewPosition(uint256 nftId_, uint256 positionIndex_) internal pure returns (bool) {
+        return nftId_ == 0 || positionIndex_ == 0;
+    }
+
+    /// @dev type(int256).min means "withdraw / pay back everything" to the Money Market and must not be negated
+    function _isMaxAmount(int256 amount_) internal pure returns (bool) {
+        return amount_ == type(int256).min;
     }
 
     function _getActualOperateAmount(uint256 amount_) internal pure returns (uint256) {

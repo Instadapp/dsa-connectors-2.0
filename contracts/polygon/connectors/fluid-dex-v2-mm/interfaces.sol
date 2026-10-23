@@ -6,7 +6,7 @@ interface IFluidDexV2 {
         uint256 nftId_,
         uint256 positionIndex_,
         bytes calldata actionData_
-    ) external payable returns (uint256, uint256);
+    ) external payable returns (uint256, uint256, bytes memory);
 
     function changeEmode(uint256 nftId_, uint256 newEmode_) external payable;
 }

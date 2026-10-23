@@ -110,7 +110,7 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
         positionIndex_ = getUint(getIds_[1], positionIndex_);
 
         if (positionType_ == 1) {
-            if (_isNewPosition(nftId_)) {
+            if (_isNewPosition(nftId_, positionIndex_)) {
                 // Handle only supply amount
                 uint256 tokenIndex;
                 (
@@ -182,25 +182,22 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
 
 
                 } else {
-                    // Handle Withdraw Amount
-                    operateWithIdsVariables_.operateCollateralAmount0 = getUint(
-                        getIds_[2],
-                        uint256(-amountInt)
-                    );
-                    actionData_ = abi.encode(
-                        -int256(
+                    // Handle Withdraw Amount. type(int256).min withdraws everything; the amount is then only known
+                    // to the Money Market, so 0 is stored in memory.
+                    if (!_isMaxAmount(amountInt)) {
+                        operateWithIdsVariables_.operateCollateralAmount0 = getUint(
+                            getIds_[2],
+                            uint256(-amountInt)
+                        );
+                        amountInt = -int256(
                             operateWithIdsVariables_.operateCollateralAmount0
-                        ),
-                        address(this)
-                    );
-
-                    if (amountInt == type(int256).min) {
-                        operateWithIdsVariables_.operateCollateralAmount0 = 0;
+                        );
                     }
+                    actionData_ = abi.encode(amountInt, address(this));
                 }
             }
         } else if (positionType_ == 2) {
-            if (_isNewPosition(nftId_)) {
+            if (_isNewPosition(nftId_, positionIndex_)) {
                 // Handle only borrow amount
                 uint256 tokenIndex;
                 (
@@ -234,40 +231,44 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                         address(this)
                     );
                 } else {
-                    // Handle payback amount
-                    operateWithIdsVariables_.operateDebtAmount0 = getUint(
-                        getIds_[4],
-                        uint256(-amountInt)
-                    );
+                    // Handle payback amount. type(int256).min pays back everything: the Money Market resolves the
+                    // amount itself, so the approval (or native value) is paybackApproveAmountParams_.approveAmount0
+                    // and 0 is stored in memory.
+                    uint256 paybackAmount_;
+                    if (_isMaxAmount(amountInt)) {
+                        paybackAmount_ = paybackApproveAmountParams_.approveAmount0;
+                    } else {
+                        operateWithIdsVariables_.operateDebtAmount0 = getUint(
+                            getIds_[4],
+                            uint256(-amountInt)
+                        );
+                        paybackAmount_ = operateWithIdsVariables_.operateDebtAmount0;
+                    }
 
                     if (tokenAddressParams_.token0Address == maticAddr) {
-                        value_ += operateWithIdsVariables_.operateDebtAmount0;
+                        value_ += paybackAmount_;
                     } else {
                         approve(
                             TokenInterface(tokenAddressParams_.token0Address),
                             FLUID_DEX_V2_MM_ADDRESS,
-                            operateWithIdsVariables_.operateDebtAmount0
+                            paybackAmount_
                         );
                     }
 
-                    // Actual operate amount is 1 wei less than the requested amount
-                    operateWithIdsVariables_
-                        .operateDebtAmount0 = _getActualOperateAmount(
-                        operateWithIdsVariables_.operateDebtAmount0
-                    );
-
-                    actionData_ = abi.encode(
-                        -int256(operateWithIdsVariables_.operateDebtAmount0),
-                        address(this)
-                    );
-
-                    if (amountInt == type(int256).min) {
-                        operateWithIdsVariables_.operateDebtAmount0 = 0;
+                    if (!_isMaxAmount(amountInt)) {
+                        // Actual operate amount is 1 wei less than the requested amount
+                        operateWithIdsVariables_
+                            .operateDebtAmount0 = _getActualOperateAmount(
+                            operateWithIdsVariables_.operateDebtAmount0
+                        );
+                        amountInt = -int256(operateWithIdsVariables_.operateDebtAmount0);
                     }
+
+                    actionData_ = abi.encode(amountInt, address(this));
                 }
             }
         } else if (positionType_ == 3) {
-            if (_isNewPosition(nftId_)) {
+            if (_isNewPosition(nftId_, positionIndex_)) {
                 (, PositionParams memory positionParams_) = abi.decode(
                     actionData_,
                     (uint256, PositionParams)
@@ -307,7 +308,7 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
 
                 actionData_ = abi.encode(3, positionParams_);
             } else {
-                (int256 amount0Int, int256 amount1Int, , , ) = abi.decode(
+                (int256 amount0Int, int256 amount1Int, uint256 amount0Min_, uint256 amount1Min_, ) = abi.decode(
                     actionData_,
                     (int256, int256, uint256, uint256, address)
                 );
@@ -333,7 +334,7 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                         _getActualOperateAmount(operateWithIdsVariables_.operateCollateralAmount0)
                     );
                     
-                } else {
+                } else if (!_isMaxAmount(amount0Int)) {
                     // Handle withdraw amount for token0
                     operateWithIdsVariables_.operateCollateralAmount0 = getUint(
                         getIds_[2],
@@ -342,10 +343,6 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                     amount0Int = -int256(
                         operateWithIdsVariables_.operateCollateralAmount0
                     );
-
-                    if (amount0Int == type(int256).min) {
-                        operateWithIdsVariables_.operateCollateralAmount0 = 0;
-                    }
                 }
 
                 if (amount1Int >= 0) {
@@ -369,7 +366,7 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                     amount1Int = int256(
                         _getActualOperateAmount(operateWithIdsVariables_.operateCollateralAmount1)
                     );
-                } else {
+                } else if (!_isMaxAmount(amount1Int)) {
                     // Handle withdraw amount for token1
                     operateWithIdsVariables_.operateCollateralAmount1 = getUint(
                         getIds_[3],
@@ -378,22 +375,18 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                     amount1Int = -int256(
                         operateWithIdsVariables_.operateCollateralAmount1
                     );
-
-                    if (amount1Int == type(int256).min) {
-                        operateWithIdsVariables_.operateCollateralAmount1 = 0;
-                    }
                 }
 
                 actionData_ = abi.encode(
                     amount0Int,
                     amount1Int,
-                    0,
-                    0,
+                    amount0Min_,
+                    amount1Min_,
                     address(this)
                 );
             }
         } else if (positionType_ == 4) {
-            if (_isNewPosition(nftId_)) {
+            if (_isNewPosition(nftId_, positionIndex_)) {
                 (, PositionParams memory positionParams_) = abi.decode(
                     actionData_,
                     (uint256, PositionParams)
@@ -414,7 +407,7 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                 positionParams_.to = address(this);
                 actionData_ = abi.encode(4, positionParams_);
             } else {
-                (int256 amount0Int, int256 amount1Int, , , ) = abi.decode(
+                (int256 amount0Int, int256 amount1Int, uint256 amount0Min_, uint256 amount1Min_, ) = abi.decode(
                     actionData_,
                     (int256, int256, uint256, uint256, address)
                 );
@@ -429,13 +422,15 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                     );
                 } else {
                     // Handle payback amount for token0
-                    operateWithIdsVariables_.operateDebtAmount0 = getUint(
-                        getIds_[4],
-                        uint256(-amount0Int)
-                    );
-                    amount0Int = -int256(
-                        operateWithIdsVariables_.operateDebtAmount0
-                    );
+                    if (!_isMaxAmount(amount0Int)) {
+                        operateWithIdsVariables_.operateDebtAmount0 = getUint(
+                            getIds_[4],
+                            uint256(-amount0Int)
+                        );
+                        amount0Int = -int256(
+                            operateWithIdsVariables_.operateDebtAmount0
+                        );
+                    }
 
                     if (tokenAddressParams_.token0Address == maticAddr) {
                         value_ += paybackApproveAmountParams_.approveAmount0;
@@ -445,10 +440,6 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                             FLUID_DEX_V2_MM_ADDRESS,
                             paybackApproveAmountParams_.approveAmount0
                         );
-                    }
-
-                    if (amount0Int == type(int256).min) {
-                        operateWithIdsVariables_.operateDebtAmount0 = 0;
                     }
                 }
                 if (amount1Int >= 0) {
@@ -462,13 +453,15 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                     );
                 } else {
                     // Handle payback amount for token1
-                    operateWithIdsVariables_.operateDebtAmount1 = getUint(
-                        getIds_[5],
-                        uint256(-amount1Int)
-                    );
-                    amount1Int = -int256(
-                        operateWithIdsVariables_.operateDebtAmount1
-                    );
+                    if (!_isMaxAmount(amount1Int)) {
+                        operateWithIdsVariables_.operateDebtAmount1 = getUint(
+                            getIds_[5],
+                            uint256(-amount1Int)
+                        );
+                        amount1Int = -int256(
+                            operateWithIdsVariables_.operateDebtAmount1
+                        );
+                    }
 
                     if (tokenAddressParams_.token1Address == maticAddr) {
                         value_ += paybackApproveAmountParams_.approveAmount1;
@@ -479,23 +472,20 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
                             paybackApproveAmountParams_.approveAmount1
                         );
                     }
-
-                    if (amount1Int == type(int256).min) {
-                        operateWithIdsVariables_.operateDebtAmount1 = 0;
-                    }
                 }
 
                 actionData_ = abi.encode(
                     amount0Int,
                     amount1Int,
-                    0,
-                    0,
+                    amount0Min_,
+                    amount1Min_,
                     address(this)
                 );
             }
         }
 
-        IFluidDexV2(FLUID_DEX_V2_MM_ADDRESS).operate{value: value_}(
+        // the Money Market returns the minted NFT id / created position index, which the setIds store
+        (nftId_, positionIndex_, ) = IFluidDexV2(FLUID_DEX_V2_MM_ADDRESS).operate{value: value_}(
             nftId_,
             positionIndex_,
             actionData_
@@ -559,5 +549,5 @@ contract FluidDexV2MMConnector is FluidDexV2Events, Basic, FluidDexV2Helpers {
 }
 
 contract ConnectV2FluidDexV2MMPolygon is FluidDexV2MMConnector {
-    string public constant name = "Fluid-Dex-v2-MM-v1.0";
+    string public constant name = "Fluid-Dex-v2-MM-v1.1";
 }
