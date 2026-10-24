@@ -2,7 +2,6 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { abis } from "../../../scripts/constant/abis";
 import { addresses } from "../../../scripts/tests/polygon/addresses";
-import { deployAndEnableConnector } from "../../../scripts/tests/deployAndEnableConnector";
 import { getMasterSigner } from "../../../scripts/tests/getMasterSigner";
 import { buildDSAv2 } from "../../../scripts/tests/buildDSAv2";
 import { encodeSpells } from "../../../scripts/tests/encodeSpells";
@@ -15,7 +14,7 @@ import { BigNumber } from "ethers";
 
 // Fluid Money Market on Polygon (audited build, live since block 96039366 / tx 0xffb99e8d...)
 describe("Fluid DEX v2 Money Market", function () {
-  const connectorName = "FLUID-DEX-V2-MM-B";
+  const connectorName = "FLUID-DEX-V2-MM-A";
   let connector: any;
 
   let wallet0: Signer, wallet1: Signer;
@@ -162,12 +161,12 @@ describe("Fluid DEX v2 Money Market", function () {
     masterSigner = await getMasterSigner();
     instaConnectorsV2 = await ethers.getContractAt(abis.core.connectorsV2, addresses.core.connectorsV2, masterSigner);
 
-    connector = await deployAndEnableConnector({
-      connectorName,
-      contractArtifact: ConnectV2FluidDexV2MMPolygon__factory,
-      signer: masterSigner,
-      connectors: instaConnectorsV2
-    });
+    // FLUID-DEX-V2-MM-A already points at the test-MM connector at this block; Team MS1 repoints it with
+    // updateConnectors, so the test does the same instead of addConnectors
+    connector = await new ConnectV2FluidDexV2MMPolygon__factory(masterSigner).deploy();
+    await instaConnectorsV2.connect(masterSigner).updateConnectors([connectorName], [connector.address]);
+    addresses.connectors[connectorName] = connector.address;
+    abis.connectors[connectorName] = ConnectV2FluidDexV2MMPolygon__factory.abi;
     console.log("Connector address", connector.address);
   });
 
