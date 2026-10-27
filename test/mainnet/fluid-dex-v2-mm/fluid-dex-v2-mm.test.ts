@@ -201,7 +201,7 @@ describe("Fluid DEX v2 Money Market", function () {
   describe("DSA wallet setup", function () {
     it("Should build DSA v2", async function () {
       dsaWallet0 = await buildDSAv2(await wallet0.getAddress());
-      expect(!!dsaWallet0.address).to.be.true;
+      expect(await ethers.provider.getCode(dsaWallet0.address)).to.not.equal("0x");
     });
 
     it("Deposit ETH, USDC and USDT into DSA wallet", async function () {
@@ -419,14 +419,32 @@ describe("Fluid DEX v2 Money Market", function () {
 
       await cast([operateSpell(4, nftId, 2, encodeDex(half.mul(-1), half.mul(-1), dsaWallet0.address), [USDC, USDT], [half, half])]);
 
-      expect((await hfInfo(nftId)).debtValue).to.be.lt(debtBefore);
+      // half the borrowed range pays back roughly half of the D4 debt value
+      const debtAfter = (await hfInfo(nftId)).debtValue;
+      expect(debtAfter).to.be.lt(debtBefore.mul(6).div(10));
+      expect(debtAfter).to.be.gt(debtBefore.mul(4).div(10));
     });
 
-    // The last full D4 payback repays more than the debt DexV2 has registered at Liquidity and panics (0x11) until a
-    // protocol-owned D4 seed position is open on the pool. Money Market behaviour, not the connector's.
-    it("full D4 payback currently reverts on the live pools (no D4 seed position)", async function () {
+    // Without a protocol-owned D4 seed position the last full D4 payback can resolve a few raw above the debt DexV2
+    // has registered at Liquidity and panic (0x11); whether it does depends on rounding at that block. Money Market
+    // behaviour, not the connector's: the connector call must either close the debt or fail with that panic only.
+    it("full D4 payback closes the debt or panics 0x11 (no D4 seed position)", async function () {
       const all = parseUnits("1000000", 6);
-      await expect(cast([operateSpell(4, nftId, 2, encodeDex(all.mul(-1), all.mul(-1), dsaWallet0.address), [USDC, USDT], [d4Amount, d4Amount])])).to.be.reverted;
+      const spell = operateSpell(4, nftId, 2, encodeDex(all.mul(-1), all.mul(-1), dsaWallet0.address), [USDC, USDT], [d4Amount, d4Amount]);
+      const snapshot = await hre.network.provider.send("evm_snapshot", []);
+      let reverted = false;
+      try {
+        await cast([spell]);
+      } catch (e) {
+        reverted = true;
+      }
+      if (reverted) {
+        await hre.network.provider.send("evm_revert", [snapshot]);
+        await expect(cast([spell])).to.be.revertedWithPanic(0x11);
+      } else {
+        expect((await hfInfo(nftId)).debtValue).to.equal(0);
+        await hre.network.provider.send("evm_revert", [snapshot]);
+      }
     });
 
     it("should forward the D3 minimums (operateWithIds)", async function () {
